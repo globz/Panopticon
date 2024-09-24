@@ -1,0 +1,26 @@
+If we want to parse the battle log, user must enable -ddd and play a turn.
+
+
+host_bua:   new unit Pearl Guard (m2387) in Pelagia (1654) for player 40
+The (m2387) is the unit ID which we could reference with dom6inspector
+
+
+xecuteorder: Jotun Warrior (unr 1035, hp 33, lnr 1 [48,25]) (1035) preparing -1, order 12
+realbatmelee2: Jotun Warrior (unr 1035, hp 33, lnr 1 [48,25]) weapon Spear, ranged 0 (at -1,-1)
+realbatmelee Jotun Warrior strikes Militia with Spear (reach 1)
+Attack roll 19 vs defence roll 32
+Jotun Warrior missed Militia
+
+
+executeorder: Heavy Infantry (unr 1255, hp 10, lnr 1 [46,23]) (1255) preparing -1, order 15
+realbatmelee2: Heavy Infantry (unr 1255, hp 10, lnr 1 [46,23]) weapon Spear, ranged 0 (at -1,-1)
+repel value 10 (Spear) vs defence value 18
+  Jotun Warrior missed to repel Heavy Infantry (10 vs 18)
+realbatmelee Heavy Infantry strikes Jotun Warrior with Spear (reach 1)
+Attack roll 19 vs defence roll 12
+hitloc Heavy Infantry strikes Jotun Warrior wl3 diff1 -> 3
+Heavy Infantry hit Jotun Warrior: dmg3 spec0x4200001 ba3 eff2 type pierce, 
+Damage roll 13+10 vs prot roll of 12+3 of Jotun Warrior = 8 points of damage
+damage 8 on Jotun Warrior (unr1039), spec0x4200001 ba3
+Heavy Infantry hit Jotun Warrior in arm with Spear for 8 points of damage 
+applyifhiteffects on Jotun Warrior from wnr1 spnr-1
