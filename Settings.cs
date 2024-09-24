@@ -1,3 +1,5 @@
+using System.CodeDom;
+
 namespace Panopticon;
 public class Settings
 {
@@ -8,21 +10,25 @@ public class Settings
         Button CreationModeButton = new()
         {
             Location = new System.Drawing.Point(20, 20),
-            Size = new System.Drawing.Size(125, 30),
+            //Size = new System.Drawing.Size(125, 30),
             Text = "Creation mode",
             BackColor = Color.LightSteelBlue,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink
         };
 
         Button NamingConventionButton = new()
         {
             Location = new System.Drawing.Point(20, 53),
-            Size = new System.Drawing.Size(125, 30),
+            //Size = new System.Drawing.Size(125, 30),
             Text = "Naming convention",
             BackColor = Color.LightSteelBlue,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink
         };
 
         groupBox_settings.Controls.Add(CreationModeButton);

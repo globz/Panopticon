@@ -9,9 +9,12 @@ namespace Panopticon;
 
 public partial class Timeline : Form
 {
-
     public Timeline()
     {
+        // DPI scaling
+        this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+        this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+
         InitializeComponent();
 
         // Example of adding a new timeline node
@@ -28,6 +31,12 @@ public partial class Timeline : Form
         var horizontalSplitContainer = new System.Windows.Forms.SplitContainer();
         var topPanel = new System.Windows.Forms.Panel();
         var bottomPanel = new System.Windows.Forms.Panel();
+
+        // DPI scaling
+        verticalSplitContainer.AutoScaleMode = AutoScaleMode.Dpi;
+        verticalSplitContainer.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+        horizontalSplitContainer.AutoScaleMode = AutoScaleMode.Dpi;
+        horizontalSplitContainer.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
 
         verticalSplitContainer.SuspendLayout();
         horizontalSplitContainer.SuspendLayout();

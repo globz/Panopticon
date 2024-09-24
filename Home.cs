@@ -16,11 +16,9 @@ public partial class Home : Form
 
     public Home()
     {
-        //InitializeComponent();
         this.ClientSize = new System.Drawing.Size(800, 800);
         this.Text = "Dominion: Panopticon";
-        this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-        this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+
         InitializeFeatures();
         InitializeAboutSection();
         InitializeBackground();
