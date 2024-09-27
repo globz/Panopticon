@@ -1,5 +1,3 @@
-using System.CodeDom;
-
 namespace Panopticon;
 public class Settings
 {

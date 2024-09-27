@@ -4,7 +4,6 @@ using System.Reflection;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms.PropertyGridInternal;
-using LibGit2Sharp;
 using System.Security.Policy;
 using Accessibility;
 using System.Diagnostics.Tracing;

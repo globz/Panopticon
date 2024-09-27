@@ -1,5 +1,3 @@
-using System.ComponentModel;
-using System.Security.Cryptography.X509Certificates;
 using LibGit2Sharp;
 
 namespace Panopticon;
