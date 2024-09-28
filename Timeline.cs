@@ -15,6 +15,9 @@ public partial class Timeline : Form
         TreeNode newTimelineNode = new(timelineName);
         newTimelineNode.Name = timelineName;
         Game.UI.Timeline_history?.Nodes.Add(newTimelineNode);
+
+        // Initialize the settings database
+        Initialize_Settings_DB();
     }
 
     private void InitializeComponent()
@@ -186,6 +189,13 @@ public partial class Timeline : Form
                 break;
         }
 
+    }
+
+    private static void Initialize_Settings_DB()
+    {
+        DB.Open();
+        DB.Query("CREATE TABLE IF NOT EXISTS settings (game, mode, prefix, suffix, turn)").ExecuteNonQuery();
+        DB.Close();
     }
 
 }
