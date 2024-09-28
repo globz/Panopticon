@@ -1,3 +1,5 @@
+using Microsoft.Data.Sqlite;
+
 namespace Panopticon;
 
 /* public static class Helper
@@ -66,4 +68,29 @@ public static class Game
 
 }
 
+public static class DB
+{
+
+    private static readonly string DatabasePath = AppDomain.CurrentDomain.BaseDirectory + @"..\..\..\db\panopticon.db";
+    private static readonly string DatabaseSource = $"Data Source={DatabasePath}";
+    private static readonly SqliteConnection Connection = new(DatabaseSource);
+
+    public static void Open()
+    {
+        DB.Connection.Open();
+    }
+
+    public static void Close()
+    {
+        DB.Connection.Close();
+    }
+
+    public static SqliteCommand Query(string text)
+    {
+        var statement = DB.Connection.CreateCommand();
+        statement.CommandText = text;
+        return statement;
+    }
+
+}
 
