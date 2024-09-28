@@ -10,7 +10,7 @@ public partial class Timeline : Form
 
         InitializeComponent();
 
-        // Example of adding a new timeline node
+        // Example of adding a new timeline node (this needs to move)
         string timelineName = Game.Settings.Prefix + Game.Name + Game.Settings.Suffix + Game.Settings.Turn;
         TreeNode newTimelineNode = new(timelineName);
         newTimelineNode.Name = timelineName;
@@ -194,7 +194,7 @@ public partial class Timeline : Form
     private static void Initialize_Settings_DB()
     {
         DB.Open();
-        DB.Query("CREATE TABLE IF NOT EXISTS settings (game, mode, prefix, suffix, turn)").ExecuteNonQuery();
+        DB.Query("CREATE TABLE IF NOT EXISTS settings (game VARCHAR(23) PRIMARY KEY, auto_commit BOOLEAN, prefix VARCHAR(10), suffix VARCHAR(10), turn DECIMAL)").ExecuteNonQuery();
         DB.Close();
     }
 

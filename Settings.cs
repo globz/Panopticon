@@ -1,3 +1,8 @@
+using System.Data;
+using System.Data.SqlTypes;
+using System.Net;
+using Microsoft.Data.Sqlite;
+
 namespace Panopticon;
 public class Settings
 {
@@ -8,7 +13,6 @@ public class Settings
         Button CreationModeButton = new()
         {
             Location = new System.Drawing.Point(20, 20),
-            //Size = new System.Drawing.Size(125, 30),
             Text = "Creation mode",
             BackColor = Color.LightSteelBlue,
             ForeColor = Game.UI.ForeColor,
@@ -20,7 +24,6 @@ public class Settings
         Button NamingConventionButton = new()
         {
             Location = new System.Drawing.Point(20, 53),
-            //Size = new System.Drawing.Size(125, 30),
             Text = "Naming convention",
             BackColor = Color.LightSteelBlue,
             ForeColor = Game.UI.ForeColor,
@@ -79,9 +82,6 @@ public class Settings
             var groupBox_creationMode = new System.Windows.Forms.GroupBox();
             var radioButton_autoMode = new System.Windows.Forms.RadioButton();
             var radioButton_manualMode = new System.Windows.Forms.RadioButton();
-            //var getSelectedRB = new System.Windows.Forms.Button();
-
-            //SuspendLayout();
 
             groupBox_creationMode.Location = new System.Drawing.Point(30, 100);
             groupBox_creationMode.Size = new System.Drawing.Size(150, 105);
@@ -100,10 +100,6 @@ public class Settings
             radioButton_manualMode.Text = "Manual";
             radioButton_manualMode.ForeColor = Game.UI.ForeColor;
 
-            //getSelectedRB.Location = new System.Drawing.Point(10, 75);
-            //getSelectedRB.Size = new System.Drawing.Size(200, 25);
-            //getSelectedRB.Text = "Save"; // TODO this might not be needed since we can persist via RB_CreationMode_CheckedChanged
-
             // Determine user settings state
             if ((bool)!Game.Settings.Auto_commit)
             {
@@ -116,7 +112,6 @@ public class Settings
 
             groupBox_creationMode.Controls.Add(radioButton_autoMode);
             groupBox_creationMode.Controls.Add(radioButton_manualMode);
-            //groupBox_creationMode.Controls.Add(getSelectedRB);        
 
             Game.UI.BottomPanel?.Controls.Clear();
             Game.UI.BottomPanel?.Controls.Add(groupBox_creationMode);
@@ -124,8 +119,6 @@ public class Settings
 
             radioButton_autoMode.CheckedChanged += new EventHandler(RB_CreationMode_CheckedChanged);
             radioButton_manualMode.CheckedChanged += new EventHandler(RB_CreationMode_CheckedChanged);
-
-            //ResumeLayout(false);
 
             static void RB_CreationMode_CheckedChanged(object? sender, EventArgs e)
             {
@@ -137,17 +130,20 @@ public class Settings
                     {
                         case "ManualMode":
                             Game.Settings.Auto_commit = false;
-                            // TODO save to DB
                             break;
                         case "AutoMode":
                             Game.Settings.Auto_commit = true;
-                            // TODO save to DB
                             break;
                         default:
                             break;
                     }
 
-                    MessageBox.Show(Game.Settings.Auto_commit.ToString());
+                    DB.Open();
+                    SqliteCommand statement = DB.Query("INSERT INTO settings (game, auto_commit) VALUES (@game, @auto_commit) ON CONFLICT(game) DO UPDATE SET auto_commit = @auto_commit");
+                    statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                    statement.Parameters.Add("@auto_commit", SqliteType.Integer).Value = Game.Settings.Auto_commit;
+                    statement.ExecuteNonQuery();
+                    DB.Close();
                 }
             }
 
@@ -216,8 +212,6 @@ public class Settings
             saveButton.Size = new System.Drawing.Size(200, 25);
             saveButton.Text = "Save";
 
-            //SuspendLayout();
-
             Game.UI.BottomPanel?.Controls.Clear();
             Game.UI.BottomPanel?.Controls.Add(saveButton);
             Game.UI.BottomPanel?.Controls.Add(numericUpDownField_turn);
@@ -258,11 +252,18 @@ public class Settings
 
             static void SaveButton_Click(object? sender, EventArgs e)
             {
-                MessageBox.Show("lmao");
+                DB.Open();
+                SqliteCommand statement = DB.Query("INSERT INTO settings (game, prefix, suffix, turn) VALUES (@game, @prefix, @suffix, @turn) ON CONFLICT(game) DO UPDATE SET prefix = @prefix, suffix = @suffix, turn = @turn");
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
+                statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
+                statement.Parameters.Add("@turn", SqliteType.Text).Value = Game.Settings.Turn;
+                statement.ExecuteNonQuery();
+                DB.Close();
+
+                MessageBox.Show("Saved successfully!");
             }
 
-
-            //ResumeLayout(false);
         }
 
     }

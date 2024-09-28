@@ -70,6 +70,7 @@ public static class Game
 
 public static class DB
 {
+    // Types : https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/types
 
     private static readonly string DatabasePath = AppDomain.CurrentDomain.BaseDirectory + @"..\..\..\db\panopticon.db";
     private static readonly string DatabaseSource = $"Data Source={DatabasePath}";
