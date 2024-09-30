@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using LibGit2Sharp;
 
 namespace Panopticon;
 
@@ -11,12 +12,6 @@ public partial class Timeline : Form
         this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
 
         InitializeComponent();
-
-        // Example of adding a new timeline node (this needs to move)
-        string timelineName = Game.Settings.Prefix + Game.Name + Game.Settings.Suffix + Game.Settings.Turn;
-        TreeNode newTimelineNode = new(timelineName);
-        newTimelineNode.Name = timelineName;
-        Game.UI.Timeline_history?.Nodes.Add(newTimelineNode);
 
         // Initialize the settings database
         Initialize_Settings_DB();
@@ -188,12 +183,80 @@ public partial class Timeline : Form
                 ResumeLayout(false);
                 break;
             case "timeline_root":
-                MessageBox.Show(e.Node?.Name);
+                Initialize_Timeline_Root();
                 break;
             default:
                 break;
         }
 
+    }
+
+    private static void Initialize_Timeline_Root()
+    {
+
+        // Validate if a Timeline has already been created (via git)
+        if (Repository.IsValid(Game.Path))
+        {
+            Game.UI.TopPanel?.Controls.Clear();
+            Game.UI.BottomPanel?.Controls.Clear();
+        }
+        else
+        {
+
+            var groupBox_timeline_root = new System.Windows.Forms.GroupBox();
+
+            Label description = new()
+            {
+                Text = "Ensure your settings are configured before creating your Timeline."
+                + System.Environment.NewLine
+                + System.Environment.NewLine,
+                Dock = DockStyle.Fill
+            };
+
+            Button CreateTimelineButton = new()
+            {
+                Location = new System.Drawing.Point(40, 40),
+                Text = "Create Timeline",
+                BackColor = Color.LightSteelBlue,
+                ForeColor = Game.UI.ForeColor,
+                Padding = new(2),
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink
+            };
+
+            groupBox_timeline_root.Controls.Add(CreateTimelineButton);
+            groupBox_timeline_root.Location = new System.Drawing.Point(10, 5);
+            groupBox_timeline_root.Size = new System.Drawing.Size(220, 115);
+            groupBox_timeline_root.Text = "Timeline - Root";
+            groupBox_timeline_root.ForeColor = Color.Orange;
+
+            Game.UI.TopPanel?.Controls.Clear();
+            Game.UI.TopPanel?.Controls.Add(groupBox_timeline_root);
+
+            Game.UI.BottomPanel?.Controls.Clear();
+            Game.UI.BottomPanel?.Controls.Add(description);
+
+            CreateTimelineButton.Click += new EventHandler(CreateTimelineButton_Click);
+
+        }
+    }
+
+    static void CreateTimelineButton_Click(object? sender, EventArgs e)
+    {
+
+        string timelineName = Game.Settings.Prefix + Game.Name + Game.Settings.Suffix + Game.Settings.Turn;
+        TreeNode newTimelineNode = new(timelineName);
+        newTimelineNode.Name = timelineName;
+        Game.UI.Timeline_history?.Nodes.Add(newTimelineNode);
+        Game.UI.Timeline_history?.ExpandAll();
+
+        // Git init
+        Repository.Init(Game.Path);
+
+        MessageBox.Show("Timeline created successfully!");
+
+        Game.UI.TopPanel?.Controls.Clear();
+        Game.UI.BottomPanel?.Controls.Clear();
     }
 
     private static void Initialize_Settings_DB()
