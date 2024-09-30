@@ -31,7 +31,6 @@ public partial class NewTimeline : Form
             + System.Environment.NewLine
             + "Default location @ C:\\Users\\USERNAME\\AppData\\Roaming\\Dominions6\\savedgames",
             TextAlign = ContentAlignment.MiddleCenter,
-            //BackColor = Color.Honeydew, // Color.Honeydew
             Height = 100,
             ForeColor = Game.UI.ForeColor
         };
