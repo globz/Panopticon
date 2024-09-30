@@ -58,7 +58,7 @@ public partial class NewTimeline : Form
             Game.Path = FolderBrowserDialog.SelectedPath;
             Game.Name = Path.GetFileName(FolderBrowserDialog.SelectedPath);
 
-            // Validate if a Timeline has already created (via git)
+            // Validate if a Timeline has already been created (via git)
             if (Repository.IsValid(Game.Path))
             {
                 MessageBox.Show("The game you selected already has an active Timeline."+ System.Environment.NewLine + "Please use the Load option.");
