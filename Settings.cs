@@ -101,7 +101,7 @@ public class Settings
             radioButton_manualMode.ForeColor = Game.UI.ForeColor;
 
             // Determine user settings state
-            if ((bool)!Game.Settings.Auto_commit)
+            if (!Game.Settings.Auto_commit)
             {
                 radioButton_manualMode.Checked = true;
             }

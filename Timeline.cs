@@ -1,3 +1,5 @@
+using Microsoft.Data.Sqlite;
+
 namespace Panopticon;
 
 public partial class Timeline : Form
@@ -18,6 +20,9 @@ public partial class Timeline : Form
 
         // Initialize the settings database
         Initialize_Settings_DB();
+
+        // Retrieve saved settings
+        Retrieve_Game_Settings();
     }
 
     private void InitializeComponent()
@@ -198,4 +203,14 @@ public partial class Timeline : Form
         DB.Close();
     }
 
+    private static void Retrieve_Game_Settings()
+    {
+        DB.Open();
+        SqliteCommand statement = DB.Query("SELECT auto_commit, prefix, suffix, turn FROM settings WHERE game = @game");
+        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        DB.ReadData(statement, DB.LoadSettingsData);
+        DB.Close();
+    }
+
 }
+

@@ -41,8 +41,8 @@ static class Program
 
 public static class Game
 {
-    public static String? Path { get; set; }
-    public static String? Name { get; set; }
+    public static string? Path { get; set; }
+    public static string? Name { get; set; }
 
     public static class UI
     {
@@ -59,10 +59,10 @@ public static class Game
 
     public static class Settings
     {
-        public static Boolean Auto_commit { get; set; }
-        public static Boolean Auto_commit_on_save_and_quit { get; set; }
-        public static String? Prefix { get; set; }
-        public static String? Suffix { get; set; }
+        public static bool Auto_commit { get; set; }
+        public static bool Auto_commit_on_save_and_quit { get; set; }
+        public static string? Prefix { get; set; }
+        public static string? Suffix { get; set; }
         public static decimal Turn { get; set; }
     }
 
@@ -78,19 +78,36 @@ public static class DB
 
     public static void Open()
     {
-        DB.Connection.Open();
+        Connection.Open();
     }
 
     public static void Close()
     {
-        DB.Connection.Close();
+        Connection.Close();
     }
 
     public static SqliteCommand Query(string text)
     {
-        var statement = DB.Connection.CreateCommand();
+        var statement = Connection.CreateCommand();
         statement.CommandText = text;
         return statement;
+    }
+
+    public static void ReadData(SqliteCommand statement, Action<SqliteDataReader> reader)
+    {
+        SqliteDataReader sdr = statement.ExecuteReader();
+        while (sdr.Read())
+        {
+            reader(sdr);
+        }
+    }
+
+    public static void LoadSettingsData(SqliteDataReader data)
+    {
+        Game.Settings.Auto_commit = Convert.ToBoolean(data["auto_commit"]);
+        Game.Settings.Prefix = (string)data["prefix"];
+        Game.Settings.Suffix = (string)data["suffix"];
+        Game.Settings.Turn = Convert.ToDecimal(data["turn"]);
     }
 
 }
