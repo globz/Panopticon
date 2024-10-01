@@ -102,12 +102,12 @@ public static class DB
         }
     }
 
-    public static void LoadSettingsData(SqliteDataReader data)
+    public static void LoadSettingsData(SqliteDataReader settings)
     {
-        Game.Settings.Auto_commit = Convert.ToBoolean(data["auto_commit"]);
-        Game.Settings.Prefix = (string)data["prefix"];
-        Game.Settings.Suffix = (string)data["suffix"];
-        Game.Settings.Turn = Convert.ToDecimal(data["turn"]);
+        Game.Settings.Auto_commit = Convert.ToBoolean(settings["auto_commit"]);
+        Game.Settings.Prefix = (string)settings["prefix"];
+        Game.Settings.Suffix = (string)settings["suffix"];
+        Game.Settings.Turn = Convert.ToDecimal(settings["turn"]);
     }
 
 }
