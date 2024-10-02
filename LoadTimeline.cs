@@ -8,7 +8,7 @@ public partial class LoadTimeline : Form
     public LoadTimeline()
     {
         this.ClientSize = new System.Drawing.Size(500, 150);
-        this.Text = "New Timeline";
+        this.Text = "Load Timeline";
         this.BackColor = Game.UI.Theme;
 
         // DPI scaling
