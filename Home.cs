@@ -81,7 +81,14 @@ public partial class Home : Form
 
     private void LoadTimeLine_Click(object? sender, EventArgs e)
     {
-        MessageBox.Show("Load TimeLine");
+        var LoadTimeLine = new LoadTimeline
+        {
+            Location = this.Location,
+            StartPosition = FormStartPosition.CenterScreen
+        };
+        LoadTimeLine.FormClosing += delegate { this.Show(); };
+        LoadTimeLine.Show();
+        this.Hide();
     }
 
     private void InitializeAboutSection()
