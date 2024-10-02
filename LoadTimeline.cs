@@ -1,5 +1,3 @@
-using LibGit2Sharp;
-
 namespace Panopticon;
 
 public partial class LoadTimeline : Form

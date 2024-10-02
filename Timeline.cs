@@ -1,5 +1,4 @@
 using Microsoft.Data.Sqlite;
-using LibGit2Sharp;
 
 namespace Panopticon;
 
@@ -18,6 +17,7 @@ public partial class Timeline : Form
 
         // Retrieve saved settings
         Retrieve_Game_Settings();
+
     }
 
     private void InitializeComponent()
@@ -193,17 +193,68 @@ public partial class Timeline : Form
 
     private static void Initialize_Timeline_Root()
     {
+        var groupBox_timeline_root = new System.Windows.Forms.GroupBox();
 
         // Validate if a Timeline has already been created (via git)
-        if (Repository.IsValid(Game.Path))
+        if (Git.Exist(Game.Path))
         {
             Game.UI.TopPanel?.Controls.Clear();
             Game.UI.BottomPanel?.Controls.Clear();
+
+            Label description = new()
+            {
+                Text = "This is the root of your Timeline."
+                + System.Environment.NewLine
+                + System.Environment.NewLine
+                + "You may do the following actions:"
+                + System.Environment.NewLine
+                + System.Environment.NewLine
+                + "Add a description about your game."
+                + System.Environment.NewLine
+                + "Switch to an alternate branch from your root Timeline."
+                + System.Environment.NewLine
+                + "Permenantly delete your Timeline.",
+                Dock = DockStyle.Fill
+            };
+
+            Button DeleteTimelineButton = new()
+            {
+                Location = new System.Drawing.Point(40, 40),
+                Text = "Delete Timeline",
+                BackColor = Color.LightSteelBlue,
+                ForeColor = Game.UI.ForeColor,
+                Padding = new(2),
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink
+            };
+
+            groupBox_timeline_root.Controls.Add(DeleteTimelineButton);
+            groupBox_timeline_root.Location = new System.Drawing.Point(10, 5);
+            groupBox_timeline_root.Size = new System.Drawing.Size(220, 115);
+            groupBox_timeline_root.Text = "Timeline - " + Game.Name;
+            groupBox_timeline_root.ForeColor = Color.Orange;
+
+            TextBox DescriptionBox = new()
+            {
+                AcceptsReturn = true,
+                AcceptsTab = true,
+                Dock = DockStyle.Bottom,
+                Multiline = true,
+                ScrollBars = ScrollBars.Vertical,
+                Size = new System.Drawing.Size(100, 300),
+                BackColor = Color.LightSteelBlue,
+                Text = "Add a description."
+
+            };
+
+            Game.UI.TopPanel?.Controls.Add(groupBox_timeline_root);
+            Game.UI.BottomPanel?.Controls.Add(DescriptionBox);
+            Game.UI.BottomPanel?.Controls.Add(description);
+
+            DeleteTimelineButton.Click += new EventHandler(DeleteTimelineButton_Click);
         }
         else
         {
-
-            var groupBox_timeline_root = new System.Windows.Forms.GroupBox();
 
             Label description = new()
             {
@@ -227,7 +278,7 @@ public partial class Timeline : Form
             groupBox_timeline_root.Controls.Add(CreateTimelineButton);
             groupBox_timeline_root.Location = new System.Drawing.Point(10, 5);
             groupBox_timeline_root.Size = new System.Drawing.Size(220, 115);
-            groupBox_timeline_root.Text = "Timeline - Root";
+            groupBox_timeline_root.Text = "Timeline - " + Game.Name;
             groupBox_timeline_root.ForeColor = Color.Orange;
 
             Game.UI.TopPanel?.Controls.Clear();
@@ -244,19 +295,56 @@ public partial class Timeline : Form
     static void CreateTimelineButton_Click(object? sender, EventArgs e)
     {
 
-        string timelineName = Game.Settings.Prefix + Game.Name + Game.Settings.Suffix + Game.Settings.Turn;
-        TreeNode newTimelineNode = new(timelineName);
-        newTimelineNode.Name = timelineName;
+        // Initialize the timeline database
+        Initialize_Timeline_DB();
+
+        // Save all game settings in case they were not configured & saved by the user
+        DB.SaveAllSettings();
+
+        // Init repo
+        Git.Init(Game.Path);
+
+        // Commit all changes
+        Git.Commit(Game.Path, Git.commit_title);
+
+        // Child nodes should be created based on git history
+        TreeNode newTimelineNode = new(Git.commit_title);
+        newTimelineNode.Name = Git.commit_title;
         Game.UI.Timeline_history?.Nodes.Add(newTimelineNode);
         Game.UI.Timeline_history?.ExpandAll();
 
-        // Git init
-        Repository.Init(Game.Path);
-
         MessageBox.Show("Timeline created successfully!");
 
-        Game.UI.TopPanel?.Controls.Clear();
-        Game.UI.BottomPanel?.Controls.Clear();
+        // Reload the node
+        Initialize_Timeline_Root();
+    }
+
+    static void DeleteTimelineButton_Click(object? sender, EventArgs e)
+    {
+        // Delete timeline settings
+        DB.Open();
+        SqliteCommand statement = DB.Query("DELETE FROM settings WHERE game = @game");
+        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.ExecuteNonQuery();
+        DB.Close();
+
+        // Delete timeline settings
+        DB.Open();
+        statement = DB.Query("DELETE FROM timeline WHERE game = @game");
+        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.ExecuteNonQuery();
+        DB.Close();        
+
+        // Delete git repo
+        Git.Delete_Repo(Game.Path);
+
+        // Delete child nodes from Timeline history
+        Game.UI.Timeline_history?.Nodes.Clear();
+
+        MessageBox.Show("Timeline deleted successfully!");
+
+        // Reload the node
+        Initialize_Timeline_Root();
     }
 
     private static void Initialize_Settings_DB()
@@ -272,6 +360,13 @@ public partial class Timeline : Form
         SqliteCommand statement = DB.Query("SELECT auto_commit, prefix, suffix, turn FROM settings WHERE game = @game");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         DB.ReadData(statement, DB.LoadSettingsData);
+        DB.Close();
+    }
+
+    private static void Initialize_Timeline_DB()
+    {
+        DB.Open();
+        DB.Query("CREATE TABLE IF NOT EXISTS timeline (game VARCHAR(23), branch VARCHAR(100), node_name VARCHAR(43), node_seq INT, commit_hash TEXT NOT NULL, notes TEXT, PRIMARY KEY (game, branch, node_name))").ExecuteNonQuery();
         DB.Close();
     }
 

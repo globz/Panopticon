@@ -1,5 +1,3 @@
-using LibGit2Sharp;
-
 namespace Panopticon;
 
 public partial class NewTimeline : Form
@@ -59,7 +57,7 @@ public partial class NewTimeline : Form
             Game.Name = Path.GetFileName(FolderBrowserDialog.SelectedPath);
 
             // Validate if a Timeline has already been created (via git)
-            if (Repository.IsValid(Game.Path))
+            if (Git.Exist(Game.Path))
             {
                 MessageBox.Show("The game you selected already has an active Timeline."+ System.Environment.NewLine + "Please use the Load option.");
             } 

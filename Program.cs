@@ -1,4 +1,6 @@
 using Microsoft.Data.Sqlite;
+using LibGit2Sharp;
+using LibGit2Sharp.Handlers;
 
 namespace Panopticon;
 
@@ -102,6 +104,19 @@ public static class DB
         }
     }
 
+    public static void SaveAllSettings()
+    {
+        Open();
+        SqliteCommand statement = Query("INSERT INTO settings (game, auto_commit, prefix, suffix, turn) VALUES (@game, @auto_commit, @prefix, @suffix, @turn) ON CONFLICT(game) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn");
+        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
+        statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
+        statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
+        statement.Parameters.Add("@turn", SqliteType.Text).Value = Game.Settings.Turn;
+        statement.ExecuteNonQuery();
+        Close();
+    }
+
     public static void LoadSettingsData(SqliteDataReader settings)
     {
         Game.Settings.Auto_commit = Convert.ToBoolean(settings["auto_commit"]);
@@ -112,3 +127,53 @@ public static class DB
 
 }
 
+public static class Git
+{
+    public static string userName = Environment.GetEnvironmentVariable("GIT_USER_NAME") ?? "Panopticon";
+    public static string userEmail = Environment.GetEnvironmentVariable("GIT_USER_EMAIL") ?? "panopticon@kittybomber.com";
+    public static string commit_title = Game.Settings.Prefix + Game.Name + Game.Settings.Suffix + Game.Settings.Turn;
+    public static string? head_commit_hash { get; set; }
+
+    public static bool Exist(string? path)
+    {
+        return Repository.IsValid(path);
+    }
+
+    public static void Init(string? path)
+    {
+        Repository.Init(path);
+    }
+
+    public static void Commit(string? path, string? title)
+    {
+        using var repo = new Repository(path);
+
+        // Stage all the working directory changes.
+        Commands.Stage(repo, "*");
+
+        // Commit changes
+        var author = new Signature(userName, userEmail, DateTimeOffset.Now);
+        var committer = author;
+        var commit = repo.Commit(title, author, committer);
+
+        // Retrieve hash of current commit
+        var head = (SymbolicReference)repo.Refs.Head;
+        head_commit_hash = head.ResolveToDirectReference().Target.Sha;
+        Console.WriteLine($"Commit hash {head_commit_hash}");
+    }
+
+    public static void Delete_Repo(string? path)
+    {
+        var git_path = path + "/.git";
+
+        var directory = new DirectoryInfo(git_path) { Attributes = FileAttributes.Normal };
+
+        foreach (var info in directory.GetFileSystemInfos("*", SearchOption.AllDirectories))
+        {
+            info.Attributes = FileAttributes.Normal;
+        }
+
+        directory.Delete(true);
+    }
+
+}

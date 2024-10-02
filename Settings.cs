@@ -1,6 +1,3 @@
-using System.Data;
-using System.Data.SqlTypes;
-using System.Net;
 using Microsoft.Data.Sqlite;
 
 namespace Panopticon;
@@ -48,6 +45,7 @@ public class Settings
             Dock = DockStyle.Fill
         };
 
+        Game.UI.TopPanel?.Controls.Clear();
         Game.UI.TopPanel?.Controls.Add(groupBox_settings);
 
         Game.UI.BottomPanel?.Controls.Clear();
@@ -169,7 +167,7 @@ public class Settings
                 Dock = DockStyle.Fill
             };
 
-            var saveButton = new System.Windows.Forms.Button();
+            var saveSettingsButton = new System.Windows.Forms.Button();
 
             var textBoxField_prefix = new TextBoxField("Prefix:")
             {
@@ -208,12 +206,12 @@ public class Settings
                 ForeColor = Game.UI.ForeColor
             };
 
-            saveButton.Location = new System.Drawing.Point(10, 225);
-            saveButton.Size = new System.Drawing.Size(200, 25);
-            saveButton.Text = "Save";
+            saveSettingsButton.Location = new System.Drawing.Point(10, 225);
+            saveSettingsButton.Size = new System.Drawing.Size(200, 25);
+            saveSettingsButton.Text = "Save";
 
             Game.UI.BottomPanel?.Controls.Clear();
-            Game.UI.BottomPanel?.Controls.Add(saveButton);
+            Game.UI.BottomPanel?.Controls.Add(saveSettingsButton);
             Game.UI.BottomPanel?.Controls.Add(numericUpDownField_turn);
             Game.UI.BottomPanel?.Controls.Add(textBoxField_suffix);
             Game.UI.BottomPanel?.Controls.Add(textBoxField_prefix);
@@ -222,7 +220,7 @@ public class Settings
 
             textBoxField_prefix.Leave += (sender, e) => TextBoxField_prefix_Leave(textBoxField_prefix, e, updatedName);
             textBoxField_suffix.Leave += (sender, e) => TextBoxField_suffix_Leave(textBoxField_suffix, e, updatedName);
-            saveButton.Click += SaveButton_Click;
+            saveSettingsButton.Click += SaveSettingsButton_Click;
 
             static void TextBoxField_prefix_Leave(object sender, EventArgs e, Label updatedName)
             {
@@ -250,17 +248,9 @@ public class Settings
                 Application.DoEvents();
             }
 
-            static void SaveButton_Click(object? sender, EventArgs e)
+            static void SaveSettingsButton_Click(object? sender, EventArgs e)
             {
-                DB.Open();
-                SqliteCommand statement = DB.Query("INSERT INTO settings (game, prefix, suffix, turn) VALUES (@game, @prefix, @suffix, @turn) ON CONFLICT(game) DO UPDATE SET prefix = @prefix, suffix = @suffix, turn = @turn");
-                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-                statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
-                statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
-                statement.Parameters.Add("@turn", SqliteType.Text).Value = Game.Settings.Turn;
-                statement.ExecuteNonQuery();
-                DB.Close();
-
+                DB.SaveAllSettings();
                 MessageBox.Show("Saved successfully!");
             }
 
