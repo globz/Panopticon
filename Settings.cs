@@ -41,7 +41,7 @@ public class Settings
             Text = "Please configure your settings before creating your Timeline."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "Once completed, navigate to [Timeline - " + Game.Name + "] via the left pane and initialize your Timeline.",
+            + "Once configured, navigate to [Timeline - " + Game.Name + "] via the left pane and initialize your Timeline.",
             Dock = DockStyle.Fill
         };
 
