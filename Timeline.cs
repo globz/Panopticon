@@ -191,6 +191,7 @@ public partial class Timeline : Form
                 Initialize_Timeline_Root();
                 break;
             default:
+                Initialize_Timeline_Node(e.Node?.Name);
                 break;
         }
 
@@ -208,9 +209,12 @@ public partial class Timeline : Form
 
             Label description = new()
             {
-                Text = "This is the root of your Timeline."
+                Text = $"This is the root of Timeline - {Game.Name}."
                 + System.Environment.NewLine
                 + System.Environment.NewLine
+                + $"This Timeline is part of the following branch : {Git.CurrentBranch()}"
+                + System.Environment.NewLine
+                + System.Environment.NewLine                  
                 + "You may do the following actions:"
                 + System.Environment.NewLine
                 + System.Environment.NewLine
@@ -271,7 +275,7 @@ public partial class Timeline : Form
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
                 Size = new System.Drawing.Size(100, 300),
-                BackColor = Color.LightSteelBlue
+                BackColor = Color.LightYellow
             };
 
             // Retrieve DescriptionBox Text
@@ -283,7 +287,7 @@ public partial class Timeline : Form
 
             DeleteTimelineButton.Click += new EventHandler(DeleteTimelineButton_Click);
             SwitchTimelineBranchButton.Click += new EventHandler(SwitchTimelineBranchButton_Click);
-            SaveDescriptionButton.Click += (sender, e) => SaveDescriptionButton_Click(sender, e, DescriptionBox);
+            SaveDescriptionButton.Click += (sender, e) => SaveNotesButton_Click(DescriptionBox);
         }
         else
         {
@@ -322,6 +326,81 @@ public partial class Timeline : Form
             CreateTimelineButton.Click += new EventHandler(CreateTimelineButton_Click);
 
         }
+    }
+
+    private static void Initialize_Timeline_Node(string? nodeName)
+    {
+        var groupBox_timeline_node = new System.Windows.Forms.GroupBox();
+
+        Game.UI.TopPanel?.Controls.Clear();
+        Game.UI.BottomPanel?.Controls.Clear();
+
+        Label description = new()
+        {
+            Text = $"This node is part of your Timeline - {Game.Name}"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + $"This node is part of the following branch : {Git.CurrentBranch()}"
+            + System.Environment.NewLine
+            + System.Environment.NewLine            
+            + "You may do the following actions:"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Add notes about this turn."
+            + System.Environment.NewLine
+            + "Rewind back to this turn.",
+            Dock = DockStyle.Fill
+        };
+
+            Button RewindButton = new()
+            {
+                Location = new System.Drawing.Point(40, 20),
+                Text = "Rewind",
+                BackColor = Color.LightSteelBlue,
+                ForeColor = Game.UI.ForeColor,
+                Padding = new(2),
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink
+            };
+
+            Button SaveNotesButton = new()
+            {
+                Location = new System.Drawing.Point(40, 50),
+                Text = "Save Notes",
+                BackColor = Color.LightSteelBlue,
+                ForeColor = Game.UI.ForeColor,
+                Padding = new(2),
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink
+            };
+
+            groupBox_timeline_node.Controls.Add(RewindButton);
+            groupBox_timeline_node.Controls.Add(SaveNotesButton);
+            groupBox_timeline_node.Location = new System.Drawing.Point(10, 5);
+            groupBox_timeline_node.Size = new System.Drawing.Size(220, 115);
+            groupBox_timeline_node.Text = nodeName;
+            groupBox_timeline_node.ForeColor = Color.Orange;
+
+            TextBox NotesBox = new()
+            {
+                AcceptsReturn = true,
+                AcceptsTab = true,
+                Dock = DockStyle.Bottom,
+                Multiline = true,
+                ScrollBars = ScrollBars.Vertical,
+                Size = new System.Drawing.Size(100, 300),
+                BackColor = Color.LightYellow
+            };
+
+            // Retrieve NotesBox Text
+            NotesBox.Text = Retrieve_Timeline_Notes();
+
+            Game.UI.TopPanel?.Controls.Add(groupBox_timeline_node);
+            Game.UI.BottomPanel?.Controls.Add(NotesBox);
+            Game.UI.BottomPanel?.Controls.Add(description);
+
+            /* RewindButton.Click += new EventHandler(DeleteTimelineButton_Click); */
+            SaveNotesButton.Click += (sender, e) => SaveNotesButton_Click(NotesBox);
     }
 
     static void CreateTimelineButton_Click(object? sender, EventArgs e)
@@ -410,9 +489,9 @@ public partial class Timeline : Form
         MessageBox.Show("Switching branch menu");
     }
 
-    static void SaveDescriptionButton_Click(object? sender, EventArgs e, TextBox description)
+    static void SaveNotesButton_Click(TextBox notes)
     {
-        DB.SaveTimelineNotes(description.Text);
+        DB.SaveTimelineNotes(notes.Text);
         MessageBox.Show("Timeline description saved!");
     }
 

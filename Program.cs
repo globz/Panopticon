@@ -29,7 +29,7 @@ static class Program
         Game.UI.ForeColor = Color.GhostWhite;
 
         // Set default Settings values
-        Game.Settings.Turn = 0;
+        Game.Settings.Turn = 1;
         Game.Settings.Prefix = "";
         Game.Settings.Suffix = "_TURN_";
         Game.Settings.Auto_commit = false;
