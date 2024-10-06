@@ -348,14 +348,14 @@ public partial class Timeline : Form
             + System.Environment.NewLine
             + "Add notes about this turn."
             + System.Environment.NewLine
-            + "Rewind back to this turn.",
+            + "Time travel to this turn.",
             Dock = DockStyle.Fill
         };
 
-            Button RewindButton = new()
+            Button TimeTravelButton = new()
             {
                 Location = new System.Drawing.Point(40, 20),
-                Text = "Rewind",
+                Text = "Time Travel",
                 BackColor = Color.LightSteelBlue,
                 ForeColor = Game.UI.ForeColor,
                 Padding = new(2),
@@ -374,7 +374,7 @@ public partial class Timeline : Form
                 AutoSizeMode = AutoSizeMode.GrowAndShrink
             };
 
-            groupBox_timeline_node.Controls.Add(RewindButton);
+            groupBox_timeline_node.Controls.Add(TimeTravelButton);
             groupBox_timeline_node.Controls.Add(SaveNotesButton);
             groupBox_timeline_node.Location = new System.Drawing.Point(10, 5);
             groupBox_timeline_node.Size = new System.Drawing.Size(220, 115);
@@ -399,7 +399,7 @@ public partial class Timeline : Form
             Game.UI.BottomPanel?.Controls.Add(NotesBox);
             Game.UI.BottomPanel?.Controls.Add(description);
 
-            /* RewindButton.Click += new EventHandler(DeleteTimelineButton_Click); */
+            /* TimeTravelButton.Click += new EventHandler(TimeTravelButton_Click); */
             SaveNotesButton.Click += (sender, e) => SaveNotesButton_Click(NotesBox);
     }
 
