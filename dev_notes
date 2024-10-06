@@ -1,0 +1,149 @@
+** Panopticon Desktop App
+
+ A desktop companion app for your favorite 4x strategy game, Dominion 6 from Illwinter
+   
+ ~Timeline~ feature with git integration.
+
+ This feature will give the ability to replay any turns by giving you a
+ timeline of saved "snapshots" (git commit)
+
+ This feature will not pollute your on-going game selection window, instead the
+ user can simply revert/advance to any turn via the application then your
+ current game will time travel to the selected turn or if the user wish to
+ branch off and create a new game from a given point in time he will be able to
+ do so and then load it within the Dominion "Continue Old Game" screen.
+ 
+ ~New Timeline~:
+ - Select an existing game by browsing the ~savedgames~ folder
+ - Select timeline mode (Auto, Manual)
+ - If Auto mode is selected, user can enable/disable "Auto commit on save and quit"
+ - Input default prefix if needed (Timeline, Snapshot, etc.) - default: NONE
+ - Input default suffix if needed (TURN, Snapshot, etc.) - default TURN
+ - Default suffix after user supplied suffix is to auto increment an integer (0,1,2,3...)
+ - On the first run of adding a new game to the application, the user will be
+   asked to specify the auto increment starting position (Turn) (example user add the
+   game on turn 10, then the user would input 10)
+ - Final game name folder name would be something like this: (~Timeline_Wailing_Winds_TURN_1~)
+ 
+ ~Mode~:
+ *Auto* - git commit whenever there is a change
+ *Manual* - git commit manually
+
+ ~Auto~:
+  Detect files change and commit automatically.
+
+  IF a .trn file is updated auto commit with supplied prefix & suffix
+  (A turn has been made)
+
+  IF only the .2h file is updated (no turn has been made)
+  Check Auto commit settings "Auto commit on save and quit"
+  IF the setting is not enabled ask user if a commit is needed (Yes/No)
+
+  IF Yes - Ask user for commit name since its no turn has been made.
+
+  IF No - Do not commit.
+
+  (It could also simply add suffix to distinguish that we are still on the same
+  turn instead of asking the player for input, example player is on turn 10
+  then save and quit the game, we would already have a previous commit named
+  ~Timeline_Wailing_Winds_TURN_10~, then it could simply append .1 to the new
+  commit like so ~Timeline_Wailing_Winds_TURN_10.1~ - If dots are not allowed
+  simply add a space ~Timeline_Wailing_Winds_TURN_10_1~)
+    
+ ~Manual:~
+  User will manually commit a turn whenever is needed.
+  
+ ~Time travel~
+ Before time traveling the user will be requested to save and exit the game if
+ the game being modified is currently running. I have no way to detect this so
+ user must be extra careful, it would probably corrupt or crash the running game.
+ 
+ In order to time travel the application will do the following by levering git.
+
+ When a game is added to the application, it will now be tracked by git.
+
+ *git add .*
+ *git commit -m "prefix_gameName_suffix"*
+
+ Changes will now be committed based on the Timeline mode (Auto, Manual)
+ 
+ The Timeline will be presented to the user via ~git reflog~ or ~git log~ where the
+ description of the commit is the game name with prefix and suffix
+ which have been configured for this specific game.
+
+ Example of ~git reflog~ (will need to parse this and present it in a nice UI):
+ ~e512ed0 (HEAD -> master) HEAD@{0}: commit: Timeline_illWinter_TURN_1~
+ ~e16b175 HEAD@{1}: commit (initial): Timeline_illWinter_TURN_0~
+
+ Example of ~git log (will need to parse this and present it in a nice UI):~
+ commit 8b2eed5ecf0e6c094bc991416bf9277fc4a87210 (HEAD -> TL_illWinter_TURN_0)
+ Author: globz <globz@kittybomber.com>
+ Date:   Wed Jul 24 15:26:19 2024 -0400
+
+    Timeline_illWinter_TURN_1
+
+ commit e16b175ba5ac6c2e22c54b1b69cb3565670af58b
+ Author: globz <globz@kittybomber.com>
+ Date:   Wed Jul 24 14:10:24 2024 -0400
+
+    Timeline_illWinter_TURN_0
+
+  
+ User may select a specific commit in the presented Timeline (HEAD@{X}), git will then
+ checkout the commit in a temporary branch which is named after the git commit
+ description of the selected turn. Example, the user is now at turn 11 but made
+ an horrible mistake and decide to go back to turn 10.
+
+ *git checkout -b Timeline_Wailing_Winds_TURN_10 HEAD@{X}*
+
+ Then the application will ask the user to select one of the following options:
+ 1. Time travel to ~Timeline_Wailing_Winds_TURN_10~ within the current game ~Wailing_Winds~
+ 2. Branch off to a new game based on ~Timeline_Wailing_Winds_TURN_10~
+
+ ~Option 1.~
+ The time travel will happen in the current game folder ~Wailing_Winds~, upon
+ reloading the game the user will now be at turn 10.
+
+ User may keep progressing through turns as usual while preserving new turn history.
+
+ However, the turn 11 is no longer part of this timeline, only turn 0...10 and
+ future turns will populate this timeline.
+
+ If the user desire to go back to turn 11 he must go back to the "master"
+ timeline, this will be an option within the application. The application may
+ detect which timeline we are currently using with the following command:
+ 
+ Track which branch is currently in use:
+ ~git rev-parse --abbrev-ref HEAD~
+  **Timeline_illWinter_TURN_0*
+  *master* 
+ 
+ ~Option 2.~
+ User will be prompted to name this new game.
+
+ Then the application will create a new game folder inside the ~savedgames~ folder
+ with the name provided by the user and then copy the files from commit
+ ~Timeline_Wailing_Winds_TURN_10~ inside this new folder.
+ 
+ *cp -R Wailing_Winds/ NAME_OF_MY_NEW_GAME_BASED_ON_TURN_10/*
+ 
+ The git repo will be removed (previous timeline is now gone), we are now
+ starting from scratch but at turn 10. A new game folder has now been created,
+ select it from the "Continue Old game" menu within Dominion. User must now add
+ this new game to the application to re-enable tracking in order to create a
+ new timeline.
+ 
+ 
+ ~File change detection~
+ When a turn is made the .trn file does update
+ When a game is saved and quit only the .2h file is updated.
+
+ ~Git packaging~
+ Use https://github.com/libgit2/libgit2sharp
+ Check out nuget for desktop app https://www.nuget.org/packages/LibGit2Sharp - dotnet add package LibGit2Sharp --version 0.30.0
+ Documentation - https://github.com/libgit2/libgit2sharp/wiki/LibGit2Sharp-Hitchhiker%27s-Guide-to-Git
+
+ ~Info~
+ Game name in Dominion supports up to 23 characters
+ Git commit title 72 characters
+ Git commit description has no limit (we could use this to let the player describe a turn)
