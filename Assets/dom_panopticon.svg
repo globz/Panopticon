@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="448" height="160" class="svgbob"><style>.svgbob line, .svgbob path, .svgbob circle, .svgbob rect, .svgbob polygon {
+    stroke: black;
+    stroke-width: 2;
+    stroke-opacity: 1;
+    fill-opacity: 1;
+    stroke-linecap: round;
+    stroke-linejoin: miter;
+}
+.svgbob text {
+    white-space: pre;
+    fill: black;
+    font-family: Iosevka Fixed, monospace;
+    font-size: 14px;
+}
+.svgbob rect.backdrop {
+    stroke: none;
+    fill: white;
+}
+.svgbob .broken {
+    stroke-dasharray: 8;
+}
+.svgbob .filled {
+    fill: black;
+}
+.svgbob .bg_filled {
+    fill: white;
+    stroke-width: 1;
+}
+.svgbob .nofill {
+    fill: white;
+}
+.svgbob .end_marked_arrow {
+    marker-end: url(#arrow);
+}
+.svgbob .start_marked_arrow {
+    marker-start: url(#arrow);
+}
+.svgbob .end_marked_diamond {
+    marker-end: url(#diamond);
+}
+.svgbob .start_marked_diamond {
+    marker-start: url(#diamond);
+}
+.svgbob .end_marked_circle {
+    marker-end: url(#circle);
+}
+.svgbob .start_marked_circle {
+    marker-start: url(#circle);
+}
+.svgbob .end_marked_open_circle {
+    marker-end: url(#open_circle);
+}
+.svgbob .start_marked_open_circle {
+    marker-start: url(#open_circle);
+}
+.svgbob .end_marked_big_open_circle {
+    marker-end: url(#big_open_circle);
+}
+.svgbob .start_marked_big_open_circle {
+    marker-start: url(#big_open_circle);
+}<!--separator--></style><defs><marker id="arrow" viewBox="-2 -2 8 8" refX="4" refY="2" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><polygon points="0,0 0,4 4,2 0,0"></polygon></marker><marker id="diamond" viewBox="-2 -2 8 8" refX="4" refY="2" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><polygon points="0,2 2,0 4,2 2,4 0,2"></polygon></marker><marker id="circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><circle cx="4" cy="4" r="2" class="filled"></circle></marker><marker id="open_circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><circle cx="4" cy="4" r="2" class="bg_filled"></circle></marker><marker id="big_open_circle" viewBox="0 0 8 8" refX="4" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><circle cx="4" cy="4" r="3" class="bg_filled"></circle></marker></defs><rect class="backdrop" x="0" y="0" width="448" height="160"></rect><text x="26" y="44" >Dominion:</text><polygon points="312,52 320,56 312,60" class="filled"></polygon><text x="82" y="76" >P</text><text x="146" y="76" >A</text><text x="266" y="76" >P</text><line x1="84" y1="88" x2="84" y2="88" class="solid end_marked_circle"></line><line x1="88" y1="88" x2="148" y2="88" class="solid end_marked_circle"></line><line x1="144" y1="88" x2="268" y2="88" class="solid end_marked_circle"></line><line x1="150" y1="92" x2="162" y2="116" class="solid"></line><line x1="264" y1="88" x2="312" y2="88" class="solid"></line><polygon points="312,84 320,88 312,92" class="filled"></polygon><polygon points="255,108 262,100 262,111" class="filled"></polygon><polygon points="159,116 166,124 166,113" class="filled"></polygon><polygon points="312,116 320,120 312,124" class="filled"></polygon><text x="170" y="140" >N</text><text x="338" y="60" >T</text><text x="338" y="92" >I</text><text x="338" y="124" >C</text><line x1="352" y1="120" x2="368" y2="120" class="solid"></line><polygon points="368,116 376,120 368,124" class="filled"></polygon><text x="386" y="124" >O</text><line x1="400" y1="120" x2="416" y2="120" class="solid"></line><polygon points="416,116 424,120 416,124" class="filled"></polygon><text x="434" y="124" >N</text><line x1="184" y1="136" x2="200" y2="136" class="solid"></line><polygon points="200,132 208,136 200,140" class="filled"></polygon><text x="218" y="140" >O</text><g><path d="M 24,24 A 8,8 0,0,0 18,28" class="nofill"></path><line x1="18" y1="28" x2="6" y2="52" class="solid"></line><line x1="24" y1="24" x2="128" y2="24" class="solid"></line><path d="M 128,24 A 3,3 0,0,1 130,28" class="nofill"></path><line x1="130" y1="28" x2="118" y2="52" class="solid"></line><path d="M 6,52 A 3,3 0,0,0 8,56" class="nofill"></path><line x1="8" y1="56" x2="112" y2="56" class="solid"></line><path d="M 118,52 A 8,8 0,0,1 112,56" class="nofill"></path></g><g><path d="M 288,56 A 8,8 0,0,0 282,60" class="nofill"></path><line x1="282" y1="60" x2="270" y2="84" class="solid"></line><line x1="288" y1="56" x2="312" y2="56" class="solid"></line></g><g><line x1="270" y1="92" x2="282" y2="116" class="solid"></line><path d="M 282,116 A 8,8 0,0,0 288,120" class="nofill"></path><line x1="288" y1="120" x2="312" y2="120" class="solid"></line></g><g><line x1="258" y1="108" x2="246" y2="132" class="solid"></line><line x1="232" y1="136" x2="240" y2="136" class="solid"></line><path d="M 246,132 A 8,8 0,0,1 240,136" class="nofill"></path></g></svg>
