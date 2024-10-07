@@ -32,7 +32,7 @@ static class Program
         Game.Settings.Turn = 1;
         Game.Settings.Prefix = "";
         Game.Settings.Suffix = "_TURN_";
-        Game.Settings.Auto_commit = false;
+        Game.Settings.Auto_commit = true;
         Game.Settings.Auto_commit_on_save_and_quit = false;
 
         Application.Run(new Home());
@@ -49,7 +49,7 @@ public static class Game
     {
         public static SplitContainer VerticalSplitContainer { get; set; } = new SplitContainer();
         public static SplitContainer HorizontalSplitContainer { get; set; } = new SplitContainer();
-        public static TreeView? TreeViewLeft { get; set; }
+        public static TreeView TreeViewLeft { get; set; } = new TreeView();
         public static Panel? TopPanel { get; set; }
         public static Panel? BottomPanel { get; set; }
         public static TreeNode? Timeline_settings { get; set; }
@@ -57,6 +57,25 @@ public static class Game
         public static Color Theme { get; set; }
         public static Color ForeColor { get; set; }
         public static TreeNode? SelectedNode { get; set; }
+        public static TreeNode? FindNodeByName(TreeNodeCollection nodes, string searchName)
+        {
+            foreach (TreeNode node in nodes)
+            {
+                if (node.Name == searchName)
+                {
+                    return node;
+                }
+
+                // Recursively search the child nodes
+                TreeNode? found = FindNodeByName(node.Nodes, searchName);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+            return null;
+        }
+
     }
 
     public static class Settings
