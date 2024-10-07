@@ -1,3 +1,4 @@
+using System.Drawing.Text;
 using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
 
@@ -8,8 +9,8 @@ public partial class Timeline : Form
     public Timeline()
     {
         // DPI scaling
-        this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-        this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
+        AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
+        AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
 
         InitializeComponent();
 
@@ -22,6 +23,9 @@ public partial class Timeline : Form
         // Refresh Timeline nodes
         Refresh_Timeline_Nodes();
 
+        // Enable automatic Turn tracking if needed
+        TurnTrackerWorker turnTracker = new TurnTrackerWorker();
+        turnTracker.Watch();
     }
 
     private void InitializeComponent()
