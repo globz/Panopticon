@@ -22,10 +22,10 @@ namespace Panopticon
             backgroundWorker.DoWork += BackgroundWorker_DoWork;
 
             // Start it in the background
-            backgroundWorker.RunWorkerAsync(); 
+            backgroundWorker.RunWorkerAsync();
         }
 
-        private void BackgroundWorker_DoWork(object ?sender, DoWorkEventArgs e)
+        private void BackgroundWorker_DoWork(object? sender, DoWorkEventArgs e)
         {
             fileSystemWatcher = new FileSystemWatcher();
 
@@ -58,7 +58,11 @@ namespace Panopticon
         // Event handler for file changes
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine($"File changed: {e.FullPath}");
+            if (Game.Settings.Auto_commit)
+            {
+                Console.WriteLine($"File changed: {e.FullPath}");
+            }
+
         }
 
         // Event handler for file deletion
