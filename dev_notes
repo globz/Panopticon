@@ -19,7 +19,7 @@
  - If Auto mode is selected, user can enable/disable "Auto commit on save and quit"
  - Input default prefix if needed (Timeline, Snapshot, etc.) - default: NONE
  - Input default suffix if needed (TURN, Snapshot, etc.) - default TURN
- - Default suffix after user supplied suffix is to auto increment an integer (0,1,2,3...)
+ - Default suffix after user supplied suffix is to auto increment an integer (1,2,3,4...)
  - On the first run of adding a new game to the application, the user will be
    asked to specify the auto increment starting position (Turn) (example user add the
    game on turn 10, then the user would input 10)
