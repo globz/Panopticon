@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.ComponentModel;
+using System.Drawing.Drawing2D;
 
 namespace Panopticon
 {
@@ -28,7 +29,7 @@ namespace Panopticon
         {
             fileSystemWatcher = new FileSystemWatcher();
 
-            fileSystemWatcher.Path = Game.Path ?? "ERROR";
+            fileSystemWatcher.Path = @$"{Game.Path}";
 
             fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite;
 
