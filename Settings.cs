@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 namespace Panopticon;
 public class Settings
 {
-    public static void InitializeSettings()
+    public static void InitializeComponent()
     {
         var groupBox_settings = new System.Windows.Forms.GroupBox();
 
@@ -128,9 +128,15 @@ public class Settings
                     {
                         case "ManualMode":
                             Game.Settings.Auto_commit = false;
+                            Timeline.Enable_Manual_Snapshot();
                             break;
                         case "AutoMode":
                             Game.Settings.Auto_commit = true;
+                            TreeNode? new_snapshot_node = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "new_snapshot");
+                            if (new_snapshot_node != null)
+                            {
+                                Game.UI.TreeViewLeft.Nodes.Remove(new_snapshot_node);
+                            }
                             break;
                         default:
                             break;

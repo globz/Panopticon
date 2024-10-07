@@ -1,5 +1,6 @@
 using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
+using SQLitePCL;
 
 namespace Panopticon;
 
@@ -25,6 +26,10 @@ public partial class Timeline : Form
         // Enable automatic Turn tracking if needed
         TurnTrackerWorker turnTracker = new TurnTrackerWorker();
         turnTracker.Watch();
+
+        // Enable manual snapshot mode if needed
+        Enable_Manual_Snapshot();
+
     }
 
     private void InitializeComponent()
@@ -188,10 +193,13 @@ public partial class Timeline : Form
         switch (e.Node?.Name)
         {
             case "settings":
-                Settings.InitializeSettings();
+                Settings.InitializeComponent();
                 break;
             case "timeline_root":
                 Initialize_Timeline_Root();
+                break;
+            case "new_snapshot":
+                Snapshot.InitializeComponent();
                 break;
             default:
                 Initialize_Timeline_Node(e.Node?.Name);
@@ -217,7 +225,7 @@ public partial class Timeline : Form
                 + System.Environment.NewLine
                 + $"This Timeline is part of the following branch : {Git.CurrentBranch()}"
                 + System.Environment.NewLine
-                + System.Environment.NewLine                  
+                + System.Environment.NewLine
                 + "You may do the following actions:"
                 + System.Environment.NewLine
                 + System.Environment.NewLine
@@ -346,7 +354,7 @@ public partial class Timeline : Form
             + System.Environment.NewLine
             + $"This node is part of the following branch : {Git.CurrentBranch()}"
             + System.Environment.NewLine
-            + System.Environment.NewLine            
+            + System.Environment.NewLine
             + "You may do the following actions:"
             + System.Environment.NewLine
             + System.Environment.NewLine
@@ -356,55 +364,55 @@ public partial class Timeline : Form
             Dock = DockStyle.Fill
         };
 
-            Button TimeTravelButton = new()
-            {
-                Location = new System.Drawing.Point(40, 20),
-                Text = "Time Travel",
-                BackColor = Color.LightSteelBlue,
-                ForeColor = Game.UI.ForeColor,
-                Padding = new(2),
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink
-            };
+        Button TimeTravelButton = new()
+        {
+            Location = new System.Drawing.Point(40, 20),
+            Text = "Time Travel",
+            BackColor = Color.LightSteelBlue,
+            ForeColor = Game.UI.ForeColor,
+            Padding = new(2),
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink
+        };
 
-            Button SaveNotesButton = new()
-            {
-                Location = new System.Drawing.Point(40, 53),
-                Text = "Save Notes",
-                BackColor = Color.LightSteelBlue,
-                ForeColor = Game.UI.ForeColor,
-                Padding = new(2),
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink
-            };
+        Button SaveNotesButton = new()
+        {
+            Location = new System.Drawing.Point(40, 53),
+            Text = "Save Notes",
+            BackColor = Color.LightSteelBlue,
+            ForeColor = Game.UI.ForeColor,
+            Padding = new(2),
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink
+        };
 
-            groupBox_timeline_node.Controls.Add(TimeTravelButton);
-            groupBox_timeline_node.Controls.Add(SaveNotesButton);
-            groupBox_timeline_node.Location = new System.Drawing.Point(10, 5);
-            groupBox_timeline_node.Size = new System.Drawing.Size(220, 115);
-            groupBox_timeline_node.Text = nodeName;
-            groupBox_timeline_node.ForeColor = Color.Orange;
+        groupBox_timeline_node.Controls.Add(TimeTravelButton);
+        groupBox_timeline_node.Controls.Add(SaveNotesButton);
+        groupBox_timeline_node.Location = new System.Drawing.Point(10, 5);
+        groupBox_timeline_node.Size = new System.Drawing.Size(220, 115);
+        groupBox_timeline_node.Text = nodeName;
+        groupBox_timeline_node.ForeColor = Color.Orange;
 
-            TextBox NotesBox = new()
-            {
-                AcceptsReturn = true,
-                AcceptsTab = true,
-                Dock = DockStyle.Bottom,
-                Multiline = true,
-                ScrollBars = ScrollBars.Vertical,
-                Size = new System.Drawing.Size(100, 250),
-                BackColor = Color.LightYellow,
-            };
+        TextBox NotesBox = new()
+        {
+            AcceptsReturn = true,
+            AcceptsTab = true,
+            Dock = DockStyle.Bottom,
+            Multiline = true,
+            ScrollBars = ScrollBars.Vertical,
+            Size = new System.Drawing.Size(100, 250),
+            BackColor = Color.LightYellow,
+        };
 
-            // Retrieve NotesBox Text
-            NotesBox.Text = Retrieve_Timeline_Notes();
+        // Retrieve NotesBox Text
+        NotesBox.Text = Retrieve_Timeline_Notes();
 
-            Game.UI.TopPanel?.Controls.Add(groupBox_timeline_node);
-            Game.UI.BottomPanel?.Controls.Add(NotesBox);
-            Game.UI.BottomPanel?.Controls.Add(description);
+        Game.UI.TopPanel?.Controls.Add(groupBox_timeline_node);
+        Game.UI.BottomPanel?.Controls.Add(NotesBox);
+        Game.UI.BottomPanel?.Controls.Add(description);
 
-            /* TimeTravelButton.Click += new EventHandler(TimeTravelButton_Click); */
-            SaveNotesButton.Click += (sender, e) => SaveNotesButton_Click(NotesBox);
+        /* TimeTravelButton.Click += new EventHandler(TimeTravelButton_Click); */
+        SaveNotesButton.Click += (sender, e) => SaveNotesButton_Click(NotesBox);
     }
 
     static void CreateTimelineButton_Click(object? sender, EventArgs e)
@@ -576,6 +584,16 @@ public partial class Timeline : Form
         string? Notes = (data != null) ? data.ToString() : "Add a description.";
         DB.Close();
         return Notes;
+    }
+
+    public static void Enable_Manual_Snapshot()
+    {
+        if (!Game.Settings.Auto_commit)
+        {
+            TreeNode newCommitNode = new("New snapshot");
+            newCommitNode.Name = "new_snapshot";
+            Game.UI.TreeViewLeft?.Nodes.Add(newCommitNode);
+        }
     }
 
 }
