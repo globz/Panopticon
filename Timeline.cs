@@ -1,4 +1,3 @@
-using System.Drawing.Text;
 using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
 
@@ -243,7 +242,7 @@ public partial class Timeline : Form
 
             Button SwitchTimelineBranchButton = new()
             {
-                Location = new System.Drawing.Point(40, 50),
+                Location = new System.Drawing.Point(40, 53),
                 Text = "Switch Branch",
                 BackColor = Color.LightSteelBlue,
                 ForeColor = Game.UI.ForeColor,
@@ -254,7 +253,7 @@ public partial class Timeline : Form
 
             Button SaveDescriptionButton = new()
             {
-                Location = new System.Drawing.Point(40, 80),
+                Location = new System.Drawing.Point(40, 86),
                 Text = "Save Description",
                 BackColor = Color.LightSteelBlue,
                 ForeColor = Game.UI.ForeColor,
@@ -267,7 +266,7 @@ public partial class Timeline : Form
             groupBox_timeline_root.Controls.Add(SwitchTimelineBranchButton);
             groupBox_timeline_root.Controls.Add(SaveDescriptionButton);
             groupBox_timeline_root.Location = new System.Drawing.Point(10, 5);
-            groupBox_timeline_root.Size = new System.Drawing.Size(220, 115);
+            groupBox_timeline_root.Size = new System.Drawing.Size(220, 125);
             groupBox_timeline_root.Text = "Timeline - " + Game.Name;
             groupBox_timeline_root.ForeColor = Color.Orange;
 
@@ -278,7 +277,7 @@ public partial class Timeline : Form
                 Dock = DockStyle.Bottom,
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
-                Size = new System.Drawing.Size(100, 300),
+                Size = new System.Drawing.Size(100, 250),
                 BackColor = Color.LightYellow
             };
 
@@ -288,6 +287,7 @@ public partial class Timeline : Form
             Game.UI.TopPanel?.Controls.Add(groupBox_timeline_root);
             Game.UI.BottomPanel?.Controls.Add(DescriptionBox);
             Game.UI.BottomPanel?.Controls.Add(description);
+            Game.UI.HorizontalSplitContainer.SplitterDistance = 150;
 
             DeleteTimelineButton.Click += new EventHandler(DeleteTimelineButton_Click);
             SwitchTimelineBranchButton.Click += new EventHandler(SwitchTimelineBranchButton_Click);
@@ -369,7 +369,7 @@ public partial class Timeline : Form
 
             Button SaveNotesButton = new()
             {
-                Location = new System.Drawing.Point(40, 50),
+                Location = new System.Drawing.Point(40, 53),
                 Text = "Save Notes",
                 BackColor = Color.LightSteelBlue,
                 ForeColor = Game.UI.ForeColor,
@@ -392,8 +392,8 @@ public partial class Timeline : Form
                 Dock = DockStyle.Bottom,
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
-                Size = new System.Drawing.Size(100, 300),
-                BackColor = Color.LightYellow
+                Size = new System.Drawing.Size(100, 250),
+                BackColor = Color.LightYellow,
             };
 
             // Retrieve NotesBox Text

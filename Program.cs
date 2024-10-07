@@ -47,8 +47,8 @@ public static class Game
 
     public static class UI
     {
-        public static SplitContainer? VerticalSplitContainer { get; set; }
-        public static SplitContainer? HorizontalSplitContainer { get; set; }
+        public static SplitContainer VerticalSplitContainer { get; set; } = new SplitContainer();
+        public static SplitContainer HorizontalSplitContainer { get; set; } = new SplitContainer();
         public static TreeView? TreeViewLeft { get; set; }
         public static Panel? TopPanel { get; set; }
         public static Panel? BottomPanel { get; set; }
