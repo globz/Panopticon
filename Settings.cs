@@ -141,13 +141,7 @@ public class Settings
                         default:
                             break;
                     }
-
-                    DB.Open();
-                    SqliteCommand statement = DB.Query("INSERT INTO settings (game, auto_commit) VALUES (@game, @auto_commit) ON CONFLICT(game) DO UPDATE SET auto_commit = @auto_commit");
-                    statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-                    statement.Parameters.Add("@auto_commit", SqliteType.Integer).Value = Game.Settings.Auto_commit;
-                    statement.ExecuteNonQuery();
-                    DB.Close();
+                    DB.SaveAllSettings();
                 }
             }
 
