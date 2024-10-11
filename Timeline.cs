@@ -431,14 +431,14 @@ public partial class Timeline : Form
         Git.Init(Game.Path);
 
         // Commit all changes
-        Git.Commit(Game.Path, Git.Commit_title());
+        Git.Commit(Game.Path, Git.Commit_title(true));
 
         // Rename master branch to root
         using var repo = new Repository(Game.Path);
         repo.Branches.Rename("master", "root");
 
         // Save current commit information to timelines DB
-        DB.SaveTimeline();
+        DB.SaveTimeline(Git.Commit_title(true));
 
         // Refresh Timeline nodes
         Refresh_Timeline_Nodes();
