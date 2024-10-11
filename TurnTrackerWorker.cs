@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Timers;
 
 namespace Panopticon
 {
@@ -6,10 +7,17 @@ namespace Panopticon
     {
         private FileSystemWatcher? fileSystemWatcher;
         private BackgroundWorker? backgroundWorker;
+        private System.Timers.Timer? debounceTimer;
+        private readonly double debounceDelay = 500; // 500 milliseconds delay
 
         public void Watch()
         {
             InitializeBackgroundWorker();
+
+            // Initialize the debounce timer
+            debounceTimer = new System.Timers.Timer(debounceDelay);
+            debounceTimer.Elapsed += OnDebounceElapsed;
+            debounceTimer.AutoReset = false; // Ensure it only triggers once after the delay
         }
 
         private void InitializeBackgroundWorker()
@@ -40,39 +48,66 @@ namespace Panopticon
             fileSystemWatcher.EnableRaisingEvents = true;
 
             // Subscribe to events
-            fileSystemWatcher.Created += OnFileCreated;
             fileSystemWatcher.Changed += OnFileChanged;
-            fileSystemWatcher.Deleted += OnFileDeleted;
-            fileSystemWatcher.Renamed += OnFileRenamed;
-        }
-
-        // Event handler for file creation
-        private void OnFileCreated(object sender, FileSystemEventArgs e)
-        {
-            Console.WriteLine($"File created: {e.FullPath}");
         }
 
         // Event handler for file changes
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
-            if (Game.Settings.Auto_commit)
+            // Reset the timer every time the event is triggered
+            if (debounceTimer != null)
             {
-                Console.WriteLine($"File changed: {e.FullPath}");
+                debounceTimer.Stop();
+                debounceTimer.Start();
             }
-
         }
 
-        // Event handler for file deletion
-        private void OnFileDeleted(object sender, FileSystemEventArgs e)
+        private void OnDebounceElapsed(object? sender, ElapsedEventArgs e)
         {
-            Console.WriteLine($"File deleted: {e.FullPath}");
-        }
+            // Deboucing fileSystemWatcher.Changed event is necessary
+            // Dom6 currently writes 4 times consecutively to *.2h
 
-        // Event handler for file renaming
-        private void OnFileRenamed(object sender, RenamedEventArgs e)
-        {
-            Console.WriteLine($"File renamed: {e.OldFullPath} to {e.FullPath}");
-        }
+            var status = Git.Status();
+            if (status != null)
+            {
+                // Check if a turn has been made
+                bool maybe_new_turn = Git.CheckIfFileExists(status.Modified, ".trn");
 
+                if (Game.Settings.Auto_commit)
+                {
+                    Console.WriteLine($"File changed (auto-commit [enabled])");
+
+                    // Auto calculate turn | sq_turn | compound_turn
+                    Game.Timeline.Calculate_Turn(maybe_new_turn);
+
+                    // Commit all changes
+                    Git.Commit(Game.Path, Git.Commit_title());
+
+                    // Save current commit information to timelines DB
+                    DB.SaveTimeline();
+
+                    // Save settings (Turn(s) have been updated)
+                    DB.SaveAllSettings();
+
+                    // Refresh Timeline nodes
+                    Timeline.Refresh_Timeline_Nodes();
+
+                }
+                else
+                {
+                    Console.WriteLine($"File changed (auto-commit [disabled])");
+
+                    // Auto calculate turn | sq_turn | compound_turn
+                    Game.Timeline.Calculate_Turn(maybe_new_turn);
+
+                    // Refresh Snapshot UI
+                    Game.UI.BottomPanel?.Invoke((MethodInvoker)delegate
+                    {
+                        // Call Snapshot.InitializeComponent() to refresh the UI
+                        Snapshot.InitializeComponent();
+                    });
+                }
+            }
+        }
     }
 }

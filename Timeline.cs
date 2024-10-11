@@ -431,7 +431,7 @@ public partial class Timeline : Form
         Git.Init(Game.Path);
 
         // Commit all changes
-        Git.Commit(Game.Path, Git.commit_title);
+        Git.Commit(Game.Path, Git.Commit_title());
 
         // Rename master branch to root
         using var repo = new Repository(Game.Path);
@@ -510,14 +510,14 @@ public partial class Timeline : Form
     private static void Initialize_Settings_DB()
     {
         DB.Open();
-        DB.Query("CREATE TABLE IF NOT EXISTS settings (game VARCHAR(23) PRIMARY KEY, auto_commit BOOLEAN, prefix VARCHAR(10), suffix VARCHAR(10), turn DECIMAL)").ExecuteNonQuery();
+        DB.Query("CREATE TABLE IF NOT EXISTS settings (game VARCHAR(23) PRIMARY KEY, auto_commit BOOLEAN, prefix VARCHAR(10), suffix VARCHAR(10), turn INT, sq_turn DOUBLE, compound_turn DOUBLE)").ExecuteNonQuery();
         DB.Close();
     }
 
     private static void Retrieve_Settings()
     {
         DB.Open();
-        SqliteCommand statement = DB.Query("SELECT auto_commit, prefix, suffix, turn FROM settings WHERE game = @game");
+        SqliteCommand statement = DB.Query("SELECT auto_commit, prefix, suffix, turn, sq_turn, compound_turn FROM settings WHERE game = @game");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         DB.ReadData(statement, DB.LoadSettingsData);
         DB.Close();
@@ -535,7 +535,7 @@ public partial class Timeline : Form
         var timeline_nodes = new Dictionary<int, string> { };
 
         DB.Open();
-        SqliteCommand statement = DB.Query("SELECT node_name, node_seq FROM timelines WHERE game = @game AND branch = @branch");
+        SqliteCommand statement = DB.Query("SELECT node_name, node_seq FROM timelines WHERE game = @game AND branch = @branch ORDER BY node_seq");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         SqliteDataReader timeline = statement.ExecuteReader();
@@ -549,11 +549,12 @@ public partial class Timeline : Form
         return timeline_nodes;
     }
 
-    private static void Refresh_Timeline_Nodes()
+    public static void Refresh_Timeline_Nodes()
     {
         if (Git.Exist(Game.Path))
         {
             Dictionary<int, string> timeline_nodes = Retrieve_TimelineNodes();
+            Game.UI.Timeline_history?.Nodes.Clear();
 
             foreach (var dict in timeline_nodes)
             {

@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using LibGit2Sharp;
+using System.Net;
 
 namespace Panopticon;
 
@@ -30,6 +31,8 @@ static class Program
 
         // Set default Settings values
         Game.Settings.Turn = 1;
+        Game.Settings.SQ_Turn = 0.00;
+        Game.Settings.Compound_Turn = 1.00;
         Game.Settings.Prefix = "";
         Game.Settings.Suffix = "_TURN_";
         Game.Settings.Auto_commit = true;
@@ -44,6 +47,30 @@ public static class Game
 {
     public static string? Path { get; set; }
     public static string? Name { get; set; }
+
+    public static class Timeline
+    {
+        public static void Calculate_Turn(bool maybe_new_turn)
+        {
+            if (maybe_new_turn)
+            {
+                // New turn detected
+                Game.Settings.Turn++;
+            }
+            else
+            {
+                // Save & Quit detected
+                if (Game.Settings.Turn > Math.Truncate(Game.Settings.Compound_Turn))
+                {
+                    // Current turn is now greater than the previous compound turn
+                    // Reset SQ_Turn to 0.0
+                    Game.Settings.SQ_Turn = 0.00;
+                }
+                Game.Settings.SQ_Turn += 0.01;
+                Game.Settings.Compound_Turn = Math.Round(Game.Settings.Turn + Game.Settings.SQ_Turn, 2);
+            }
+        }
+    }
 
     public static class UI
     {
@@ -84,7 +111,9 @@ public static class Game
         public static bool Auto_commit_on_save_and_quit { get; set; } // TODO might not be needed
         public static string? Prefix { get; set; }
         public static string? Suffix { get; set; }
-        public static decimal Turn { get; set; }
+        public static int Turn { get; set; }
+        public static double SQ_Turn { get; set; }
+        public static double Compound_Turn { get; set; }
     }
 
 }
@@ -126,12 +155,14 @@ public static class DB
     public static void SaveAllSettings()
     {
         Open();
-        SqliteCommand statement = Query("INSERT INTO settings (game, auto_commit, prefix, suffix, turn) VALUES (@game, @auto_commit, @prefix, @suffix, @turn) ON CONFLICT(game) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn");
+        SqliteCommand statement = Query("INSERT INTO settings (game, auto_commit, prefix, suffix, turn, sq_turn, compound_turn) VALUES (@game, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn) ON CONFLICT(game) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
         statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
         statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
         statement.Parameters.Add("@turn", SqliteType.Text).Value = Game.Settings.Turn;
+        statement.Parameters.Add("@sq_turn", SqliteType.Text).Value = Game.Settings.SQ_Turn;
+        statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = Game.Settings.Compound_Turn;
         statement.ExecuteNonQuery();
         Close();
     }
@@ -141,29 +172,31 @@ public static class DB
         Game.Settings.Auto_commit = Convert.ToBoolean(settings["auto_commit"]);
         Game.Settings.Prefix = (string)settings["prefix"];
         Game.Settings.Suffix = (string)settings["suffix"];
-        Game.Settings.Turn = Convert.ToDecimal(settings["turn"]);
+        Game.Settings.Turn = Convert.ToInt32(settings["turn"]);
+        Game.Settings.SQ_Turn = (double)settings["sq_turn"];
+        Game.Settings.Compound_Turn = (double)settings["compound_turn"];
     }
 
-    public static void SaveTimeline()
+    public static void SaveTimeline(string? title = null)
     {
         Open();
         SqliteCommand statement = Query("INSERT INTO timelines (game, branch, node_name, node_seq, commit_hash) VALUES (@game, @branch, @node_name, @node_seq, @commit_hash)");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@node_name", SqliteType.Text).Value = Git.commit_title;
+        statement.Parameters.Add("@node_name", SqliteType.Text).Value = title ?? Git.Commit_title();
         statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = Git.CommitCount();
         statement.Parameters.Add("@commit_hash", SqliteType.Integer).Value = Git.head_commit_hash;
         statement.ExecuteNonQuery();
         Close();
     }
 
-    public static void SaveTimelineNotes(string notes)
+    public static void SaveTimelineNotes(string notes, string? nodeName = null)
     {
         Open();
         SqliteCommand statement = Query("INSERT INTO notes (game, branch, node_name, notes) VALUES (@game, @branch, @node_name, @notes) ON CONFLICT(game, branch, node_name) DO UPDATE SET notes = @notes");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
+        statement.Parameters.Add("@node_name", SqliteType.Text).Value = nodeName ?? Game.UI.SelectedNode?.Name;
         statement.Parameters.Add("@notes", SqliteType.Text).Value = notes;
         statement.ExecuteNonQuery();
         Close();
@@ -175,8 +208,13 @@ public static class Git
 {
     public static string userName = Environment.GetEnvironmentVariable("GIT_USER_NAME") ?? "Panopticon";
     public static string userEmail = Environment.GetEnvironmentVariable("GIT_USER_EMAIL") ?? "panopticon@kittybomber.com";
-    public static string commit_title = Game.Settings.Prefix + Game.Name + Game.Settings.Suffix + Game.Settings.Turn;
     public static string? head_commit_hash { get; set; }
+
+    public static string Commit_title()
+    {
+        return Game.Settings.Prefix + Game.Name + Game.Settings.Suffix + Game.Settings.Turn;
+    }
+
     public static bool Exist(string? path)
     {
         return Repository.IsValid(path);
@@ -202,6 +240,7 @@ public static class Git
         // Retrieve hash of current commit
         var head = (SymbolicReference)repo.Refs.Head;
         head_commit_hash = head.ResolveToDirectReference().Target.Sha;
+        
         Console.WriteLine($"Commit hash {head_commit_hash}");
     }
 
@@ -229,6 +268,47 @@ public static class Git
     {
         using var repo = new Repository(Game.Path);
         return repo.Head.Commits.Count();
+    }
+
+    public static Dictionary<string, ChangeKind> Diff()
+    {
+        var diffs = new Dictionary<string, ChangeKind> { };
+        if (Exist(Game.Path))
+        {
+            using var repo = new Repository(Game.Path);
+            foreach (TreeEntryChanges c in repo.Diff.Compare<TreeChanges>())
+            {
+                diffs.Add(c.Path, c.Status);
+            }
+        }
+        return diffs;
+    }
+
+    public static RepositoryStatus? Status()
+    {
+        RepositoryStatus? status = null;
+
+        if (Exist(Game.Path))
+        {
+            using var repo = new Repository(Game.Path);
+            status = repo.RetrieveStatus();
+
+            if (!status.Any())
+            {
+                status = null;
+            }
+        }
+
+        return status;
+    }
+
+    public static bool CheckIfFileExists(IEnumerable<StatusEntry> modifiedEntries, string file)
+    {
+        // Check if any entries have a FilePath containing file
+        bool hasMatchingEntry = modifiedEntries
+            .Any(entry => entry.FilePath != null && entry.FilePath.Contains(file));
+
+        return hasMatchingEntry;
     }
 
 }

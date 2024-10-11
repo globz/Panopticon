@@ -200,10 +200,10 @@ public class Settings
             var numericUpDownField_turn = new NumericUpDownField("Current Turn:", updatedName)
             {
                 Value = Game.Settings.Turn,
-                Minimum = 0,
+                Minimum = 1,
                 TabIndex = 3,
                 Location = new System.Drawing.Point(5, 185),
-                ForeColor = Game.UI.ForeColor
+                ForeColor = Game.UI.ForeColor,
             };
 
             saveSettingsButton.Location = new System.Drawing.Point(10, 225);
@@ -336,7 +336,7 @@ public class Settings
         static void NumericUpDownField_ValueChanged(object? sender, EventArgs e, Label updatedName)
         {
             var _numericUpDownField = sender as NumericUpDown ?? throw new ArgumentException();
-            Game.Settings.Turn = _numericUpDownField.Value;
+            Game.Settings.Turn = (int)_numericUpDownField.Value;
             updatedName.Text = "Your Timeline nodes will named after the following pattern: "
                         + System.Environment.NewLine
                         + Game.Settings.Prefix + Game.Name + Game.Settings.Suffix + Game.Settings.Turn;
