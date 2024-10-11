@@ -144,3 +144,7 @@
  Game name in Dominion supports up to 23 characters
  Git commit title 72 characters
  Git commit description has no limit (we could use this to let the player describe a turn)
+
+ TODO:
+- Add a way for the user to update its current turn inside the new snapshot UI?
+- TurnTrackerWorker ~ perhaps implement an Adaptive Debounce Delay?
