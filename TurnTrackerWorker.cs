@@ -64,7 +64,7 @@ namespace Panopticon
 
         private void OnDebounceElapsed(object? sender, ElapsedEventArgs e)
         {
-            // Deboucing fileSystemWatcher.Changed event is necessary
+            // Debouncing fileSystemWatcher.Changed event is necessary
             // Dom6 currently writes 4 times consecutively to *.2h
 
             var status = Git.Status();
