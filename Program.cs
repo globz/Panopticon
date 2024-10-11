@@ -55,19 +55,19 @@ public static class Game
             if (maybe_new_turn)
             {
                 // New turn detected
-                Game.Settings.Turn++;
+                Settings.Turn++;
             }
             else
             {
                 // Save & Quit detected
-                if (Game.Settings.Turn > Math.Truncate(Game.Settings.Compound_Turn))
+                if (Settings.Turn > Math.Truncate(Settings.Compound_Turn))
                 {
                     // Current turn is now greater than the previous compound turn
                     // Reset SQ_Turn to 0.0
-                    Game.Settings.SQ_Turn = 0.00;
+                    Settings.SQ_Turn = 0.00;
                 }
-                Game.Settings.SQ_Turn += 0.01;
-                Game.Settings.Compound_Turn = Math.Round(Game.Settings.Turn + Game.Settings.SQ_Turn, 2);
+                Settings.SQ_Turn += 0.01;
+                Settings.Compound_Turn = Math.Round(Settings.Turn + Settings.SQ_Turn, 2);
             }
         }
     }
@@ -177,13 +177,13 @@ public static class DB
         Game.Settings.Compound_Turn = (double)settings["compound_turn"];
     }
 
-    public static void SaveTimeline(string? title = null)
+    public static void SaveTimeline(string title)
     {
         Open();
         SqliteCommand statement = Query("INSERT INTO timelines (game, branch, node_name, node_seq, commit_hash) VALUES (@game, @branch, @node_name, @node_seq, @commit_hash)");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@node_name", SqliteType.Text).Value = title ?? Git.Commit_title();
+        statement.Parameters.Add("@node_name", SqliteType.Text).Value = title;
         statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = Git.CommitCount();
         statement.Parameters.Add("@commit_hash", SqliteType.Integer).Value = Git.head_commit_hash;
         statement.ExecuteNonQuery();
@@ -210,9 +210,18 @@ public static class Git
     public static string userEmail = Environment.GetEnvironmentVariable("GIT_USER_EMAIL") ?? "panopticon@kittybomber.com";
     public static string? head_commit_hash { get; set; }
 
-    public static string Commit_title()
+    public static string Commit_title(bool maybe_new_turn)
     {
-        return Game.Settings.Prefix + Game.Name + Game.Settings.Suffix + Game.Settings.Turn;
+        if (maybe_new_turn)
+        {
+            // New turn detected
+            return Game.Settings.Prefix + Game.Name + Game.Settings.Suffix + Game.Settings.Turn;
+        }
+        else
+        {
+            // Save & Quit detected
+            return Game.Settings.Prefix + Game.Name + "_SQ_" + Game.Settings.Compound_Turn.ToString("0.00");
+        }        
     }
 
     public static bool Exist(string? path)
@@ -240,7 +249,7 @@ public static class Git
         // Retrieve hash of current commit
         var head = (SymbolicReference)repo.Refs.Head;
         head_commit_hash = head.ResolveToDirectReference().Target.Sha;
-        
+
         Console.WriteLine($"Commit hash {head_commit_hash}");
     }
 
