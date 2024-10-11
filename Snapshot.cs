@@ -95,10 +95,10 @@ public partial class Snapshot : Form
                 // New turn detected
 
                 // Commit all changes
-                Git.Commit(Game.Path, Git.Commit_title());
+                Git.Commit(Game.Path, Git.Commit_title(maybe_new_turn));
 
                 // Save current commit information to timelines DB
-                DB.SaveTimeline();
+                DB.SaveTimeline(Git.Commit_title(maybe_new_turn));
 
                 // Save settings (Turn have been updated & commited)
                 DB.SaveAllSettings();
@@ -114,19 +114,19 @@ public partial class Snapshot : Form
             {
                 // Save & Quit detected
 
-                var commit_title = Game.Settings.Prefix + Game.Name + "_SQ_" + Game.Settings.Compound_Turn.ToString("0.00");
+                // var commit_title = Game.Settings.Prefix + Game.Name + "_SQ_" + Game.Settings.Compound_Turn.ToString("0.00");
 
                 // Commit all changes
-                Git.Commit(Game.Path, commit_title);
+                Git.Commit(Game.Path, Git.Commit_title(maybe_new_turn));
 
                 // Save current commit information to timelines DB
-                DB.SaveTimeline(commit_title);
+                DB.SaveTimeline(Git.Commit_title(maybe_new_turn));
 
                 // Save settings (Turn(s) have been updated & commited)
                 DB.SaveAllSettings();
 
                 // Added default timeline notes for S&Q
-                DB.SaveTimelineNotes($"Save & Quit on turn {Game.Settings.Turn}", commit_title);
+                DB.SaveTimelineNotes($"Save & Quit on turn {Game.Settings.Turn}", Git.Commit_title(maybe_new_turn));
 
                 // Refresh Timeline nodes
                 Timeline.Refresh_Timeline_Nodes();
