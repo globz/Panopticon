@@ -26,7 +26,7 @@
  - Final game name folder name would be something like this: (~Timeline_Wailing_Winds_TURN_1~)
  
  ~Mode~:
- *Auto* - git commit whenever there is a change
+ *Auto* - git commit as neded whenever there is a change
  *Manual* - git commit manually
 
  ~Auto~:
@@ -39,17 +39,13 @@
   Check Auto commit settings "Auto commit on save and quit"
   IF the setting is not enabled ask user if a commit is needed (Yes/No)
 
-  IF Yes - Ask user for commit name since its no turn has been made.
-
-  IF No - Do not commit.
-
-  Let use the solution below:
-  (It could also simply add suffix to distinguish that we are still on the same
+  IF Yes -   Simply add suffix to distinguish that we are still on the same
   turn instead of asking the player for input, example player is on turn 10
   then save and quit the game, we would already have a previous commit named
-  ~Timeline_Wailing_Winds_TURN_10~, then it could simply append .1 to the new
-  commit like so ~Timeline_Wailing_Winds_TURN_10.1~ - If dots are not allowed
-  simply add a space ~Timeline_Wailing_Winds_TURN_10_1~)
+  ~Timeline_Wailing_Winds_TURN_10~, then it could simply append 0.01 to the new
+  commit like so ~Timeline_Wailing_Winds_TURN_10.01~
+
+  IF No - Do not commit.
     
  ~Manual:~
   User will manually commit a turn whenever is needed.
