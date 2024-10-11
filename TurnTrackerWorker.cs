@@ -78,8 +78,8 @@ namespace Panopticon
                     // Auto-commit enabled
                     Console.WriteLine($"File changed (auto-commit [enabled])");
 
-                    // Auto calculate turn | sq_turn | compound_turn
-                    Game.Timeline.Calculate_Turn(maybe_new_turn);
+                    // Auto update turn | sq_turn | compound_turn
+                    Game.Timeline.Update_Turn(maybe_new_turn);
 
                     // Commit all changes
                     Git.Commit(Game.Path, Git.Commit_title(maybe_new_turn));
@@ -109,7 +109,7 @@ namespace Panopticon
                     Console.WriteLine($"File changed (auto-commit [disabled])");
 
                     // Auto calculate turn | sq_turn | compound_turn
-                    Game.Timeline.Calculate_Turn(maybe_new_turn);
+                    Game.Timeline.Update_Turn(maybe_new_turn);
 
                     // Refresh Snapshot UI
                     Game.UI.BottomPanel?.Invoke((MethodInvoker)delegate

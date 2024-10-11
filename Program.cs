@@ -50,7 +50,7 @@ public static class Game
 
     public static class Timeline
     {
-        public static void Calculate_Turn(bool maybe_new_turn)
+        public static void Update_Turn(bool maybe_new_turn)
         {
             if (maybe_new_turn)
             {
