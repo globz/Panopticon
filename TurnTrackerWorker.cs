@@ -8,7 +8,7 @@ namespace Panopticon
         private FileSystemWatcher? fileSystemWatcher;
         private BackgroundWorker? backgroundWorker;
         private System.Timers.Timer? debounceTimer;
-        private readonly double debounceDelay = 500; // 500 milliseconds delay
+        private readonly double debounceDelay = 1000; // Debouncing delay for fileSystemWatcher.Changed (TODO: perhaps implement an Adaptive Debounce Delay?)
 
         public void Watch()
         {
@@ -75,26 +75,37 @@ namespace Panopticon
 
                 if (Game.Settings.Auto_commit)
                 {
+                    // Auto-commit enabled
                     Console.WriteLine($"File changed (auto-commit [enabled])");
 
                     // Auto calculate turn | sq_turn | compound_turn
                     Game.Timeline.Calculate_Turn(maybe_new_turn);
 
                     // Commit all changes
-                    Git.Commit(Game.Path, Git.Commit_title());
+                    Git.Commit(Game.Path, Git.Commit_title(maybe_new_turn));
 
                     // Save current commit information to timelines DB
-                    DB.SaveTimeline();
+                    DB.SaveTimeline(Git.Commit_title(maybe_new_turn));
 
                     // Save settings (Turn(s) have been updated)
                     DB.SaveAllSettings();
 
-                    // Refresh Timeline nodes
-                    Timeline.Refresh_Timeline_Nodes();
+                    if (!maybe_new_turn)
+                    {
+                        // Added default timeline notes for S&Q
+                        DB.SaveTimelineNotes($"Save & Quit on turn {Game.Settings.Turn}", Git.Commit_title(maybe_new_turn));
+                    }                    
+
+                    Game.UI.TreeViewLeft.Invoke((MethodInvoker)delegate
+                    {
+                        // Refresh Timeline nodes
+                        Timeline.Refresh_Timeline_Nodes();
+                    });
 
                 }
                 else
                 {
+                    // Auto-commit disabled
                     Console.WriteLine($"File changed (auto-commit [disabled])");
 
                     // Auto calculate turn | sq_turn | compound_turn
