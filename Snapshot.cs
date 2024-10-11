@@ -4,7 +4,7 @@ using Accessibility;
 using LibGit2Sharp;
 
 namespace Panopticon;
-public partial class Snapshot : Form
+public class Snapshot
 {
     public static void InitializeComponent()
     {
@@ -108,7 +108,6 @@ public partial class Snapshot : Form
 
                 // Refresh Snapshot UI
                 InitializeComponent();
-
             }
             else
             {
@@ -133,9 +132,7 @@ public partial class Snapshot : Form
 
                 // Refresh Snapshot UI
                 InitializeComponent();
-
             }
-
         }
         else
         {
