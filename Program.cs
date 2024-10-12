@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using LibGit2Sharp;
 using System.Net;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Panopticon;
 
@@ -79,8 +80,8 @@ public static class Game
         public static TreeView TreeViewLeft { get; set; } = new TreeView();
         public static Panel? TopPanel { get; set; }
         public static Panel? BottomPanel { get; set; }
-        public static TreeNode? Timeline_settings { get; set; }
-        public static TreeNode? Timeline_history { get; set; }
+        public static TreeNode Timeline_settings { get; set; } = new TreeNode();
+        public static TreeNode Timeline_history { get; set; } = new TreeNode();
         public static Color Theme { get; set; }
         public static Color ForeColor { get; set; }
         public static TreeNode? SelectedNode { get; set; }
@@ -90,6 +91,7 @@ public static class Game
             {
                 if (node.Name == searchName)
                 {
+
                     return node;
                 }
 
@@ -100,6 +102,7 @@ public static class Game
                     return found;
                 }
             }
+
             return null;
         }
 
@@ -221,7 +224,7 @@ public static class Git
         {
             // Save & Quit detected
             return Game.Settings.Prefix + Game.Name + "_SQ_" + Game.Settings.Compound_Turn.ToString("0.00");
-        }        
+        }
     }
 
     public static bool Exist(string? path)
@@ -318,6 +321,15 @@ public static class Git
             .Any(entry => entry.FilePath != null && entry.FilePath.Contains(file));
 
         return hasMatchingEntry;
+    }
+
+    public static void ResetHard(string? commit_hash)
+    {
+        using var repo = new Repository(Game.Path);
+        if (commit_hash != null)
+        {
+            repo.Reset(ResetMode.Hard, commit_hash);
+        }
     }
 
 }
