@@ -148,3 +148,15 @@
  TODO:
 - Add a way for the user to update its current turn inside the new snapshot UI?
 - TurnTrackerWorker ~ perhaps implement an Adaptive Debounce Delay?
+
+
+Branch description with Timeline analogy:
+
+
+A Git branch is like an alternate timeline in a story. Imagine you’re writing a novel, and the main timeline is the published book, the "master" or "main" branch. At some point, you decide to explore a different plot idea, but you don’t want to mess up the main storyline.
+
+So, you create a new timeline (a new Git branch). In this alternate timeline, you can make changes to the plot, develop characters differently, or experiment with new ideas. As you work, your changes stay within this alternate timeline, leaving the main story untouched.
+
+If your alternate timeline turns out well, you can merge it back into the main story, combining the best parts of both timelines. If it doesn’t, you can simply abandon this branch without affecting the original plot.
+
+In short, a Git branch allows you to explore different "what-if" scenarios in your project, just like creating alternate storylines in a timeline.
