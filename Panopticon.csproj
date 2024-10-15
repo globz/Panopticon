@@ -9,6 +9,8 @@
 
     <ApplicationDefaultFont>Segoe UI, 9pt</ApplicationDefaultFont>
 
+    <PublishSingleFile>true</PublishSingleFile>
+    <DebugType>embedded</DebugType>
   </PropertyGroup>
 
   <ItemGroup>
