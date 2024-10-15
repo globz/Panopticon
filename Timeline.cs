@@ -722,15 +722,16 @@ public partial class Timeline : Form
     private static void Initialize_Settings_DB()
     {
         DB.Open();
-        DB.Query("CREATE TABLE IF NOT EXISTS settings (game VARCHAR(23) PRIMARY KEY, auto_commit BOOLEAN, prefix VARCHAR(10), suffix VARCHAR(10), turn INT, sq_turn DOUBLE, compound_turn DOUBLE)").ExecuteNonQuery();
+        DB.Query("CREATE TABLE IF NOT EXISTS settings (game VARCHAR(23), branch VARCHAR(100), auto_commit BOOLEAN, prefix VARCHAR(10), suffix VARCHAR(10), turn INT, sq_turn DOUBLE, compound_turn DOUBLE, PRIMARY KEY (game, branch))").ExecuteNonQuery();
         DB.Close();
     }
 
     private static void Retrieve_Settings()
     {
         DB.Open();
-        SqliteCommand statement = DB.Query("SELECT auto_commit, prefix, suffix, turn, sq_turn, compound_turn FROM settings WHERE game = @game");
+        SqliteCommand statement = DB.Query("SELECT auto_commit, prefix, suffix, turn, sq_turn, compound_turn FROM settings WHERE game = @game AND branch = @branch");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         DB.ReadData(statement, DB.LoadSettingsData);
         DB.Close();
     }

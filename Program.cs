@@ -174,8 +174,9 @@ public static class DB
     public static void SaveAllSettings()
     {
         Open();
-        SqliteCommand statement = Query("INSERT INTO settings (game, auto_commit, prefix, suffix, turn, sq_turn, compound_turn) VALUES (@game, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn) ON CONFLICT(game) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn");
+        SqliteCommand statement = Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
         statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
         statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
@@ -288,8 +289,16 @@ public static class Git
 
     public static string CurrentBranch()
     {
-        using var repo = new Repository(Game.Path);
-        return repo.Head.FriendlyName;
+        // A branch may not already exist but will always default to root
+        if (Git.Exist(Game.Path))
+        {
+            using var repo = new Repository(Game.Path);
+            return repo.Head.FriendlyName;
+        }
+        else
+        {
+            return "root";
+        }
     }
 
     public static int CommitCount()
