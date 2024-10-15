@@ -1,9 +1,6 @@
-using System.DirectoryServices;
-using System.Security.Cryptography.X509Certificates;
+using System.Windows.Forms.VisualStyles;
 using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
-using Microsoft.VisualBasic;
-using SQLitePCL;
 
 namespace Panopticon;
 
@@ -32,7 +29,23 @@ public partial class Timeline : Form
 
         // Enable manual snapshot mode if needed
         Enable_Manual_Snapshot();
+    }
 
+    protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    {
+        if (keyData == (Keys.Control | Keys.S))
+        {
+            if (Game.UI.SelectedNode != null && Git.Exist(Game.Path))
+            {
+                if (Game.UI.SelectedNode.Name != "settings")
+                {
+                    Button? saveNotesButton = Game.UI.FindButtonByName(Game.UI.TopPanel, "saveNotes");
+                    saveNotesButton?.PerformClick();
+                }
+            }
+            return true;
+        }
+        return base.ProcessCmdKey(ref msg, keyData);
     }
 
     private void InitializeComponent()
@@ -270,7 +283,8 @@ public partial class Timeline : Form
                 ForeColor = Game.UI.ForeColor,
                 Padding = new(2),
                 AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink
+                AutoSizeMode = AutoSizeMode.GrowAndShrink,
+                Name = "saveNotes"
             };
 
             groupBox_timeline_root.Controls.Add(DeleteTimelineButton);
@@ -289,7 +303,8 @@ public partial class Timeline : Form
                 Multiline = true,
                 ScrollBars = ScrollBars.Vertical,
                 Size = new System.Drawing.Size(100, 250),
-                BackColor = Color.LightYellow
+                BackColor = Color.LightYellow,
+                Name = "Description"
             };
 
             // Retrieve DescriptionBox Text
@@ -303,6 +318,7 @@ public partial class Timeline : Form
             DeleteTimelineButton.Click += new EventHandler(DeleteTimelineButton_Click);
             SwitchTimelineBranchButton.Click += new EventHandler(SwitchTimelineBranchButton_Click);
             SaveDescriptionButton.Click += (sender, e) => SaveNotesButton_Click(DescriptionBox);
+            DescriptionBox.TextChanged += (sender, e) => notes_TextChanged(DescriptionBox);
         }
         else
         {
@@ -386,7 +402,8 @@ public partial class Timeline : Form
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
             AutoSize = true,
-            AutoSizeMode = AutoSizeMode.GrowAndShrink
+            AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            Name = "saveNotes"
         };
 
         groupBox_timeline_node.Controls.Add(TimeTravelButton);
@@ -405,6 +422,7 @@ public partial class Timeline : Form
             ScrollBars = ScrollBars.Vertical,
             Size = new System.Drawing.Size(100, 250),
             BackColor = Color.LightYellow,
+            Name = "notes"
         };
 
         // Retrieve NotesBox Text
@@ -416,6 +434,7 @@ public partial class Timeline : Form
 
         TimeTravelButton.Click += new EventHandler(TimeTravelButton_Click);
         SaveNotesButton.Click += (sender, e) => SaveNotesButton_Click(NotesBox);
+        NotesBox.TextChanged += (sender, e) => notes_TextChanged(NotesBox);
     }
 
     static void CreateTimelineButton_Click(object? sender, EventArgs e)
@@ -507,7 +526,7 @@ public partial class Timeline : Form
     static void SaveNotesButton_Click(TextBox notes)
     {
         DB.SaveTimelineNotes(notes.Text);
-        MessageBox.Show("Timeline description saved!");
+        notes.BackColor = Color.LightYellow;
     }
 
     static void TimeTravelButton_Click(object? send, EventArgs e)
@@ -518,8 +537,9 @@ public partial class Timeline : Form
 
         // TODO 
         // check if commit hash matches the HEAD = Block Replay action
-        // Permenantly undo this turn = Delete the node for timeline_history
-        // Cannot undo node_seq 1 (block action) ~ still guard the code of this case
+        // Permenantly undo this turn = Delete the node for timeline_history - OK
+        // Cannot undo node_seq 1 (block action) ~ still guard the code of this case - OK
+        // Finish UNDO UI
         // Replay this turn (block action when selected node is HEAD)
         // Branch off
         // Create new game
@@ -607,113 +627,95 @@ public partial class Timeline : Form
 
     static void UndoButton_Click(object? send, EventArgs e)
     {
+        // Display UI and confirm user action
         Game.UI.BottomPanel?.Controls.Clear();
 
-        // Retrieve current selected node sequence
-        DB.Open();
-        SqliteCommand statement = DB.Query("SELECT node_seq FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
-        var data = statement.ExecuteScalar();
-        DB.Close();
+        // Gather information about the upcoming node(s) deletion
+        List<string> undo_nodes_name = TimeTravel.Undo();
 
-        int? node_seq = Convert.ToInt32(data);
+        int undo_node_count = undo_nodes_name.Count();
 
-        // Retrieve parent node sequence
-        int? parent_node_seq = node_seq - 1;
-
-        // Retrieve the commit hash of the node that HEAD will point to.
-        DB.Open();
-        statement = DB.Query("SELECT commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = parent_node_seq;
-        data = statement.ExecuteScalar();
-        DB.Close();
-
-        string? commit_hash = data?.ToString();
-
-        // Retrieve max node_seq associated to this timeline & branch
-        DB.Open();
-        statement = DB.Query("SELECT MAX(node_seq) FROM timelines WHERE game = @game AND branch = @branch");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        data = statement.ExecuteScalar();
-        DB.Close();
-
-        int? max_node_seq = Convert.ToInt32(data);
-
-        // Calculate how many nodes will be deleted
-        int? absolute_delta = max_node_seq - parent_node_seq;
-        Console.WriteLine($"Absolute Delta: {absolute_delta}");
-
-        int? node_seq_start = 0;
-        int? node_seq_end = 0;
-        if (node_seq == max_node_seq)
+        Label description = new()
         {
-            // This node is HEAD therefor we only need to point to ourself
-            node_seq_start = node_seq;
-            node_seq_end = node_seq;
-            Console.WriteLine($"node_seq_start & end: {node_seq}");
+            Text = $"Ensure that Dominion is not running this game."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "If the game is running and you undo this turn, select [Quit without saving] to exit."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Once your is game closed, you may proceed to permanently delete the following snapshot(s) from existence.",
+            Dock = DockStyle.Fill
+        };
+
+        var groupBox_undo_log = new System.Windows.Forms.GroupBox();
+        groupBox_undo_log.Location = new System.Drawing.Point(5, 100);
+        //groupBox_undo_log.Size = new System.Drawing.Size(220, 500);
+        groupBox_undo_log.Text = $"Undoing {undo_node_count} snapshot(s)";
+        groupBox_undo_log.ForeColor = Color.Orange;
+        groupBox_undo_log.AutoSize = true;
+
+        Label undo_log = new()
+        {
+            AutoSize = true,
+            Dock = DockStyle.Fill
+        };
+
+        if (undo_node_count == 0)
+        {
+            undo_log.Text = "This node is the initial snapshot of your branch, you cannot undo it.";
         }
         else
         {
-            // Build range sequence to be deleted
-            int[] range_seq_to_be_deleted = Enumerable.Range((int)node_seq, (int)absolute_delta).ToArray();
-            range_seq_to_be_deleted.ToList().ForEach(i => Console.WriteLine($" range_seq_to_be_deleted: {i.ToString()}"));
-            node_seq_start = range_seq_to_be_deleted.First();
-            node_seq_end = range_seq_to_be_deleted.Max();
+            undo_nodes_name.ForEach(node_name => undo_log.Text += $"{node_name + System.Environment.NewLine}");
+
+            Button ProceedUnDoButton = new()
+            {
+                Location = new System.Drawing.Point(200, 100),
+                Text = "Proceed and delete.",
+                BackColor = Color.IndianRed,
+                ForeColor = Game.UI.ForeColor,
+                Padding = new(2),
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink
+            };
+
+            Game.UI.BottomPanel?.Controls.Add(ProceedUnDoButton);
+            ProceedUnDoButton.Click += (sender, e) => { TimeTravel.Undo(true); };
         }
 
-        // Do not undo the first commit (Delete and rebuild a new timeline instead!)
-        if (node_seq != 1)
+        Game.UI.BottomPanel?.Controls.Add(groupBox_undo_log);
+        Game.UI.BottomPanel?.Controls.Add(description);        
+        groupBox_undo_log.Controls.Add(undo_log);
+        AutoSizeGroupBox(groupBox_undo_log);
+    }
+
+    private static void AutoSizeGroupBox(GroupBox groupBox)
+    {
+        int maxWidth = 0;
+        int totalHeight = groupBox.Padding.Top;
+
+        foreach (Control control in groupBox.Controls)
         {
+            // Calculate the right edge of the control (X + Width)
+            int controlRight = control.Left + control.Width;
+            maxWidth = Math.Max(maxWidth, controlRight);
 
-            // Destructive actions below:
-
-            // git reset --hard using the parent_node commit_hash
-            Git.ResetHard(commit_hash);
-
-            // Retrieve node_name(s) associated with this commit_hash along with subsequent nodes
-            List<string> timeline_nodes_name = new List<string>();
-            DB.Open();
-            statement = DB.Query("SELECT node_name FROM timelines WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-            statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
-            statement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
-            SqliteDataReader timeline = statement.ExecuteReader();
-
-            while (timeline.Read())
-            {
-                timeline_nodes_name.Add((string)timeline["node_name"]);
-            }
-            DB.Close();
-
-            // Delete timeline node(s) associated with this commit_hash along with subsequent nodes (UI + DB)
-            TreeNode? node_to_delete = new TreeNode();
-            timeline_nodes_name.ForEach(i =>
-            {
-                node_to_delete = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, i);
-                if (node_to_delete != null)
-                {
-                    Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
-                }
-            });
-
-            DB.Open();
-            statement = DB.Query("DELETE FROM timelines WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-            statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
-            statement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
-            statement.ExecuteNonQuery();
-            DB.Close();
+            // Calculate the total height required
+            totalHeight += control.Height + control.Margin.Bottom;
         }
-        else
+
+        totalHeight += groupBox.Padding.Bottom;
+
+        // Set the new size for the GroupBox
+        groupBox.Width = maxWidth + groupBox.Padding.Right;
+        groupBox.Height = totalHeight;
+    }
+
+    private static void notes_TextChanged(TextBox notes)
+    {
+        if (notes.BackColor != Color.PaleVioletRed)
         {
-            MessageBox.Show("You cannot do this action.");
+            notes.BackColor = Color.PaleVioletRed;
         }
     }
 
