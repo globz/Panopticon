@@ -36,12 +36,23 @@ public class Settings
         groupBox_settings.Text = "Settings";
         groupBox_settings.ForeColor = Color.Orange;
 
+        var settings_description = "Please configure your settings before creating your Timeline."
+        + System.Environment.NewLine
+        + System.Environment.NewLine
+        + "Once configured, navigate to [Timeline - " + Game.Name + "] via the left pane and initialize your Timeline.";
+
+        if (Git.Exist(Game.Path))
+        {
+            settings_description = "You may adjust your current turn if it does not reflect your current in-game turn."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + $"This configuration applies to [Timeline - " + Game.Name + "] on branch [" + Git.CurrentBranch() + "]";
+        }
+
+
         Label description = new()
         {
-            Text = "Please configure your settings before creating your Timeline."
-            + System.Environment.NewLine
-            + System.Environment.NewLine
-            + "Once configured, navigate to [Timeline - " + Game.Name + "] via the left pane and initialize your Timeline.",
+            Text = $"{settings_description}",
             Dock = DockStyle.Fill
         };
 
