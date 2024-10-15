@@ -1,7 +1,5 @@
 using Microsoft.Data.Sqlite;
 using LibGit2Sharp;
-using System.Net;
-using System.Reflection.Metadata.Ecma335;
 
 namespace Panopticon;
 
@@ -78,8 +76,8 @@ public static class Game
         public static SplitContainer VerticalSplitContainer { get; set; } = new SplitContainer();
         public static SplitContainer HorizontalSplitContainer { get; set; } = new SplitContainer();
         public static TreeView TreeViewLeft { get; set; } = new TreeView();
-        public static Panel? TopPanel { get; set; }
-        public static Panel? BottomPanel { get; set; }
+        public static Panel TopPanel { get; set; } = new Panel();
+        public static Panel BottomPanel { get; set; } = new Panel();
         public static TreeNode Timeline_settings { get; set; } = new TreeNode();
         public static TreeNode Timeline_history { get; set; } = new TreeNode();
         public static Color Theme { get; set; }
@@ -104,6 +102,24 @@ public static class Game
             }
 
             return null;
+        }
+        public static Button? FindButtonByName(Control parent, string buttonName)
+        {
+            foreach (Control control in parent.Controls)
+            {
+                if (control is Button button && button.Name == buttonName)
+                {
+                    return button; // Found the button
+                }
+
+                // Recursively search in child controls
+                Button? foundButton = FindButtonByName(control, buttonName);
+                if (foundButton != null)
+                {
+                    return foundButton;
+                }
+            }
+            return null; // No matching button found
         }
 
     }
