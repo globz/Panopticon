@@ -8,7 +8,13 @@ namespace Panopticon
         private FileSystemWatcher? fileSystemWatcher;
         private BackgroundWorker? backgroundWorker;
         private System.Timers.Timer? debounceTimer;
-        private readonly double debounceDelay = 1000; // Debouncing delay for fileSystemWatcher.Changed (TODO: perhaps implement an Adaptive Debounce Delay?)
+
+        // Debouncing delay for fileSystemWatcher.Changed (TODO: perhaps implement an Adaptive Debounce Delay?)
+        // Confirmed: The longer the game the goes the longer it takes to process a turn.
+        // 5000 ms does not work for longer running games (creates 2 commit (S&Q & Turn))
+        // Probing the size of 2h file may be a good indicator for increasing debounceDelay
+        private readonly double debounceDelay = 8000; 
+        
 
         public void Watch()
         {
@@ -57,6 +63,7 @@ namespace Panopticon
             // Reset the timer every time the event is triggered
             if (debounceTimer != null)
             {
+                Console.WriteLine("Starting timer...");
                 debounceTimer.Stop();
                 debounceTimer.Start();
             }
@@ -66,7 +73,7 @@ namespace Panopticon
         {
             // Debouncing fileSystemWatcher.Changed event is necessary
             // Dom6 currently writes 4 times consecutively to *.2h
-
+            Console.WriteLine("OnDebounceElapsed");
             var status = Git.Status();
             if (status != null)
             {
@@ -101,7 +108,6 @@ namespace Panopticon
                         // Refresh Timeline nodes
                         Timeline.Refresh_Timeline_Nodes();
                     });
-
                 }
                 else
                 {
