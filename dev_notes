@@ -148,6 +148,11 @@
  TODO:
 - Add a way for the user to update its current turn inside the new snapshot UI?
 - TurnTrackerWorker ~ perhaps implement an Adaptive Debounce Delay?
+- Implement settings at the branch level, right now settings are global to a specific game.
+
+BUG:
+- Fix TimeTravel.undo - node_seq = 1 condition not return the proper value and UI feedback
+- Sometimes 2h files writes do not trigger TurnTrackerWorker event, this cause a manual snapshot to fail and Auto_commit won't trigger either.
 
 
 Branch description with Timeline analogy:
