@@ -113,8 +113,6 @@ public class Snapshot
             {
                 // Save & Quit detected
 
-                // var commit_title = Game.Settings.Prefix + Game.Name + "_SQ_" + Game.Settings.Compound_Turn.ToString("0.00");
-
                 // Commit all changes
                 Git.Commit(Game.Path, Git.Commit_title(maybe_new_turn));
 
