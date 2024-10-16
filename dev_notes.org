@@ -19,10 +19,7 @@
  - If Auto mode is selected, user can enable/disable "Auto commit on save and quit"
  - Input default prefix if needed (Timeline, Snapshot, etc.) - default: NONE
  - Input default suffix if needed (TURN, Snapshot, etc.) - default TURN
- - Default suffix after user supplied suffix is to auto increment an integer (1,2,3,4...)
- - On the first run of adding a new game to the application, the user will be
-   asked to specify the auto increment starting position (Turn) (example user add the
-   game on turn 10, then the user would input 10)
+ - Input current in-game TURN (INT) - default 1
  - Final game name folder name would be something like this: (~Timeline_Wailing_Winds_TURN_1~)
  
  ~Mode~:
@@ -157,11 +154,11 @@ BUG:
 DEBUG log:
 
 // Timer on TURN 52 to detect a new trn
-Starting timer...618194.704
+Starting timer...618194.704 (ignore)
 Starting timer...1.2903
 Starting timer...5.1504
 Starting timer...0.1082
-Starting timer...4343.3294
+Starting timer...4343.3294 (ignore)
 Starting timer...5.3999
 Starting timer...4.2574
 Starting timer...0.1945
