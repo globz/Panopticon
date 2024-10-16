@@ -318,7 +318,7 @@ public partial class Timeline : Form
             DeleteTimelineButton.Click += new EventHandler(DeleteTimelineButton_Click);
             SwitchTimelineBranchButton.Click += new EventHandler(SwitchTimelineBranchButton_Click);
             SaveDescriptionButton.Click += (sender, e) => SaveNotesButton_Click(DescriptionBox);
-            DescriptionBox.TextChanged += (sender, e) => notes_TextChanged(DescriptionBox);
+            DescriptionBox.TextChanged += (sender, e) => Notes_TextChanged(DescriptionBox);
         }
         else
         {
@@ -434,7 +434,7 @@ public partial class Timeline : Form
 
         TimeTravelButton.Click += new EventHandler(TimeTravelButton_Click);
         SaveNotesButton.Click += (sender, e) => SaveNotesButton_Click(NotesBox);
-        NotesBox.TextChanged += (sender, e) => notes_TextChanged(NotesBox);
+        NotesBox.TextChanged += (sender, e) => Notes_TextChanged(NotesBox);
     }
 
     static void CreateTimelineButton_Click(object? sender, EventArgs e)
@@ -623,6 +623,7 @@ public partial class Timeline : Form
         Game.UI.BottomPanel?.Controls.Add(description);
 
         UndoButton.Click += new EventHandler(UndoButton_Click);
+        BranchOffButton.Click += new EventHandler(BranchOffButton_Click);
     }
 
     static void UndoButton_Click(object? send, EventArgs e)
@@ -649,7 +650,6 @@ public partial class Timeline : Form
 
         var groupBox_undo_log = new System.Windows.Forms.GroupBox();
         groupBox_undo_log.Location = new System.Drawing.Point(5, 100);
-        //groupBox_undo_log.Size = new System.Drawing.Size(220, 500);
         groupBox_undo_log.Text = $"Undoing {undo_node_count} snapshot(s)";
         groupBox_undo_log.ForeColor = Color.Orange;
         groupBox_undo_log.AutoSize = true;
@@ -684,7 +684,7 @@ public partial class Timeline : Form
         }
 
         Game.UI.BottomPanel?.Controls.Add(groupBox_undo_log);
-        Game.UI.BottomPanel?.Controls.Add(description);        
+        Game.UI.BottomPanel?.Controls.Add(description);
         groupBox_undo_log.Controls.Add(undo_log);
         AutoSizeGroupBox(groupBox_undo_log);
     }
@@ -711,7 +711,39 @@ public partial class Timeline : Form
         groupBox.Height = totalHeight;
     }
 
-    private static void notes_TextChanged(TextBox notes)
+    static void BranchOffButton_Click(object? send, EventArgs e)
+    {
+        // Display UI and confirm user action
+        Game.UI.BottomPanel?.Controls.Clear();
+
+        Label description = new()
+        {
+            Text = $"You are about to create an alternate timeline branch based on the following snapshot:"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + $"Turn: {Game.UI.SelectedNode?.Name} & branch: {Git.CurrentBranch()}"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Fill in the name of your new branch and proceed with the creation.",
+            Dock = DockStyle.Fill
+        };
+
+        Button CreateBranchButton = new()
+        {
+            Location = new System.Drawing.Point(200, 100),
+            Text = "Create branch",
+            BackColor = Color.IndianRed,
+            ForeColor = Game.UI.ForeColor,
+            Padding = new(2),
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink
+        };
+
+        Game.UI.BottomPanel?.Controls.Add(description);
+        Game.UI.BottomPanel?.Controls.Add(CreateBranchButton);
+    }
+
+    private static void Notes_TextChanged(TextBox notes)
     {
         if (notes.BackColor != Color.PaleVioletRed)
         {
