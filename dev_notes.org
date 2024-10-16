@@ -150,7 +150,8 @@
 BUG:
 - Fix TimeTravel.undo - node_seq = 1 condition not return the proper value and UI feedback (Fixed)
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, this cause a manual snapshot to fail and Auto_commit won't trigger either.
-
+- When using Manual snapshot, you still have to wait 8000ms for the turn to calculate, if you create the snapshot before that turn wont be properly updated.
+  
 DEBUG log:
 
 // Timer on TURN 52 to detect a new trn
