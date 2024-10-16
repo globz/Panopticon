@@ -54,8 +54,14 @@ namespace Panopticon
             fileSystemWatcher.IncludeSubdirectories = false;
             fileSystemWatcher.EnableRaisingEvents = true;
 
+            //fileSystemWatcher.InternalBufferSize = 64 * 1024; // 64 KB
+            Console.WriteLine(fileSystemWatcher.InternalBufferSize);
+
             // Subscribe to events
             fileSystemWatcher.Changed += OnFileChanged;
+
+            // Subscribe to the Error event
+            fileSystemWatcher.Error += OnError;
         }
 
         // Event handler for file changes
@@ -73,10 +79,10 @@ namespace Panopticon
             }
         }
 
+        // Debouncing fileSystemWatcher.Changed event is necessary
+        // Dom6 currently writes 4 times consecutively to *.2h
         private void OnDebounceElapsed(object? sender, ElapsedEventArgs e)
         {
-            // Debouncing fileSystemWatcher.Changed event is necessary
-            // Dom6 currently writes 4 times consecutively to *.2h
             Console.WriteLine("OnDebounceElapsed");
             var status = Git.Status();
             if (status != null)
@@ -128,6 +134,17 @@ namespace Panopticon
                         Snapshot.InitializeComponent();
                     });
                 }
+            }
+        }
+
+        // Error event handler
+        private static void OnError(object sender, ErrorEventArgs e)
+        {
+            Console.WriteLine("An error occurred: " + e.GetException().Message);
+
+            if (e.GetException() is InternalBufferOverflowException)
+            {
+                Console.WriteLine("The file system watcher buffer overflowed. Consider increasing the buffer size.");
             }
         }
     }
