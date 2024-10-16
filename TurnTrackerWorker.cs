@@ -13,8 +13,9 @@ namespace Panopticon
         // Confirmed: The longer the game the goes the longer it takes to process a turn.
         // 5000 ms does not work for longer running games (creates 2 commit (S&Q & Turn))
         // Probing the size of 2h file may be a good indicator for increasing debounceDelay
-        private readonly double debounceDelay = 8000; 
-        
+        private readonly double debounceDelay = 8000;
+
+        private DateTime lastEventTime;
 
         public void Watch()
         {
@@ -63,9 +64,12 @@ namespace Panopticon
             // Reset the timer every time the event is triggered
             if (debounceTimer != null)
             {
-                Console.WriteLine("Starting timer...");
+                DateTime now = DateTime.Now;
+                TimeSpan timeSinceLastEvent = now - lastEventTime;
+                lastEventTime = now;
                 debounceTimer.Stop();
                 debounceTimer.Start();
+                Console.WriteLine($"Starting timer...{timeSinceLastEvent.TotalMilliseconds}");
             }
         }
 
@@ -101,7 +105,7 @@ namespace Panopticon
                     {
                         // Added default timeline notes for S&Q
                         DB.SaveTimelineNotes($"Save & Quit on turn {Game.Settings.Turn}", Git.Commit_title(maybe_new_turn));
-                    }                    
+                    }
 
                     Game.UI.TreeViewLeft.Invoke((MethodInvoker)delegate
                     {
