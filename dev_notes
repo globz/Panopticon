@@ -154,9 +154,23 @@ BUG:
 - Fix TimeTravel.undo - node_seq = 1 condition not return the proper value and UI feedback (Fixed)
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, this cause a manual snapshot to fail and Auto_commit won't trigger either.
 
+DEBUG log:
+
+// Timer on TURN 52 to detect a new trn
+Starting timer...618194.704
+Starting timer...1.2903
+Starting timer...5.1504
+Starting timer...0.1082
+Starting timer...4343.3294
+Starting timer...5.3999
+Starting timer...4.2574
+Starting timer...0.1945
+OnDebounceElapsed
+File changed (auto-commit [enabled])
+Commit hash 4e214ec1cb8c55da855e8cdbf9bf5ff2ba61b97d
+
 
 Branch description with Timeline analogy:
-
 
 A Git branch is like an alternate timeline in a story. Imagine you’re writing a novel, and the main timeline is the published book, the "master" or "main" branch. At some point, you decide to explore a different plot idea, but you don’t want to mess up the main storyline.
 
