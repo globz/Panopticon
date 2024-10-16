@@ -8,10 +8,6 @@ public partial class NewTimeline : Form
         this.ClientSize = new System.Drawing.Size(500, 150);
         this.Text = "New Timeline";
         this.BackColor = Game.UI.Theme;
-        
-        // DPI scaling
-        this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-        this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
 
         InitializeAboutSection();
     }

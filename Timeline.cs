@@ -8,10 +8,6 @@ public partial class Timeline : Form
 {
     public Timeline()
     {
-        // DPI scaling
-        AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-        AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-
         InitializeComponent();
 
         // Initialize the settings database
@@ -55,12 +51,6 @@ public partial class Timeline : Form
         var horizontalSplitContainer = new System.Windows.Forms.SplitContainer();
         var topPanel = new System.Windows.Forms.Panel();
         var bottomPanel = new System.Windows.Forms.Panel();
-
-        // DPI scaling
-        verticalSplitContainer.AutoScaleMode = AutoScaleMode.Dpi;
-        verticalSplitContainer.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
-        horizontalSplitContainer.AutoScaleMode = AutoScaleMode.Dpi;
-        horizontalSplitContainer.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
 
         verticalSplitContainer.SuspendLayout();
         horizontalSplitContainer.SuspendLayout();
@@ -535,11 +525,7 @@ public partial class Timeline : Form
 
         var groupBox_TimeTravelActions = new System.Windows.Forms.GroupBox();
 
-        // TODO 
-        // check if commit hash matches the HEAD = Block Replay action
-        // Permenantly undo this turn = Delete the node for timeline_history - OK
-        // Cannot undo node_seq 1 (block action) ~ still guard the code of this case - OK
-        // Finish UNDO UI
+        // TODO
         // Replay this turn (block action when selected node is HEAD)
         // Branch off
         // Create new game
@@ -683,10 +669,10 @@ public partial class Timeline : Form
             ProceedUnDoButton.Click += (sender, e) => { TimeTravel.Undo(true); };
         }
 
+        groupBox_undo_log.Controls.Add(undo_log);  
+        AutoSizeGroupBox(groupBox_undo_log);      
         Game.UI.BottomPanel?.Controls.Add(groupBox_undo_log);
         Game.UI.BottomPanel?.Controls.Add(description);
-        groupBox_undo_log.Controls.Add(undo_log);
-        AutoSizeGroupBox(groupBox_undo_log);
     }
 
     private static void AutoSizeGroupBox(GroupBox groupBox)
