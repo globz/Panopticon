@@ -55,7 +55,7 @@ namespace Panopticon
             fileSystemWatcher.EnableRaisingEvents = true;
 
             //fileSystemWatcher.InternalBufferSize = 64 * 1024; // 64 KB
-            Console.WriteLine(fileSystemWatcher.InternalBufferSize);
+            Console.WriteLine($"Current buffer size: {fileSystemWatcher.InternalBufferSize}");
 
             // Subscribe to events
             fileSystemWatcher.Changed += OnFileChanged;
