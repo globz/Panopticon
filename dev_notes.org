@@ -146,26 +146,133 @@
 - Add a way for the user to update its current turn inside the new snapshot UI?
 - TurnTrackerWorker ~ perhaps implement an Adaptive Debounce Delay?
 - Implement settings at the branch level, right now settings are global to a specific game. (Implemented 2024-10-15)
+- Fix Tab index on all forms
+- Delete branch settings whenver a branch is deleted
 
 BUG:
 - Fix TimeTravel.undo - node_seq = 1 condition not return the proper value and UI feedback (Fixed)
-- Sometimes 2h files writes do not trigger TurnTrackerWorker event, this cause a manual snapshot to fail and Auto_commit won't trigger either.
+- Sometimes 2h files writes do not trigger TurnTrackerWorker event, resulting in no new calculated turn. 
+  This cause a manual snapshot to fail and Auto_commit won't trigger at all.
 - When using Manual snapshot, you still have to wait 8000ms for the turn to calculate, if you create the snapshot before that turn wont be properly updated.
-  
-DEBUG log:
+- When undoing turns, reset the turn values
 
-// Timer on TURN 52 to detect a new trn
-Starting timer...618194.704 (ignore)
-Starting timer...1.2903
-Starting timer...5.1504
-Starting timer...0.1082
-Starting timer...4343.3294 (ignore)
-Starting timer...5.3999
-Starting timer...4.2574
-Starting timer...0.1945
+DEBUG log:
+------------------------------------------------------------------------------
+Turn 46 @ Testing3
+------------------------------------------------------------------------------
+Current buffer size: 8192
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:8000
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:1.425199999999677
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:1.344000000000051
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:0.023100000000340515
+
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:5008.2579
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:5.672899999999572
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:5.209100000000035
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:0.19279999999980646
 OnDebounceElapsed
 File changed (auto-commit [enabled])
-Commit hash 4e214ec1cb8c55da855e8cdbf9bf5ff2ba61b97d
+Commit hash dc584acffe0da00b03bc742271f793faa787a572
+
+------------------------------------------------------------------------------
+Turn 47 @ Testing3
+------------------------------------------------------------------------------
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:8000
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:1.5149000000001251
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:3.8617999999996755
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:0.07250000000021828
+
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:5376.9758
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:5.786399999999958
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:5.270300000000134
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:0.19549999999981083
+OnDebounceElapsed
+File changed (auto-commit [enabled])
+Commit hash 0ec2ba28deb4a48e81dde6490776f78a581e53f0
+
+------------------------------------------------------------------------------
+S&Q 47 @ Testing3
+------------------------------------------------------------------------------
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:8000
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:1.1395000000002256
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:3.7453999999997905
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:0.10120000000006257
+OnDebounceElapsed
+File changed (auto-commit [enabled])
+Commit hash 009189cc65794cedc448b9553b85a8c6d1b1886c
+
+Here is a potential solution for an adaptive debounce delay:
+
+Set the initial debounceDelay relatively low ~ 2000ms
+It could also adjust itself based on the current game turn counter or file size of (*.2h && *.trn)
+
+OnFileChanged will keep track of a tick counter for each files (*.2h & *.trn)
+int 2h_tick_counter = 0
+int trn_tick_counter = 0
+
+Whenever OnFileChanged detect *.2h or *.trn it will increase the assigned counter.
+
+Tick #1 to #3 should  not modify the initial debounceDelay value.
+
+On tick #4 of 2h_tick_counter, debounceDelay will increase to ~10000ms
+This is based on our current profiling where tick #5 which is written to *.trn
+and is always taking A LOT more than the average elapsed time.
+
+IF there is a 5th tick which would be tick #1 (trn_tick_counter) which in theory is always tied to 
+the *.trn file then reduce debounceDelay back to ~2000ms, the remaining writes should 
+take around ~12ms
+
+The problem with this solution is if there is no write to *.trn and instead the player only
+did a Save & Quit, then we will have to wait to full debounceDelay timer of 10000ms before 
+calling OnDebounceElapsed logic.
+
+Therefor, on tick #4 (2h) - We could also call a loop which for example; subtract 1000 ms at every X interval (~500ms).
+This way the alloted 10000ms would quickly elapsed if no turn has been made, player would need to wait 
+5 seconds instead 10 seconds.
+
+On the other hand if we make it to tick #5 or to be more precise tick #1 (trn_tick_counter) 
+then stop the decrease_counter loop.
+
 
 
 Branch description with Timeline analogy:
