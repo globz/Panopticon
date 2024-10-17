@@ -69,6 +69,8 @@ namespace Panopticon
         // Event handler for file changes
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
+            Console.WriteLine("OnFileChanged");
+
             // Reset the timer every time the event is triggered
             if (debounceTimer != null)
             {
