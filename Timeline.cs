@@ -635,7 +635,7 @@ public partial class Timeline : Form
         };
 
         var groupBox_undo_log = new System.Windows.Forms.GroupBox();
-        groupBox_undo_log.Location = new System.Drawing.Point(5, 100);
+        groupBox_undo_log.Location = new System.Drawing.Point(200, 100);
         groupBox_undo_log.Text = $"Undoing {undo_node_count} snapshot(s)";
         groupBox_undo_log.ForeColor = Color.Orange;
         groupBox_undo_log.AutoSize = true;
@@ -656,7 +656,7 @@ public partial class Timeline : Form
 
             Button ProceedUnDoButton = new()
             {
-                Location = new System.Drawing.Point(200, 100),
+                Location = new System.Drawing.Point(5, 100),
                 Text = "Proceed and delete.",
                 BackColor = Color.IndianRed,
                 ForeColor = Game.UI.ForeColor,
@@ -683,7 +683,7 @@ public partial class Timeline : Form
         foreach (Control control in groupBox.Controls)
         {
             // Calculate the right edge of the control (X + Width)
-            int controlRight = control.Left + control.Width;
+            int controlRight = control.Left + control.Width + 30;
             maxWidth = Math.Max(maxWidth, controlRight);
 
             // Calculate the total height required
