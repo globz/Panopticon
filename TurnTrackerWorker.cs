@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Timers;
 
 namespace Panopticon
@@ -15,16 +16,17 @@ namespace Panopticon
         // Probing the size of 2h file may be a good indicator for increasing debounceDelay
         private readonly double debounceDelay = 8000;
 
-        private DateTime lastEventTime;
+        // Initialize stopWatch for elapsed time tracking
+        private Stopwatch stopwatch = new Stopwatch();
 
         public void Watch()
         {
-            InitializeBackgroundWorker();
-
             // Initialize the debounce timer
             debounceTimer = new System.Timers.Timer(debounceDelay);
             debounceTimer.Elapsed += OnDebounceElapsed;
             debounceTimer.AutoReset = false; // Ensure it only triggers once after the delay
+
+            InitializeBackgroundWorker();
         }
 
         private void InitializeBackgroundWorker()
@@ -70,13 +72,21 @@ namespace Panopticon
             // Reset the timer every time the event is triggered
             if (debounceTimer != null)
             {
-                DateTime now = DateTime.Now;
-                TimeSpan timeSinceLastEvent = now - lastEventTime;
-                lastEventTime = now;
+                Console.WriteLine($"is S&Q: {e.FullPath.Contains(".2h")}");
+                Console.WriteLine($"is NEW TURN: {e.FullPath.Contains(".trn")}");
                 debounceTimer.Stop();
+                Console.WriteLine($"[Timer]~Elapsed time since last event:{GetElapsedTime()}");
                 debounceTimer.Start();
-                Console.WriteLine($"Starting timer...{timeSinceLastEvent.TotalMilliseconds}");
+                stopwatch.Restart();
             }
+        }
+
+        public double GetElapsedTime()
+        {
+            var elapsed = stopwatch.Elapsed.TotalMilliseconds;
+            double remainingTime = debounceDelay - elapsed;
+            double remaingTime_to_subtract = remainingTime > 0 ? remainingTime : 0;
+            return debounceDelay - remaingTime_to_subtract;
         }
 
         // Debouncing fileSystemWatcher.Changed event is necessary
@@ -84,6 +94,8 @@ namespace Panopticon
         private void OnDebounceElapsed(object? sender, ElapsedEventArgs e)
         {
             Console.WriteLine("OnDebounceElapsed");
+            debounceTimer?.Stop();
+            stopwatch.Stop();
             var status = Git.Status();
             if (status != null)
             {
