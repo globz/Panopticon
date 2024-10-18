@@ -139,8 +139,8 @@
 
  ~Info~
  Game name in Dominion supports up to 23 characters
- Git commit title 72 characters
- Git commit description has no limit (we could use this to let the player describe a turn)
+ Git commit title 72 characters - Still use it but useless - use Sqlite
+ Git commit description has no limit (we could use this to let the player describe a turn) - Nope use sqlite
 
  TODO:
 - Add a way for the user to update its current turn inside the new snapshot UI?
@@ -148,13 +148,14 @@
 - Implement settings at the branch level, right now settings are global to a specific game. (Implemented 2024-10-15)
 - Fix Tab index on all forms
 - Delete branch settings whenver a branch is deleted
+- Remove Save Notes button once inside a TimeTravel option menu
 
 BUG:
 - Fix TimeTravel.undo - node_seq = 1 condition not return the proper value and UI feedback (Fixed)
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, resulting in no new calculated turn. 
   This cause a manual snapshot to fail and Auto_commit won't trigger at all.
 - When using Manual snapshot, you still have to wait 8000ms for the turn to calculate, if you create the snapshot before that turn wont be properly updated.
-- When undoing turns, reset the turn values
+- When undoing turns, rewind the turn(s) value - (Implemented 2024-10-18)
 
 DEBUG log:
 ------------------------------------------------------------------------------
@@ -240,6 +241,87 @@ is NEW TURN: False
 OnDebounceElapsed
 File changed (auto-commit [enabled])
 Commit hash 009189cc65794cedc448b9553b85a8c6d1b1886c
+
+------------------------------------------------------------------------------
+TURN 46 @ Testing3
+------------------------------------------------------------------------------
+Current buffer size: 8192
+OnFileChanged
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:0
+OnFileChanged
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:0.10260000000016589
+OnFileChanged
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:0.013100000000122236
+OnFileChanged
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:0.0052999999998064595
+OnFileChanged
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:4078.3978
+OnFileChanged
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:5.139900000000125
+OnFileChanged
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:4.636300000000119
+OnFileChanged
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:0.1679999999996653
+OnDebounceElapsed
+File changed (auto-commit [enabled])
+Commit hash 6df0e067ba79ee7690f5be93615a88ed0ef73d51
+
+------------------------------------------------------------------------------
+TURN 46 @ Testing3
+------------------------------------------------------------------------------
+Current buffer size: 8192
+OnFileChanged
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:0
+OnFileChanged
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:0.08129999999982829
+OnFileChanged
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:0.009500000000116415
+OnFileChanged
+is S&Q: True
+is NEW TURN: False
+[Timer]~Elapsed time since last event:0.004500000000007276
+OnFileChanged
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:3468.2347
+OnFileChanged
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:5.142499999999927
+OnFileChanged
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:4.444599999999809
+OnFileChanged
+is S&Q: False
+is NEW TURN: True
+[Timer]~Elapsed time since last event:0.18689999999969586
+OnDebounceElapsed
+File changed (auto-commit [enabled])
+Commit hash bc5f26670f4c63658d68461f700587778b29d3c3
+
 
 Here is a potential solution for an adaptive debounce delay:
 
