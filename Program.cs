@@ -94,17 +94,22 @@ public static class Game
 
             return null;
         }
-        public static Button? FindButtonByName(Control parent, string buttonName)
+        public static dynamic? FindControlByName(Control parent, string controlName, Type type)
         {
             foreach (Control control in parent.Controls)
             {
-                if (control is Button button && button.Name == buttonName)
+                if (type == typeof(Button) && control is Button button && button.Name == controlName)
                 {
                     return button; // Found the button
                 }
 
+                if (type == typeof(GroupBox) && control is GroupBox groupBox && groupBox.Name == controlName)
+                {
+                    return groupBox; // Found the groupBox
+                }                
+
                 // Recursively search in child controls
-                Button? foundButton = FindButtonByName(control, buttonName);
+                dynamic? foundButton = FindControlByName(control, controlName, type);
                 if (foundButton != null)
                 {
                     return foundButton;

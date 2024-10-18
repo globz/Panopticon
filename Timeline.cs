@@ -35,7 +35,7 @@ public partial class Timeline : Form
             {
                 if (Game.UI.SelectedNode.Name != "settings")
                 {
-                    Button? saveNotesButton = Game.UI.FindButtonByName(Game.UI.TopPanel, "saveNotes");
+                    Button? saveNotesButton = Game.UI.FindControlByName(Game.UI.TopPanel, "saveNotes", typeof(Button));
                     saveNotesButton?.PerformClick();
                 }
             }
@@ -285,6 +285,7 @@ public partial class Timeline : Form
             groupBox_timeline_root.Size = new System.Drawing.Size(220, 125);
             groupBox_timeline_root.Text = "Timeline - " + Game.Name;
             groupBox_timeline_root.ForeColor = Color.Orange;
+            groupBox_timeline_root.Name = "groupBox_timeline_root";
 
             TextBox DescriptionBox = new()
             {
@@ -403,6 +404,7 @@ public partial class Timeline : Form
         groupBox_timeline_node.Size = new System.Drawing.Size(220, 115);
         groupBox_timeline_node.Text = nodeName;
         groupBox_timeline_node.ForeColor = Color.Orange;
+        groupBox_timeline_node.Name = "groupBox_timeline_node";
 
         TextBox NotesBox = new()
         {
@@ -524,6 +526,11 @@ public partial class Timeline : Form
     {
         Game.UI.BottomPanel?.Controls.Clear();
 
+        // Remove "Save Notes" Button - no longer valid in this context
+        GroupBox? topPanel_groupBox = Game.UI.FindControlByName(Game.UI.TopPanel, "groupBox_timeline_node", typeof(GroupBox));
+        Button? saveNotesButton = Game.UI.FindControlByName(topPanel_groupBox ?? new GroupBox(), "saveNotes", typeof(Button));
+        topPanel_groupBox?.Controls.Remove(saveNotesButton);
+
         var groupBox_TimeTravelActions = new System.Windows.Forms.GroupBox();
 
         // TODO
@@ -621,7 +628,7 @@ public partial class Timeline : Form
         // Gather information about the upcoming node(s) deletion
         List<string> undo_nodes_name = TimeTravel.Undo();
 
-        int undo_node_count = undo_nodes_name.Count();
+        int undo_node_count = undo_nodes_name.Count;
 
         Label description = new()
         {
@@ -670,8 +677,8 @@ public partial class Timeline : Form
             ProceedUnDoButton.Click += (sender, e) => { TimeTravel.Undo(true); };
         }
 
-        groupBox_undo_log.Controls.Add(undo_log);  
-        AutoSizeGroupBox(groupBox_undo_log);      
+        groupBox_undo_log.Controls.Add(undo_log);
+        AutoSizeGroupBox(groupBox_undo_log);
         Game.UI.BottomPanel?.Controls.Add(groupBox_undo_log);
         Game.UI.BottomPanel?.Controls.Add(description);
     }

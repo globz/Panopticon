@@ -148,7 +148,7 @@
 - Implement settings at the branch level, right now settings are global to a specific game. (Implemented 2024-10-15)
 - Fix Tab index on all forms
 - Delete branch settings whenver a branch is deleted
-- Remove Save Notes button once inside a TimeTravel option menu
+- Remove Save Notes button once inside a TimeTravel option menu - (Implemented 2024-10-18)
 
 BUG:
 - Fix TimeTravel.undo - node_seq = 1 condition not return the proper value and UI feedback (Fixed)
