@@ -3,15 +3,6 @@ using LibGit2Sharp;
 
 namespace Panopticon;
 
-/* public static class Helper
-{
-    public static object? GetPropertyValue(this object T, string PropName)
-    {
-        return T.GetType().GetProperty(PropName)?.GetValue(T, null);
-
-    }
-
-} */
 static class Program
 {
     /// <summary>
@@ -141,7 +132,7 @@ public static class DB
 {
     // Types : https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/types
 
-    private static readonly string DatabasePath = AppDomain.CurrentDomain.BaseDirectory + @"..\..\..\db\panopticon.db";
+    public static readonly string DatabasePath = AppDomain.CurrentDomain.BaseDirectory + @"..\..\..\db\panopticon.db";
     private static readonly string DatabaseSource = $"Data Source={DatabasePath}";
     private static readonly SqliteConnection Connection = new(DatabaseSource);
 
@@ -180,7 +171,7 @@ public static class DB
         statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
         statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
         statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
-        statement.Parameters.Add("@turn", SqliteType.Text).Value = Game.Settings.Turn;
+        statement.Parameters.Add("@turn", SqliteType.Integer).Value = Game.Settings.Turn;
         statement.Parameters.Add("@sq_turn", SqliteType.Text).Value = Game.Settings.SQ_Turn;
         statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = Game.Settings.Compound_Turn;
         statement.ExecuteNonQuery();
@@ -200,12 +191,13 @@ public static class DB
     public static void SaveTimeline(string title)
     {
         Open();
-        SqliteCommand statement = Query("INSERT INTO timelines (game, branch, node_name, node_seq, commit_hash) VALUES (@game, @branch, @node_name, @node_seq, @commit_hash)");
+        SqliteCommand statement = Query("INSERT INTO timelines (game, branch, node_name, node_seq, compound_turn, commit_hash) VALUES (@game, @branch, @node_name, @node_seq, @compound_turn, @commit_hash)");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         statement.Parameters.Add("@node_name", SqliteType.Text).Value = title;
         statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = Git.CommitCount();
-        statement.Parameters.Add("@commit_hash", SqliteType.Integer).Value = Git.head_commit_hash;
+        statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = Game.Settings.Compound_Turn;
+        statement.Parameters.Add("@commit_hash", SqliteType.Text).Value = Git.head_commit_hash;
         statement.ExecuteNonQuery();
         Close();
     }

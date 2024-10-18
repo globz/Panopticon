@@ -744,7 +744,7 @@ public partial class Timeline : Form
         DB.Close();
     }
 
-    private static void Retrieve_Settings()
+    public static void Retrieve_Settings()
     {
         DB.Open();
         SqliteCommand statement = DB.Query("SELECT auto_commit, prefix, suffix, turn, sq_turn, compound_turn FROM settings WHERE game = @game AND branch = @branch");
@@ -757,7 +757,7 @@ public partial class Timeline : Form
     private static void Initialize_Timelines_DB()
     {
         DB.Open();
-        DB.Query("CREATE TABLE IF NOT EXISTS timelines (game VARCHAR(23), branch VARCHAR(100), node_name VARCHAR(43), node_seq INT, commit_hash TEXT NOT NULL, PRIMARY KEY (game, branch, node_name))").ExecuteNonQuery();
+        DB.Query("CREATE TABLE IF NOT EXISTS timelines (game VARCHAR(23), branch VARCHAR(100), node_name VARCHAR(43), node_seq INT, compound_turn DOUBLE, commit_hash TEXT NOT NULL, PRIMARY KEY (game, branch, node_name))").ExecuteNonQuery();
         DB.Close();
     }
 

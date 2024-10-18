@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Microsoft.Data.Sqlite;
 
 namespace Panopticon;
@@ -111,6 +112,40 @@ public class TimeTravel
                 statement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
                 statement.ExecuteNonQuery();
                 DB.Close();
+
+                // Retrieve the compound turn of the node that HEAD will point to.
+                DB.Open();
+                statement = DB.Query("SELECT compound_turn FROM timelines WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = parent_node_seq;
+                data = statement.ExecuteScalar();
+                DB.Close();
+
+                double compoundTurnValue = Convert.ToDouble(data ?? 0.00);
+                string compoundTurnString = compoundTurnValue.ToString("0.00");
+
+                // Rewind the Turn(s) settings values
+                string pattern = @"(\d+)\.(\d+)";
+                var match = Regex.Match(compoundTurnString, pattern);
+
+                int rewinded_turn = int.Parse(match.Groups[1].Value);
+                double rewinded_sq_turn = double.Parse(match.Groups[2].Value) / 100.0;
+                double rewinded_compound_turn = rewinded_turn + rewinded_sq_turn;
+
+                DB.Open();
+                statement = DB.Query("UPDATE settings SET turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn WHERE game = @game AND branch = @branch");
+                statement.Parameters.Add("@turn", SqliteType.Integer).Value = rewinded_turn;
+                statement.Parameters.Add("@sq_turn", SqliteType.Integer).Value = rewinded_sq_turn;
+                statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = rewinded_compound_turn;
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                statement.ExecuteNonQuery();
+                DB.Close();
+
+                // Reload settings
+                Timeline.Retrieve_Settings();
+
             }
         }
         return timeline_nodes_name;
