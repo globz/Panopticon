@@ -156,6 +156,7 @@ public partial class Timeline : Form
         bottomPanel.Size = new System.Drawing.Size(207, 142);
         // bottomPanel is the fifth control in the tab order.
         bottomPanel.TabIndex = 4;
+        bottomPanel.AutoScroll = true;
 
         // These are basic properties of the form.
         this.ClientSize = new System.Drawing.Size(800, 600);
@@ -635,7 +636,7 @@ public partial class Timeline : Form
         };
 
         var groupBox_undo_log = new System.Windows.Forms.GroupBox();
-        groupBox_undo_log.Location = new System.Drawing.Point(200, 100);
+        groupBox_undo_log.Location = new System.Drawing.Point(5, 130);
         groupBox_undo_log.Text = $"Undoing {undo_node_count} snapshot(s)";
         groupBox_undo_log.ForeColor = Color.Orange;
         groupBox_undo_log.AutoSize = true;
