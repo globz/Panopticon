@@ -26,11 +26,6 @@ namespace Panopticon
             debounceTimer.Elapsed += OnDebounceElapsed;
             debounceTimer.AutoReset = false; // Ensure it only triggers once after the delay
 
-            InitializeBackgroundWorker();
-        }
-
-        private void InitializeBackgroundWorker()
-        {
             // Initialize the BackgroundWorker
             backgroundWorker = new BackgroundWorker();
             backgroundWorker.DoWork += BackgroundWorker_DoWork;
@@ -92,7 +87,7 @@ namespace Panopticon
         }
 
         // Debouncing fileSystemWatcher.Changed event is necessary
-        // Dom6 currently writes 4 times consecutively to *.2h
+        // Dom6 currently writes 4 times consecutively to each files (.2h & .trn)
         private void OnDebounceElapsed(object? sender, ElapsedEventArgs e)
         {
             Console.WriteLine("OnDebounceElapsed");
