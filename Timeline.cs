@@ -371,7 +371,7 @@ public partial class Timeline : Form
             + System.Environment.NewLine
             + "Add notes about this turn."
             + System.Environment.NewLine
-            + "Time travel to this turn.",
+            + "Execute time travel abilities.",
             Dock = DockStyle.Fill
         };
 
