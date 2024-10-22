@@ -90,6 +90,16 @@ public class Snapshot
             // Check if a turn has been made
             bool maybe_new_turn = Git.CheckIfFileExists(status.Modified, ".trn");
 
+            // Temp fix until I can find why FileSystemWatcher is missing file changes which is
+            // causing a stale commit title in the process. Since we automatically update the
+            // turn values via FileSystemWatcher, if it does not trigger at all the title state
+            // will be out of sync.
+            if (Git.Maybe_missed_update(maybe_new_turn))
+            {
+                // Calculate turn | sq_turn | compound_turn
+                Game.Timeline.Update_Turn(maybe_new_turn);
+            }
+
             if (maybe_new_turn)
             {
                 // New turn detected

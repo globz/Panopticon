@@ -106,7 +106,7 @@ public static class Game
                 if (type == typeof(GroupBox) && control is GroupBox groupBox && groupBox.Name == controlName)
                 {
                     return groupBox; // Found the groupBox
-                }                
+                }
 
                 // Recursively search in child controls
                 dynamic? foundButton = FindControlByName(control, controlName, type);
@@ -238,6 +238,36 @@ public static class Git
         {
             // Save & Quit detected
             return Game.Settings.Prefix + Game.Name + "_SQ_" + Game.Settings.Compound_Turn.ToString("0.00");
+        }
+    }
+
+    public static bool Maybe_missed_update(bool maybe_new_turn)
+    {
+        DB.Open();
+        SqliteCommand statement = DB.Query(
+        "SELECT node_name FROM timelines " +
+        "WHERE game = @game AND branch = @branch " +
+        "AND node_seq = (" +
+        "SELECT MAX(node_seq) FROM timelines " +
+        "WHERE game = @game AND branch = @branch)");
+        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+        var data = statement.ExecuteScalar();
+        string? previously_saved_title = (data != null) ? data.ToString() : "";
+        DB.Close();
+
+        Console.WriteLine($"Currently saved in db: {previously_saved_title}");
+        Console.WriteLine($"Current title in memory: {Git.Commit_title(maybe_new_turn)}");
+
+        if (previously_saved_title == Git.Commit_title(maybe_new_turn))
+        {
+            Console.WriteLine("FileSystemWatcher missed a turn.");
+            return true;
+        }
+        else
+        {
+            Console.WriteLine("FileSystemWatcher DID NOT missed a turn.");
+            return false;
         }
     }
 

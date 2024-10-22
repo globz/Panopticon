@@ -10,11 +10,7 @@ namespace Panopticon
         private BackgroundWorker? backgroundWorker;
         private System.Timers.Timer? debounceTimer;
 
-        // Debouncing delay for fileSystemWatcher.Changed (TODO: perhaps implement an Adaptive Debounce Delay?)
-        // Confirmed: The longer the game the goes the longer it takes to process a turn.
-        // 5000 ms does not work for longer running games (creates 2 commit (S&Q & Turn))
-        // Probing the size of 2h file may be a good indicator for increasing debounceDelay
-        private readonly double debounceDelay = 8000;
+        private readonly double debounceDelay = 500;
 
         // Initialize stopWatch for elapsed time tracking
         private Stopwatch stopwatch = new Stopwatch();
@@ -40,7 +36,7 @@ namespace Panopticon
 
             fileSystemWatcher.Path = @$"{Game.Path}";
 
-            fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite;
+            fileSystemWatcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.Attributes;
 
             // Dom6 orders for a given turn (if .2h is solely updated without the .trn file then it means save & quit)
             fileSystemWatcher.Filters.Add("*.2h");
@@ -51,7 +47,7 @@ namespace Panopticon
             fileSystemWatcher.IncludeSubdirectories = false;
             fileSystemWatcher.EnableRaisingEvents = true;
 
-            //fileSystemWatcher.InternalBufferSize = 64 * 1024; // 64 KB
+            fileSystemWatcher.InternalBufferSize = 64 * 1024; // 64 KB
             Console.WriteLine($"Current buffer size: {fileSystemWatcher.InternalBufferSize}");
 
             // Subscribe to events
@@ -64,13 +60,17 @@ namespace Panopticon
         // Event handler for file changes
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine("OnFileChanged");
+            Console.WriteLine($"OnFileChanged: {e.FullPath}");
 
-            // Reset the timer every time the event is triggered
+            
             if (debounceTimer != null)
             {
-                Console.WriteLine($"is S&Q: {e.FullPath.Contains(".2h")}");
-                Console.WriteLine($"is NEW TURN: {e.FullPath.Contains(".trn")}");
+
+                Console.WriteLine($"is S&Q: {e.FullPath.EndsWith(".2h")}"); 
+                Console.WriteLine($"is NEW TURN: {e.FullPath.EndsWith(".trn")}");
+                Console.WriteLine($"Current debounceDelay interval: {debounceTimer.Interval}");
+                
+                // Reset the timers every time the event is triggered
                 debounceTimer.Stop();
                 Console.WriteLine($"[Timer]~Elapsed time since last event:{GetElapsedTime()}");
                 debounceTimer.Start();
@@ -91,8 +91,11 @@ namespace Panopticon
         private void OnDebounceElapsed(object? sender, ElapsedEventArgs e)
         {
             Console.WriteLine("OnDebounceElapsed");
+
+            // Stop timers
             debounceTimer?.Stop();
             stopwatch.Stop();
+
             var status = Git.Status();
             if (status != null)
             {
@@ -118,8 +121,8 @@ namespace Panopticon
 
                     if (!maybe_new_turn)
                     {
-                        // Added default timeline notes for S&Q
-                        DB.SaveTimelineNotes($"Save & Quit on turn {Game.Settings.Turn}", Git.Commit_title(maybe_new_turn));
+                        // Added default timeline notes for Saves
+                        DB.SaveTimelineNotes($"Save on turn {Game.Settings.Turn}", Git.Commit_title(maybe_new_turn));
                     }
 
                     Game.UI.TreeViewLeft.Invoke((MethodInvoker)delegate
@@ -133,7 +136,7 @@ namespace Panopticon
                     // Auto-commit disabled
                     Console.WriteLine($"File changed (auto-commit [disabled])");
 
-                    // Auto calculate turn | sq_turn | compound_turn
+                    // Calculate turn | sq_turn | compound_turn
                     Game.Timeline.Update_Turn(maybe_new_turn);
 
                     // Refresh Snapshot UI
