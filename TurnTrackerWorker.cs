@@ -60,8 +60,7 @@ namespace Panopticon
         // Event handler for file changes
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
-            Console.WriteLine($"OnFileChanged: {e.FullPath}");
-
+            Console.WriteLine($"OnFileChanged: {e.ChangeType} => {e.FullPath}");
             
             if (debounceTimer != null)
             {
