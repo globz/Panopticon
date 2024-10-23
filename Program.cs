@@ -37,31 +37,6 @@ public static class Game
 {
     public static string? Path { get; set; }
     public static string? Name { get; set; }
-
-    public static class Timeline
-    {
-        public static void Update_Turn(bool maybe_new_turn)
-        {
-            if (maybe_new_turn)
-            {
-                // New turn detected
-                Settings.Turn++;
-            }
-            else
-            {
-                // Save & Quit detected
-                if (Settings.Turn > Math.Truncate(Settings.Compound_Turn))
-                {
-                    // Current turn is now greater than the previous compound turn
-                    // Reset SQ_Turn to 0.0
-                    Settings.SQ_Turn = 0.00;
-                }
-                Settings.SQ_Turn += 0.01;
-                Settings.Compound_Turn = Math.Round(Settings.Turn + Settings.SQ_Turn, 2);
-            }
-        }
-    }
-
     public static class UI
     {
         public static SplitContainer VerticalSplitContainer { get; set; } = new SplitContainer();
@@ -238,36 +213,6 @@ public static class Git
         {
             // Save & Quit detected
             return Game.Settings.Prefix + Game.Name + "_SQ_" + Game.Settings.Compound_Turn.ToString("0.00");
-        }
-    }
-
-    public static bool Maybe_missed_update(bool maybe_new_turn)
-    {
-        DB.Open();
-        SqliteCommand statement = DB.Query(
-        "SELECT node_name FROM timelines " +
-        "WHERE game = @game AND branch = @branch " +
-        "AND node_seq = (" +
-        "SELECT MAX(node_seq) FROM timelines " +
-        "WHERE game = @game AND branch = @branch)");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        var data = statement.ExecuteScalar();
-        string? previously_saved_title = (data != null) ? data.ToString() : "";
-        DB.Close();
-
-        Console.WriteLine($"Currently saved in db: {previously_saved_title}");
-        Console.WriteLine($"Current title in memory: {Git.Commit_title(maybe_new_turn)}");
-
-        if (previously_saved_title == Git.Commit_title(maybe_new_turn))
-        {
-            Console.WriteLine("FileSystemWatcher missed a turn.");
-            return true;
-        }
-        else
-        {
-            Console.WriteLine("FileSystemWatcher DID NOT missed a turn.");
-            return false;
         }
     }
 
