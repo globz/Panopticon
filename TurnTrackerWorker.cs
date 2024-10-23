@@ -7,7 +7,7 @@ namespace Panopticon
     public class TurnTrackerWorker
     {
         private FileSystemWatcher? fileSystemWatcher;
-        private BackgroundWorker? backgroundWorker;
+        public static BackgroundWorker backgroundWorker = new BackgroundWorker();
         private System.Timers.Timer? debounceTimer;
 
         private readonly double debounceDelay = 500;
@@ -24,7 +24,10 @@ namespace Panopticon
 
             // Initialize the BackgroundWorker
             backgroundWorker = new BackgroundWorker();
+            backgroundWorker.WorkerSupportsCancellation = true;
+
             backgroundWorker.DoWork += BackgroundWorker_DoWork;
+            backgroundWorker.RunWorkerCompleted += TurnTrackerWorker_RunWorkerCompleted;
 
             // Start it in the background
             backgroundWorker.RunWorkerAsync();
@@ -55,20 +58,35 @@ namespace Panopticon
 
             // Subscribe to the Error event
             fileSystemWatcher.Error += OnError;
+
+            try
+            {
+                // Keep the worker alive until cancellation is requested
+                while (!backgroundWorker.CancellationPending)
+                {
+                    Thread.Sleep(1000);  // Keep loop responsive and low on CPU usage
+                }
+            }
+            finally
+            {
+                // Clean up FileSystemWatcher on exit
+                fileSystemWatcher.Dispose();
+            }
+
         }
 
         // Event handler for file changes
         private void OnFileChanged(object sender, FileSystemEventArgs e)
         {
             Console.WriteLine($"OnFileChanged: {e.ChangeType} => {e.FullPath}");
-            
+
             if (debounceTimer != null)
             {
 
-                Console.WriteLine($"is S&Q: {e.FullPath.EndsWith(".2h")}"); 
+                Console.WriteLine($"is S&Q: {e.FullPath.EndsWith(".2h")}");
                 Console.WriteLine($"is NEW TURN: {e.FullPath.EndsWith(".trn")}");
                 Console.WriteLine($"Current debounceDelay interval: {debounceTimer.Interval}");
-                
+
                 // Reset the timers every time the event is triggered
                 debounceTimer.Stop();
                 Console.WriteLine($"[Timer]~Elapsed time since last event:{GetElapsedTime()}");
@@ -85,7 +103,7 @@ namespace Panopticon
             return debounceDelay - remaingTime_to_subtract;
         }
 
-        // Debouncing fileSystemWatcher.Changed event is necessary
+        // Debouncing FileSystemWatcher.Changed event is necessary
         // Dom6 currently writes 4 times consecutively to each files (.2h & .trn)
         private void OnDebounceElapsed(object? sender, ElapsedEventArgs e)
         {
@@ -95,57 +113,7 @@ namespace Panopticon
             debounceTimer?.Stop();
             stopwatch.Stop();
 
-            var status = Git.Status();
-            if (status != null)
-            {
-                // Check if a turn has been made
-                bool maybe_new_turn = Git.CheckIfFileExists(status.Modified, ".trn");
-
-                if (Game.Settings.Auto_commit)
-                {
-                    // Auto-commit enabled
-                    Console.WriteLine($"File changed (auto-commit [enabled])");
-
-                    // Auto update turn | sq_turn | compound_turn
-                    Game.Timeline.Update_Turn(maybe_new_turn);
-
-                    // Commit all changes
-                    Git.Commit(Game.Path, Git.Commit_title(maybe_new_turn));
-
-                    // Save current commit information to timelines DB
-                    DB.SaveTimeline(Git.Commit_title(maybe_new_turn));
-
-                    // Save settings (Turn(s) have been updated)
-                    DB.SaveAllSettings();
-
-                    if (!maybe_new_turn)
-                    {
-                        // Added default timeline notes for Saves
-                        DB.SaveTimelineNotes($"Save on turn {Game.Settings.Turn}", Git.Commit_title(maybe_new_turn));
-                    }
-
-                    Game.UI.TreeViewLeft.Invoke((MethodInvoker)delegate
-                    {
-                        // Refresh Timeline nodes
-                        Timeline.Refresh_Timeline_Nodes();
-                    });
-                }
-                else
-                {
-                    // Auto-commit disabled
-                    Console.WriteLine($"File changed (auto-commit [disabled])");
-
-                    // Calculate turn | sq_turn | compound_turn
-                    Game.Timeline.Update_Turn(maybe_new_turn);
-
-                    // Refresh Snapshot UI
-                    Game.UI.BottomPanel?.Invoke((MethodInvoker)delegate
-                    {
-                        // Call Snapshot.InitializeComponent() to refresh the UI
-                        Snapshot.InitializeComponent();
-                    });
-                }
-            }
+            TurnTracker.Process();
         }
 
         // Error event handler
@@ -157,6 +125,31 @@ namespace Panopticon
             {
                 Console.WriteLine("The file system watcher buffer overflowed. Consider increasing the buffer size.");
             }
+        }
+
+        // Clean up logic when the worker completes
+        private static void TurnTrackerWorker_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
+        {
+            if (e.Cancelled)
+            {
+                Console.WriteLine("TurnTrackerWorker stopped gracefully.");
+            }
+            else if (e.Error != null)
+            {
+                Console.WriteLine($"TurnTrackerWorker encountered an error: {e.Error.Message}");
+            }
+        }
+
+        // Handle application shutdown and stop the worker gracefully
+        public bool Cancel()
+        {
+            if (backgroundWorker.IsBusy)
+            {
+                backgroundWorker.CancelAsync();  // Request cancellation
+                Console.WriteLine("Stopping FileSystemWatcher...");
+                Thread.Sleep(500);  // Give it time to clean up (optional)
+            }
+            return true;
         }
     }
 }
