@@ -1,11 +1,15 @@
+using System.ComponentModel;
 using System.Windows.Forms.VisualStyles;
 using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
+using SQLitePCL;
 
 namespace Panopticon;
 
 public partial class Timeline : Form
 {
+    public FileWatcherManager? _fileWatcher;
+
     public Timeline()
     {
         InitializeComponent();
@@ -19,9 +23,18 @@ public partial class Timeline : Form
         // Refresh Timeline nodes
         Refresh_Timeline_Nodes();
 
-        // Enable automatic Turn tracking if needed
-        TurnTrackerWorker turnTracker = new TurnTrackerWorker();
-        turnTracker.Watch();
+        // Initialize FileWatcherManager
+        this.Load += (s, e) =>
+        {
+            _fileWatcher = new FileWatcherManager(@$"{Game.Path}");
+            _fileWatcher.Start();
+        };
+
+        // Clean up when form closes
+        this.FormClosing += (s, e) =>
+        {
+            _fileWatcher?.Dispose();
+        };        
 
         // Enable manual snapshot mode if needed
         Enable_Manual_Snapshot();
@@ -835,6 +848,5 @@ public partial class Timeline : Form
             Game.UI.TreeViewLeft?.Nodes.Add(newCommitNode);
         }
     }
-
 }
 
