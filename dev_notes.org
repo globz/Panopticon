@@ -167,3 +167,73 @@ So, you create a new timeline (a new Git branch). In this alternate timeline, yo
 If your alternate timeline turns out well, you can merge it back into the main story, combining the best parts of both timelines. If it doesn’t, you can simply abandon this branch without affecting the original plot.
 
 In short, a Git branch allows you to explore different "what-if" scenarios in your project, just like creating alternate storylines in a timeline.
+
+Code dump:
+
+    public static bool Maybe_missed_update(bool maybe_new_turn)
+    {
+        DB.Open();
+        SqliteCommand statement = DB.Query(
+        "SELECT node_name FROM timelines " +
+        "WHERE game = @game AND branch = @branch " +
+        "AND node_seq = (" +
+        "SELECT MAX(node_seq) FROM timelines " +
+        "WHERE game = @game AND branch = @branch)");
+        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+        var data = statement.ExecuteScalar();
+        string? previously_saved_title = (data != null) ? data.ToString() : "";
+        DB.Close();
+
+        Console.WriteLine($"Currently saved in db: {previously_saved_title}");
+        Console.WriteLine($"Current title in memory: {Git.Commit_title(maybe_new_turn)}");
+
+        if (previously_saved_title == Git.Commit_title(maybe_new_turn))
+        {
+            Console.WriteLine("FileSystemWatcher missed a turn.");
+            return true;
+        }
+        else
+        {
+            Console.WriteLine("FileSystemWatcher DID NOT missed a turn.");
+            return false;
+        }
+    }
+
+   // Temp fix until I can find why FileSystemWatcher is missing file changes which is
+   // causing a stale commit title in the process. Since we automatically update the
+   // turn values via FileSystemWatcher, if it does not trigger at all the title state
+   // will be out of sync.
+   if (Git.Maybe_missed_update(maybe_new_turn))
+   {
+      // Calculate turn | sq_turn | compound_turn
+      Game.Timeline.Update_Turn(maybe_new_turn);
+   }
+
+       public static class Timeline // TODO this may no longer be needed
+    {
+        public static void Update_Turn(bool maybe_new_turn)
+        {
+            if (maybe_new_turn)
+            {
+                // New turn detected
+                Settings.Turn++;
+            }
+            else
+            {
+                // Save & Quit detected
+                if (Settings.Turn > Math.Truncate(Settings.Compound_Turn))
+                {
+                    // Current turn is now greater than the previous compound turn
+                    // Reset SQ_Turn to 0.0
+                    Settings.SQ_Turn = 0.00;
+                }
+                Settings.SQ_Turn += 0.01;
+                Settings.Compound_Turn = Math.Round(Settings.Turn + Settings.SQ_Turn, 2);
+            }
+        }
+    }
+
+    // Enable automatic Turn tracking if needed
+    //TurnTrackerWorker turnTracker = new TurnTrackerWorker();
+    //turnTracker.Watch();
