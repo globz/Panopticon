@@ -26,7 +26,6 @@ static class Program
         Game.Settings.Prefix = "";
         Game.Settings.Suffix = "_TURN_";
         Game.Settings.Auto_commit = true;
-        Game.Settings.Auto_commit_on_save_and_quit = false;
 
         Application.Run(new Home());
     }
@@ -98,7 +97,6 @@ public static class Game
     public static class Settings
     {
         public static bool Auto_commit { get; set; }
-        public static bool Auto_commit_on_save_and_quit { get; set; } // TODO might not be needed
         public static string? Prefix { get; set; }
         public static string? Suffix { get; set; }
         public static int Turn { get; set; }
