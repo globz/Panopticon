@@ -1,5 +1,8 @@
+using System.Text.RegularExpressions;
+using Microsoft.Data.Sqlite;
+
 namespace Panopticon;
-public class TurnTracker
+public partial class TurnTracker
 {
     public static void Process()
     {
@@ -9,7 +12,7 @@ public class TurnTracker
             // Check if a turn has been made
             bool maybe_new_turn = Git.CheckIfFileExists(status.Modified, ".trn");
 
-            // Auto update turn | sq_turn | compound_turn
+            // Update turn | sq_turn | compound_turn
             Update_Turn(maybe_new_turn);
 
             // Auto commit if needed
@@ -91,4 +94,36 @@ public class TurnTracker
         }
     }
 
+    public static bool Maybe_missed_turn()
+    {
+        DB.Open();
+        SqliteCommand statement = DB.Query(
+        "SELECT node_name FROM timelines " +
+        "WHERE game = @game AND branch = @branch " +
+        "AND node_seq = (" +
+        "SELECT MAX(node_seq) FROM timelines " +
+        "WHERE game = @game AND branch = @branch)");
+        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+        var data = statement.ExecuteScalar();
+        string? current_saved_title = (data != null) ? data.ToString() : "";
+        DB.Close();
+
+        bool hasDecimal = !string.IsNullOrEmpty(current_saved_title) && DecimalPattern().IsMatch(current_saved_title);
+
+        if (hasDecimal)
+        {
+            // We are dealing with "SAVE" turn ie; SAVE_45.01
+            return current_saved_title == Git.Commit_title(false);
+        }
+        else
+        {
+            // We are dealing with turn only ie; TURN_45
+            return current_saved_title == Git.Commit_title(true);
+        }
+
+    }
+
+    [GeneratedRegex(@"\d+\.\d+$")]
+    private static partial Regex DecimalPattern();
 }

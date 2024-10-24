@@ -53,7 +53,7 @@ public class Snapshot
             // Check if a turn has been made
             bool maybe_new_turn = Git.CheckIfFileExists(status.Modified, ".trn");
 
-            string status_description = maybe_new_turn ? "New turn has been detected" : "Save && Quit has been detected";
+            string status_description = maybe_new_turn ? "New turn has been detected" : "A save has been detected";
 
             description.Text += System.Environment.NewLine
             + System.Environment.NewLine
@@ -90,6 +90,14 @@ public class Snapshot
             // Check if a turn has been made
             bool maybe_new_turn = Git.CheckIfFileExists(status.Modified, ".trn");
 
+            // Did FileWatcherManager missed a turn?
+            if (TurnTracker.Maybe_missed_turn())
+            {                
+                // Update turn | sq_turn | compound_turn
+                TurnTracker.Update_Turn(maybe_new_turn);
+                Console.WriteLine("TurnTracker missed a turn!");
+            }
+
             if (maybe_new_turn)
             {
                 // New turn detected
@@ -122,8 +130,8 @@ public class Snapshot
                 // Save settings (Turn(s) have been updated & commited)
                 DB.SaveAllSettings();
 
-                // Added default timeline notes for S&Q
-                DB.SaveTimelineNotes($"Save & Quit on turn {Game.Settings.Turn}", Git.Commit_title(maybe_new_turn));
+                // Added default timeline notes for Saves
+                DB.SaveTimelineNotes($"Save on turn {Game.Settings.Turn}", Git.Commit_title(maybe_new_turn));
 
                 // Refresh Timeline nodes
                 Timeline.Refresh_Timeline_Nodes();
