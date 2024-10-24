@@ -212,6 +212,7 @@ public class Settings
             {
                 Value = Game.Settings.Turn,
                 Minimum = 1,
+                Maximum = 9999,
                 TabIndex = 3,
                 Location = new System.Drawing.Point(5, 185),
                 ForeColor = Game.UI.ForeColor,
