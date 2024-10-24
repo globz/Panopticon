@@ -34,7 +34,7 @@ public partial class Timeline : Form
         this.FormClosing += (s, e) =>
         {
             _fileWatcher?.Dispose();
-        };        
+        };
 
         // Enable manual snapshot mode if needed
         Enable_Manual_Snapshot();
@@ -816,6 +816,12 @@ public partial class Timeline : Form
             }
 
             Game.UI.Timeline_history?.ExpandAll();
+
+            // Scroll to the bottom
+            if (Game.UI.Timeline_history?.Nodes.Count > 0)
+            {
+                Game.UI.Timeline_history.Nodes[Game.UI.Timeline_history.Nodes.Count - 1].EnsureVisible();
+            }
         }
     }
 
