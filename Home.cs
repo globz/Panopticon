@@ -103,7 +103,7 @@ public partial class Home : Form
     private void InitializeBackground()
     {
         Image bg_source = Image.FromFile(AppDomain.CurrentDomain.BaseDirectory + @"..\..\..\Assets\background.png");
-        BackColor = Game.UI.Theme; //Color.GhostWhite;
+        BackColor = Game.UI.Theme;
         Image bg = RoundCorners(bg_source, 250, Game.UI.Theme);
         BackgroundImage = bg;
         BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
