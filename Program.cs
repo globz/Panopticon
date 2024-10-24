@@ -211,8 +211,8 @@ public static class Git
         }
         else
         {
-            // Save & Quit detected
-            return Game.Settings.Prefix + Game.Name + "_SQ_" + Game.Settings.Compound_Turn.ToString("0.00");
+            // Save detected
+            return Game.Settings.Prefix + Game.Name + "_SAVE_" + Game.Settings.Compound_Turn.ToString("0.00");
         }
     }
 
