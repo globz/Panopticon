@@ -29,19 +29,17 @@ public partial class TurnTracker
         {
             // New turn detected
             Game.Settings.Turn++;
+            Game.Settings.SQ_Turn = 0.00;            
         }
         else
         {
-            // Save & Quit detected
-            if (Game.Settings.Turn > Math.Truncate(Game.Settings.Compound_Turn))
-            {
-                // Current turn is now greater than the previous compound turn
-                // Reset SQ_Turn to 0.0
-                Game.Settings.SQ_Turn = 0.00;
-            }
-            Game.Settings.SQ_Turn += 0.01;
-            Game.Settings.Compound_Turn = Math.Round(Game.Settings.Turn + Game.Settings.SQ_Turn, 2);
+            // Save detected
+            Game.Settings.SQ_Turn += 0.01;            
         }
+
+        // Compound turn must always be updated
+        Game.Settings.Compound_Turn = Math.Round(Game.Settings.Turn + Game.Settings.SQ_Turn, 2);
+
     }
 
     public static void Refresh_UI(bool auto_commit)
