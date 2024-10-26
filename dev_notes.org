@@ -141,30 +141,61 @@
  Game name in Dominion supports up to 23 characters
  Git commit title 72 characters - Still use it but useless - use Sqlite
  Git commit description has no limit (we could use this to let the player describe a turn) - Nope use sqlite
+ Git branch are 244 bytes - Panopticon does set this value to 50 characters.
 
  TODO:
-- Add a way for the user to update its current turn inside the new snapshot UI?
 - FileWatcherManager ~ perhaps implement an Adaptive Debounce Delay?
-- Implement settings at the branch level, right now settings are global to a specific game. (Implemented 2024-10-15)
+- Renamed column "sq_turn" to "saved_turn" in table timelines
+- Implement TimeTravel.BranchOff (Implemented 2024-10-25)
 - Fix Tab index on all forms
 - Delete branch settings whenever a branch is deleted
+- Branch switching menu
+- Ability to rename nodes?
+- Implement settings at the branch level, right now settings are global to a specific game. (Implemented 2024-10-15)
 - Remove Save Notes button once inside a TimeTravel option menu - (Implemented 2024-10-18)
 - Call TurnTracker.Update_Turn() on missed turn(s), this is needed for the snapshot implementation. (Implemented 2024-10-24)
-- Renamed column "sq_turn" to "saved_turn" in table timelines
+
 
 BUG:
-- Fix TimeTravel.undo - node_seq = 1 condition not return the proper value and UI feedback (Fixed)
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, resulting in no new calculated turn. 
   This cause a manual snapshot to fail and Auto_commit won't trigger at all. (Still pending, testing now with the new FileWatcherManager)
+- Fix TimeTravel.undo - node_seq = 1 condition not return the proper value and UI feedback (Fixed)
 - When undoing turns, rewind the turn(s) value - (Implemented 2024-10-18)
 
+HEAD - 85b14ecf7cae4b9db7f0cac429654647f82d3cbe
 
-Branch description with Timeline analogy:
+commit e71037c7f72afafc53ac12efe76ed04a8e155d43
+Author: Panopticon <panopticon@kittybomber.com>
+Date:   Thu Oct 24 10:44:39 2024 -0400
 
-A Git branch is like an alternate timeline in a story. Imagine you’re writing a novel, and the main timeline is the published book, the "master" or "main" branch. At some point, you decide to explore a different plot idea, but you don’t want to mess up the main storyline.
+    EA_DebugMissedTurn_TURN_27
 
-So, you create a new timeline (a new Git branch). In this alternate timeline, you can make changes to the plot, develop characters differently, or experiment with new ideas. As you work, your changes stay within this alternate timeline, leaving the main story untouched.
 
-If your alternate timeline turns out well, you can merge it back into the main story, combining the best parts of both timelines. If it doesn’t, you can simply abandon this branch without affecting the original plot.
+git branch my_branch e71037c7f72afafc53ac12efe76ed04a8e155d43
 
-In short, a Git branch allows you to explore different "what-if" scenarios in your project, just like creating alternate storylines in a timeline.
+or checkout immediately 
+
+git checkout -b my_branch e71037c7f72afafc53ac12efe76ed04a8e155d43
+
+
+git checkout root
+git checkout my_branch
+
+commit 9fb36faf0b6af8e9bb0ae039b1048994e2eed444
+Author: Panopticon <panopticon@kittybomber.com>
+Date:   Thu Oct 24 09:50:25 2024 -0400
+
+    EA_DebugMissedTurn_TURN_9
+
+git checkout -b my_branch2 9fb36faf0b6af8e9bb0ae039b1048994e2eed444
+
+This is exactly what we need for the "Replay" feature - https://www.inmotionhosting.com/support/website/git/git-checkout/
+
+// Start replay mode (detached HEAD)
+git checkout <commit hash>
+
+// Everything done during Replay mode may be saved to a new branch
+git switch -c <new-branch-name> 
+
+// Discard all changes made while Replay mode was active - Go back to previous branch
+git switch - 
