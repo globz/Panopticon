@@ -327,4 +327,51 @@ public static class Git
         }
     }
 
+    public static Branch Detached_Head(string commit_hash)
+    {
+        using var repo = new Repository(Game.Path);
+        Branch detached_head = Commands.Checkout(repo, commit_hash);
+        return detached_head;
+    }
+
+    public class BranchResult
+    {
+        public Branch? Branch { get; set; }
+        public string? ErrorMessage { get; set; }
+        public bool IsSuccess => Branch != null;
+    }
+
+    public static BranchResult New_branch(string branch, string commit_hash)
+    {
+        try
+        {
+            using var repo = new Repository(Game.Path);
+            Branch new_branch = repo.Branches.Add(branch, commit_hash);
+            return new BranchResult { Branch = new_branch };
+        }
+        catch (Exception ex)
+        {
+            return new BranchResult { ErrorMessage = ex.Message };
+        }
+    }
+
+    public static BranchResult Checkout(string? checkout_branch)
+    {
+        try
+        {
+            using var repo = new Repository(Game.Path);
+            Branch current_branch = Commands.Checkout(repo, checkout_branch);
+            return new BranchResult { Branch = current_branch };
+        }
+        catch (LibGit2Sharp.CheckoutConflictException ex)
+        {
+            return new BranchResult { ErrorMessage = $"You have unsaved turn(s) - please manually create a snapshot. - {ex.Message}" };
+        }
+        catch (Exception ex)
+        {
+            return new BranchResult { ErrorMessage = ex.Message };
+        }
+
+    }
+
 }
