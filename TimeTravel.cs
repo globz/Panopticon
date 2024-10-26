@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
 
 namespace Panopticon;
@@ -149,5 +150,114 @@ public class TimeTravel
             }
         }
         return timeline_nodes_name;
+    }
+
+    public static void BranchOff(string branch_name)
+    {
+        Console.WriteLine(branch_name);
+
+        // Retrieve information tied to this node
+        DB.Open();
+        SqliteCommand statement = DB.Query("SELECT node_seq, compound_turn, commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
+        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+        statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
+        SqliteDataReader node_info = statement.ExecuteReader();
+
+        int node_seq_end = 0;
+        string commit_hash = "";
+        double compoundTurnValue = 0.0;
+        while (node_info.Read())
+        {
+            node_seq_end = Convert.ToInt32(node_info["node_seq"]);
+            commit_hash = (string)node_info["commit_hash"];
+            compoundTurnValue = Convert.ToDouble(node_info["compound_turn"] ?? 0.00);
+        }
+        DB.Close();
+
+        string compoundTurnString = compoundTurnValue.ToString("0.00");
+        Console.WriteLine(node_seq_end);
+        Console.WriteLine(commit_hash);
+        Console.WriteLine(compoundTurnString);
+
+        // Keep a reference of the branch BEFORE CHECKOUT
+        string branch_before_checkout = Git.CurrentBranch();
+
+        // Create new branch @ <commit hash>
+        var new_branch_result = Git.New_branch(branch_name, commit_hash);
+
+        if (!new_branch_result.IsSuccess)
+        {
+            MessageBox.Show($"An error occured while attempting to create a branch - {new_branch_result.ErrorMessage}");
+            return;
+        }
+
+        // Checkout new branch
+        var checkout_branch = Git.Checkout(new_branch_result.Branch?.FriendlyName);
+
+        if (checkout_branch.IsSuccess)
+        {
+
+            var new_branch = checkout_branch.Branch;
+
+            // Retrieve turn, sq_turn & compound_turn with the compound_turn found in timelines
+            // Keep default prefix & suffix
+            // Keep default auto_commit value
+            string pattern = @"(\d+)\.(\d+)";
+            var match = Regex.Match(compoundTurnString, pattern);
+
+            int branch_turn = int.Parse(match.Groups[1].Value);
+            double branch_sq_turn = double.Parse(match.Groups[2].Value) / 100.0;
+            double branch_compound_turn = branch_turn + branch_sq_turn;
+
+            // Save newbranch settings
+            DB.Open();
+            statement = DB.Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn");
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+            statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
+            statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
+            statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
+            statement.Parameters.Add("@turn", SqliteType.Integer).Value = branch_turn;
+            statement.Parameters.Add("@sq_turn", SqliteType.Text).Value = branch_sq_turn;
+            statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = branch_compound_turn;
+            statement.ExecuteNonQuery();
+            DB.Close();
+
+            // Reload all settings from this current branch
+            Timeline.Retrieve_Settings();
+
+            // Find all previous node(s) FROM 
+            // This information has to come from branch_before_checkout since this is our reference branch
+            // Persist them to timelines table under this new branch
+            int node_seq_start = 1;
+            DB.Open();
+            SqliteCommand insertStatement = DB.Query(@"
+            INSERT INTO timelines (game, branch, node_name, node_seq, compound_turn, commit_hash)
+            SELECT @game, @new_branch, node_name, node_seq, compound_turn, commit_hash
+            FROM timelines 
+            WHERE game = @game 
+            AND branch = @old_branch 
+            AND node_seq BETWEEN @node_seq_start AND @node_seq_end
+            ORDER BY node_seq");
+
+            insertStatement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            insertStatement.Parameters.Add("@new_branch", SqliteType.Text).Value = new_branch?.FriendlyName;
+            insertStatement.Parameters.Add("@old_branch", SqliteType.Text).Value = branch_before_checkout;
+            insertStatement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
+            insertStatement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
+            insertStatement.ExecuteNonQuery();
+            DB.Close();
+
+            // Refresh timeline UI
+            Timeline.Refresh_Timeline_Nodes();
+
+        }
+        else
+        {
+            MessageBox.Show($"An error occured while attempting to create a branch - {checkout_branch.ErrorMessage}");
+            return;
+        }
+
     }
 }
