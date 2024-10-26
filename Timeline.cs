@@ -3,6 +3,7 @@ using System.Windows.Forms.VisualStyles;
 using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
 using SQLitePCL;
+using static Panopticon.Settings;
 
 namespace Panopticon;
 
@@ -243,7 +244,7 @@ public partial class Timeline : Form
                 Text = $"This is the root of Timeline - {Game.Name}."
                 + System.Environment.NewLine
                 + System.Environment.NewLine
-                + $"This Timeline is part of the following branch : {Git.CurrentBranch()}"
+                + $"This Timeline is part of the following branch : [{Git.CurrentBranch()}]"
                 + System.Environment.NewLine
                 + System.Environment.NewLine
                 + "You may do the following actions:"
@@ -376,7 +377,7 @@ public partial class Timeline : Form
             Text = $"This node is part of your Timeline - {Game.Name}"
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + $"This node is part of the following branch : {Git.CurrentBranch()}"
+            + $"This node is part of the following branch : [{Git.CurrentBranch()}]"
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "You may do the following actions:"
@@ -556,7 +557,7 @@ public partial class Timeline : Form
             Text = $"This node is part of your Timeline - {Game.Name}"
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + $"This Timeline is part of the following branch : {Git.CurrentBranch()}"
+            + $"This Timeline is part of the following branch : [{Git.CurrentBranch()}]"
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "You may do the following actions:"
@@ -725,29 +726,74 @@ public partial class Timeline : Form
 
         Label description = new()
         {
-            Text = $"You are about to create an alternate timeline branch based on the following snapshot:"
+            Text = $"You are about to create an alternate timeline based on the following snapshot:"
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + $"Turn: {Game.UI.SelectedNode?.Name} & branch: {Git.CurrentBranch()}"
+            + $"Turn: {Game.UI.SelectedNode?.Name} & branch: [{Git.CurrentBranch()}]"
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "Fill in the name of your new branch and proceed with the creation.",
             Dock = DockStyle.Fill
         };
 
-        Button CreateBranchButton = new()
+        Label branch_description = new()
         {
-            Location = new System.Drawing.Point(200, 100),
-            Text = "Create branch",
-            BackColor = Color.IndianRed,
-            ForeColor = Game.UI.ForeColor,
-            Padding = new(2),
-            AutoSize = true,
-            AutoSizeMode = AutoSizeMode.GrowAndShrink
+            Text = "A branch is like an alternate timeline in a story."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Imagine you’re writing a novel, and the main timeline is the published book, the [root] branch."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "At some point, you decide to explore a different plot idea, but you don’t want to mess up the main storyline."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "So, you create a new timeline (a branch)."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "In this alternate timeline, you can make changes to the plot, develop characters differently, or experiment with new ideas."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "As you work, your changes stay within this alternate timeline, leaving the main timeline (root) untouched."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "In short, a branch allows you to explore different what-if scenarios in your game",
+            Dock = DockStyle.Fill
         };
 
-        Game.UI.BottomPanel?.Controls.Add(description);
+        var groupBox_branch_description = new System.Windows.Forms.GroupBox();
+        groupBox_branch_description.Location = new System.Drawing.Point(5, 200);
+        groupBox_branch_description.Size = new System.Drawing.Size(520, 250);
+        groupBox_branch_description.Text = "What is a branch?";
+        groupBox_branch_description.ForeColor = Color.Orange;
+        groupBox_branch_description.Controls.Add(branch_description);
+        groupBox_branch_description.Dock = DockStyle.Bottom;
+
+        Button CreateBranchButton = new()
+        {
+            Location = new System.Drawing.Point(5, 145),
+            Size = new System.Drawing.Size(100, 25),
+            Text = "Create branch",
+            BackColor = Color.Purple,
+            ForeColor = Game.UI.ForeColor,
+            Padding = new(2),
+            TabIndex = 2
+        };
+
+        var textBoxField_branch_name = new TextBoxField("Branch name:")
+        {
+            TabIndex = 1,
+            Location = new System.Drawing.Point(5, 100),
+            ForeColor = Game.UI.ForeColor,
+            MaxLength = 50
+        };
+
+
         Game.UI.BottomPanel?.Controls.Add(CreateBranchButton);
+        Game.UI.BottomPanel?.Controls.Add(textBoxField_branch_name);
+        Game.UI.BottomPanel?.Controls.Add(groupBox_branch_description);
+        Game.UI.BottomPanel?.Controls.Add(description);
+        CreateBranchButton.Click += (sender, e) => { TimeTravel.BranchOff(textBoxField_branch_name.Text); };
+
     }
 
     private static void Notes_TextChanged(TextBox notes)
