@@ -528,6 +528,77 @@ public partial class Timeline : Form
     static void SwitchTimelineBranchButton_Click(object? sender, EventArgs e)
     {
         Game.UI.BottomPanel?.Controls.Clear();
+
+        var groupBox_overview = new System.Windows.Forms.GroupBox();
+        groupBox_overview.Location = new System.Drawing.Point(10, 100);
+        groupBox_overview.Text = $"Branches overview";
+        groupBox_overview.ForeColor = Color.Orange;
+        groupBox_overview.AutoSize = true;
+
+        Label description = new()
+        {
+            Text = $"This game cannot run while Dominion is active"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "If you ever switch branch while your game is running, please select [Quit without saving] to exit your game."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Once your is game closed, you may proceed and switch branch.",
+            Dock = DockStyle.Fill
+        };
+
+        IEnumerable<string> branches = Git.List_all();
+
+        int yPosition = 25; // Starting Y position for the first button
+        const int BUTTON_HEIGHT = 30; // Height of each button
+        const int BUTTON_WIDTH = 150;  // Width of each button
+        const int X_POSITION = 10;     // X position for all buttons
+
+        branches.ToList().ForEach(branch =>
+        {
+            Button branchButton = new Button
+            {
+                Text = branch,
+                Name = $"btn_{branch}",  // Unique name for each button
+                Location = new Point(X_POSITION, yPosition),
+                Size = new Size(BUTTON_WIDTH, BUTTON_HEIGHT),
+                // Optional: Add tooltip
+                UseVisualStyleBackColor = true,
+                BackColor = Color.IndianRed,
+                ForeColor = Game.UI.ForeColor,
+                Padding = new(2),
+                AutoSize = true,
+                AutoSizeMode = AutoSizeMode.GrowAndShrink
+            };
+
+            // Add click event handler
+            branchButton.Click += (sender, e) =>
+            {
+                var confirmDeletion = MessageBox.Show($"Please exit your game before switching to another branch.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and switch branch?",
+                                     $"Switch to branch {branch}",
+                                     MessageBoxButtons.YesNo);
+                if (confirmDeletion == DialogResult.Yes)
+                {
+                    TimeTravel.SwitchBranch(branch);
+                }
+                else
+                {
+                    return;
+                }
+
+            };
+
+            // Add button to form's controls
+            groupBox_overview.Controls.Add(branchButton);
+
+            // Increment Y position for next button
+            yPosition += BUTTON_HEIGHT + 5; // 5 pixels spacing between buttons
+        });
+
+        AutoSizeGroupBox(groupBox_overview);
+        Game.UI.BottomPanel?.Controls.Add(groupBox_overview);
+        Game.UI.BottomPanel?.Controls.Add(description);
+
     }
 
     static void SaveNotesButton_Click(TextBox notes)
@@ -646,10 +717,10 @@ public partial class Timeline : Form
 
         Label description = new()
         {
-            Text = $"Ensure that Dominion is not running this game."
+            Text = $"This game cannot run while Dominion is active."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "If the game is running and you undo this turn, select [Quit without saving] to exit."
+            + "If you ever undo this turn while your game is running, please select [Quit without saving] to exit your game."
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "Once your is game closed, you may proceed to permanently delete the following snapshot(s) from existence.",
@@ -688,7 +759,22 @@ public partial class Timeline : Form
             };
 
             Game.UI.BottomPanel?.Controls.Add(ProceedUnDoButton);
-            ProceedUnDoButton.Click += (sender, e) => { TimeTravel.Undo(true); };
+            ProceedUnDoButton.Click += (sender, e) =>
+            {
+                var confirmDeletion = MessageBox.Show($"Please exit your game before undoing this turn.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and undo this turn?",
+                $"Confirm deletion",
+                MessageBoxButtons.YesNo);
+                if (confirmDeletion == DialogResult.Yes)
+                {
+
+                    TimeTravel.Undo(true);
+                }
+                else
+                {
+                    return;
+                }
+
+            };
         }
 
         groupBox_undo_log.Controls.Add(undo_log);

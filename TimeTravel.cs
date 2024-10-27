@@ -255,9 +255,28 @@ public class TimeTravel
         }
         else
         {
-            MessageBox.Show($"An error occured while attempting to create a branch - {checkout_branch.ErrorMessage}");
+            MessageBox.Show($"An error occured while attempting to switch branch - {checkout_branch.ErrorMessage}");
             return;
         }
+
+    }
+
+    public static void SwitchBranch(string branch)
+    {
+
+        var checkout_branch = Git.Checkout(branch);
+
+        if (!checkout_branch.IsSuccess)
+        {
+            MessageBox.Show($"An error occured while attempting to switch branch - {checkout_branch.ErrorMessage}");
+            return;
+        }
+
+        // Reload all settings from this current branch
+        Timeline.Retrieve_Settings();
+
+        // Refresh timeline UI
+        Timeline.Refresh_Timeline_Nodes();
 
     }
 }
