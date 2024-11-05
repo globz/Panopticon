@@ -148,8 +148,9 @@
 - Renamed column "sq_turn" to "saved_turn" in table timelines
 - Implement TimeTravel.BranchOff (Implemented 2024-10-25)
 - Fix Tab index on all forms
-- Delete branch settings whenever a branch is deleted
-- Branch switching menu
+- Ability to delete branches from Timeline - (Implemented 2024-11-05)
+- Branch switching menu - (Implemented 2024-10-25)
+- Add Confirmation Dialog when undoing turn(s) (Implemented 2024-10-27)
 - Ability to rename nodes?
 - Implement settings at the branch level, right now settings are global to a specific game. (Implemented 2024-10-15)
 - Remove Save Notes button once inside a TimeTravel option menu - (Implemented 2024-10-18)
