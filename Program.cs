@@ -257,6 +257,12 @@ public static class Git
         directory.Delete(true);
     }
 
+    public static void Delete_Branch(string? path, string branch)
+    {
+        using var repo = new Repository(path);
+        repo.Branches.Remove(branch);
+    }
+
     public static string CurrentBranch()
     {
         // A branch may not already exist but will always default to root
@@ -372,6 +378,28 @@ public static class Git
             return new BranchResult { ErrorMessage = ex.Message };
         }
 
+    }
+
+    public static IEnumerable<string> List_branches()
+    {
+
+        var branches = Repository.ListRemoteReferences(Game.Path)
+                        .Where(elem => elem.IsLocalBranch)
+                        .Select(elem => elem.CanonicalName
+                        .Replace("refs/heads/", ""));
+
+        return branches;
+    }
+
+    public static int Count_branches()
+    {
+
+        var branches = Repository.ListRemoteReferences(Game.Path)
+                        .Where(elem => elem.IsLocalBranch)
+                        .Select(elem => elem.CanonicalName
+                        .Replace("refs/heads/", ""));
+
+        return branches.Count();
     }
 
 }

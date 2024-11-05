@@ -229,7 +229,7 @@ public partial class Timeline : Form
 
     }
 
-    private static void Initialize_Timeline_Root()
+    public static void Initialize_Timeline_Root()
     {
         var groupBox_timeline_root = new System.Windows.Forms.GroupBox();
 
@@ -258,16 +258,39 @@ public partial class Timeline : Form
                 Dock = DockStyle.Fill
             };
 
-            Button DeleteTimelineButton = new()
+
+            if (Git.CurrentBranch() == "root")
             {
-                Location = new System.Drawing.Point(40, 20),
-                Text = "Delete Timeline",
-                BackColor = Color.LightSteelBlue,
-                ForeColor = Game.UI.ForeColor,
-                Padding = new(2),
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink
-            };
+                Button DeleteTimelineButton = new()
+                {
+                    Location = new System.Drawing.Point(40, 20),
+                    Text = "Delete Timeline",
+                    BackColor = Color.LightSteelBlue,
+                    ForeColor = Game.UI.ForeColor,
+                    Padding = new(2),
+                    AutoSize = true,
+                    AutoSizeMode = AutoSizeMode.GrowAndShrink
+                };
+
+                groupBox_timeline_root.Controls.Add(DeleteTimelineButton);
+                DeleteTimelineButton.Click += new EventHandler(DeleteTimelineButton_Click);
+            }
+            else
+            {
+                Button DeleteBranchButton = new()
+                {
+                    Location = new System.Drawing.Point(40, 20),
+                    Text = "Delete Branch",
+                    BackColor = Color.LightSteelBlue,
+                    ForeColor = Game.UI.ForeColor,
+                    Padding = new(2),
+                    AutoSize = true,
+                    AutoSizeMode = AutoSizeMode.GrowAndShrink
+                };
+
+                groupBox_timeline_root.Controls.Add(DeleteBranchButton);
+                DeleteBranchButton.Click += new EventHandler(DeleteBranchButton_Click);
+            }
 
             Button SwitchTimelineBranchButton = new()
             {
@@ -292,8 +315,6 @@ public partial class Timeline : Form
                 Name = "saveNotes"
             };
 
-            groupBox_timeline_root.Controls.Add(DeleteTimelineButton);
-            groupBox_timeline_root.Controls.Add(SwitchTimelineBranchButton);
             groupBox_timeline_root.Controls.Add(SaveDescriptionButton);
             groupBox_timeline_root.Location = new System.Drawing.Point(10, 5);
             groupBox_timeline_root.Size = new System.Drawing.Size(220, 125);
@@ -316,12 +337,12 @@ public partial class Timeline : Form
             // Retrieve DescriptionBox Text
             DescriptionBox.Text = Retrieve_Timeline_Notes();
 
+            groupBox_timeline_root.Controls.Add(SwitchTimelineBranchButton);
             Game.UI.TopPanel?.Controls.Add(groupBox_timeline_root);
             Game.UI.BottomPanel?.Controls.Add(DescriptionBox);
             Game.UI.BottomPanel?.Controls.Add(description);
             Game.UI.HorizontalSplitContainer.SplitterDistance = 150;
 
-            DeleteTimelineButton.Click += new EventHandler(DeleteTimelineButton_Click);
             SwitchTimelineBranchButton.Click += new EventHandler(SwitchTimelineBranchButton_Click);
             SaveDescriptionButton.Click += (sender, e) => SaveNotesButton_Click(DescriptionBox);
             DescriptionBox.TextChanged += (sender, e) => Notes_TextChanged(DescriptionBox);
@@ -525,6 +546,59 @@ public partial class Timeline : Form
 
     }
 
+    static void DeleteBranchButton_Click(object? sender, EventArgs e)
+    {
+
+        var confirmDeletion = MessageBox.Show("This change is irreversible; your branch will be permanently deleted. Do you want to proceed with the deletion?",
+                                             "Branch deletion confirmation",
+                                             MessageBoxButtons.YesNo);
+        if (confirmDeletion == DialogResult.Yes)
+        {
+            // Delete timeline branch settings
+            DB.Open();
+            SqliteCommand statement = DB.Query("DELETE FROM settings WHERE game = @game AND branch = @branch");
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+            statement.ExecuteNonQuery();
+            DB.Close();
+
+            // Delete timeline associated to this branch
+            DB.Open();
+            statement = DB.Query("DELETE FROM timelines WHERE game = @game AND branch = @branch");
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+            statement.ExecuteNonQuery();
+            DB.Close();
+
+            // Delete notes related to this branch
+            DB.Open();
+            statement = DB.Query("DELETE FROM notes WHERE game = @game AND branch = @branch");
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+            statement.ExecuteNonQuery();
+            DB.Close();
+
+            // Retrieve current branch to delete
+            string branch_to_delete = Git.CurrentBranch();
+
+            // Switch back to Timeline root branch since we can remove HEAD
+            TimeTravel.SwitchBranch("root");
+
+            // Delete git branch
+            Git.Delete_Branch(Game.Path, branch_to_delete);
+
+            MessageBox.Show("Timeline branch has been deleted!");
+
+            // Reload the node
+            Initialize_Timeline_Root();
+        }
+        else
+        {
+            MessageBox.Show("Timeline deletion aborted!");
+        }
+
+    }
+
     static void SwitchTimelineBranchButton_Click(object? sender, EventArgs e)
     {
         Game.UI.BottomPanel?.Controls.Clear();
@@ -547,53 +621,67 @@ public partial class Timeline : Form
             Dock = DockStyle.Fill
         };
 
-        IEnumerable<string> branches = Git.List_all();
-
-        int yPosition = 25; // Starting Y position for the first button
-        const int BUTTON_HEIGHT = 30; // Height of each button
-        const int BUTTON_WIDTH = 150;  // Width of each button
-        const int X_POSITION = 10;     // X position for all buttons
-
-        branches.ToList().ForEach(branch =>
+        if (Git.Count_branches() == 1)
         {
-            Button branchButton = new Button
+            Label x = new Label
             {
-                Text = branch,
-                Name = $"btn_{branch}",  // Unique name for each button
-                Location = new Point(X_POSITION, yPosition),
-                Size = new Size(BUTTON_WIDTH, BUTTON_HEIGHT),
-                // Optional: Add tooltip
-                UseVisualStyleBackColor = true,
-                BackColor = Color.IndianRed,
-                ForeColor = Game.UI.ForeColor,
-                Padding = new(2),
-                AutoSize = true,
-                AutoSizeMode = AutoSizeMode.GrowAndShrink
+                Location = new Point(10, 25),
+                Size = new Size(150, 50),
+                Text = "There are currently no branch."
             };
 
-            // Add click event handler
-            branchButton.Click += (sender, e) =>
+            groupBox_overview.Controls.Add(x);
+        }
+        else
+        {
+            IEnumerable<string> branches = Git.List_branches();
+
+            int yPosition = 35; // Starting Y position for the first button
+            const int BUTTON_HEIGHT = 30; // Height of each button
+            const int BUTTON_WIDTH = 150;  // Width of each button
+            const int X_POSITION = 10;     // X position for all buttons
+
+            branches.ToList().ForEach(branch =>
             {
-                var confirmDeletion = MessageBox.Show($"Please exit your game before switching to another branch.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and switch branch?",
-                                     $"Switch to branch {branch}",
-                                     MessageBoxButtons.YesNo);
-                if (confirmDeletion == DialogResult.Yes)
+                Button branchButton = new Button
                 {
-                    TimeTravel.SwitchBranch(branch);
-                }
-                else
+                    Text = branch,
+                    Name = $"btn_{branch}",  // Unique name for each button
+                    Location = new Point(X_POSITION, yPosition),
+                    Size = new Size(BUTTON_WIDTH, BUTTON_HEIGHT),
+                    // Optional: Add tooltip
+                    UseVisualStyleBackColor = true,
+                    BackColor = Color.IndianRed,
+                    ForeColor = Game.UI.ForeColor,
+                    Padding = new(2),
+                    AutoSize = true,
+                    AutoSizeMode = AutoSizeMode.GrowAndShrink
+                };
+
+                // Add click event handler
+                branchButton.Click += (sender, e) =>
                 {
-                    return;
-                }
+                    var confirmDeletion = MessageBox.Show($"Please exit your game before switching to another branch.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and switch branch?",
+                                         $"Switch to branch {branch}",
+                                         MessageBoxButtons.YesNo);
+                    if (confirmDeletion == DialogResult.Yes)
+                    {
+                        TimeTravel.SwitchBranch(branch);
+                    }
+                    else
+                    {
+                        return;
+                    }
 
-            };
+                };
 
-            // Add button to form's controls
-            groupBox_overview.Controls.Add(branchButton);
+                // Add button to form's controls
+                groupBox_overview.Controls.Add(branchButton);
 
-            // Increment Y position for next button
-            yPosition += BUTTON_HEIGHT + 5; // 5 pixels spacing between buttons
-        });
+                // Increment Y position for next button
+                yPosition += BUTTON_HEIGHT + 5; // 5 pixels spacing between buttons
+            });
+        }
 
         AutoSizeGroupBox(groupBox_overview);
         Game.UI.BottomPanel?.Controls.Add(groupBox_overview);

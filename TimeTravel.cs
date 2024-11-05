@@ -278,5 +278,8 @@ public class TimeTravel
         // Refresh timeline UI
         Timeline.Refresh_Timeline_Nodes();
 
+        // Refresh timeline TopPanel (switch between Delete Timeline & Delete Branch button)
+        Timeline.Initialize_Timeline_Root();
+
     }
 }
