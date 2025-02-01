@@ -791,6 +791,7 @@ public partial class Timeline : Form
 
         UndoButton.Click += new EventHandler(UndoButton_Click);
         BranchOffButton.Click += new EventHandler(BranchOffButton_Click);
+        ReplayButton.Click += new EventHandler(ReplayButton_Click);
     }
 
     static void UndoButton_Click(object? send, EventArgs e)
@@ -969,6 +970,73 @@ public partial class Timeline : Form
         CreateBranchButton.Click += (sender, e) => { TimeTravel.BranchOff(textBoxField_branch_name.Text); };
 
     }
+
+static void ReplayButton_Click(object? send, EventArgs e)
+    {
+        // Display UI and confirm user action
+        Game.UI.BottomPanel?.Controls.Clear();
+
+        Label description = new()
+        {
+            Text = $"You are about to replay this specific point in time based on the following snapshot:"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + $"Turn: {Game.UI.SelectedNode?.Name} & branch: [{Git.CurrentBranch()}]",
+            Dock = DockStyle.Fill
+        };
+
+        Label replay_description = new()
+        {
+            Text = "This is a temporary state which may become permanent based on your approval of the outcome."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "You may initiate a replay session from any available snapshots based on your current timeline."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Once enabled, at the end of each new turn you will be asked to make the following choice:"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "[Persist], [Discard] or [Continue]"
+            + System.Environment.NewLine
+            + System.Environment.NewLine            
+            + "You may play as many turns as you wish however they will only persist if you decide to do so."            
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Selecting [Persist] will ask you to name your new branch which will now be based on your replay session."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Selecting [Discard], will discard the outcome of your replay session."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Selecting [Continue] will resume your replay session and you may continue with a new turn.",
+            Dock = DockStyle.Fill
+        };
+
+        var groupBox_branch_description = new System.Windows.Forms.GroupBox();
+        groupBox_branch_description.Location = new System.Drawing.Point(5, 200);
+        groupBox_branch_description.Size = new System.Drawing.Size(520, 250);
+        groupBox_branch_description.Text = "How does replay work?";
+        groupBox_branch_description.ForeColor = Color.Orange;
+        groupBox_branch_description.Controls.Add(replay_description);
+        groupBox_branch_description.Dock = DockStyle.Bottom;
+
+        Button EnableReplayButton = new()
+        {
+            Location = new System.Drawing.Point(5, 90),
+            Size = new System.Drawing.Size(100, 25),
+            Text = "Enable replay",
+            BackColor = Color.Purple,
+            ForeColor = Game.UI.ForeColor,
+            Padding = new(2),
+            TabIndex = 2
+        };
+
+        Game.UI.BottomPanel?.Controls.Add(EnableReplayButton);
+        Game.UI.BottomPanel?.Controls.Add(groupBox_branch_description);
+        Game.UI.BottomPanel?.Controls.Add(description);
+        EnableReplayButton.Click += (sender, e) => { /* TimeTravel.BranchOff(textBoxField_branch_name.Text); */ };
+
+    }    
 
     private static void Notes_TextChanged(TextBox notes)
     {
