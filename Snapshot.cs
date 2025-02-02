@@ -6,7 +6,20 @@ using LibGit2Sharp;
 namespace Panopticon;
 public class Snapshot
 {
+
     public static void InitializeComponent()
+    {
+
+        if (!Game.Settings.Replay_Mode)
+        {
+            InitializeDefaultComponent();
+        }
+        else
+        {
+            InitializeReplayComponent();
+        }
+    }
+    public static void InitializeDefaultComponent()
     {
         var groupBox_snapshot = new System.Windows.Forms.GroupBox();
         var groupBox_modified_files = new System.Windows.Forms.GroupBox();
@@ -92,7 +105,7 @@ public class Snapshot
 
             // Did FileWatcherManager missed a turn?
             if (TurnTracker.Maybe_missed_turn())
-            {                
+            {
                 // Update turn | sq_turn | compound_turn
                 TurnTracker.Update_Turn(maybe_new_turn);
                 Console.WriteLine("TurnTracker missed a turn!");
@@ -115,7 +128,7 @@ public class Snapshot
                 Timeline.Refresh_Timeline_Nodes();
 
                 // Refresh Snapshot UI
-                InitializeComponent();
+                InitializeDefaultComponent();
             }
             else
             {
@@ -137,13 +150,108 @@ public class Snapshot
                 Timeline.Refresh_Timeline_Nodes();
 
                 // Refresh Snapshot UI
-                InitializeComponent();
+                InitializeDefaultComponent();
             }
         }
         else
         {
             MessageBox.Show("There are no pending changes!");
         }
+
+    }
+
+    public static void InitializeReplayComponent()
+    {
+        var groupBox_snapshot = new System.Windows.Forms.GroupBox();
+        var groupBox_modified_files = new System.Windows.Forms.GroupBox();
+
+        Game.UI.TopPanel?.Controls.Clear();
+        Game.UI.BottomPanel?.Controls.Clear();
+
+        Button PersistButton = new()
+        {
+            Location = new System.Drawing.Point(20, 20),
+            Text = "Persist",
+            BackColor = Color.LightSteelBlue,
+            ForeColor = Game.UI.ForeColor,
+            Padding = new(2),
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink
+        };
+
+        Button DiscardButton = new()
+        {
+            Location = new System.Drawing.Point(110, 20),
+            Text = "Discard",
+            BackColor = Color.LightSteelBlue,
+            ForeColor = Game.UI.ForeColor,
+            Padding = new(2),
+            AutoSize = true,
+            AutoSizeMode = AutoSizeMode.GrowAndShrink
+        };        
+
+        groupBox_snapshot.Controls.Add(PersistButton);
+        groupBox_snapshot.Controls.Add(DiscardButton);
+        groupBox_snapshot.Location = new System.Drawing.Point(10, 5);
+        groupBox_snapshot.Size = new System.Drawing.Size(220, 115);
+        groupBox_snapshot.Text = "Replay Mode";
+        groupBox_snapshot.ForeColor = Color.Orange;
+
+        Label description = new()
+        {
+            Text = "You are currently in replay mode."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "You are currently using manual Timeline node creation. (forced)"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Choose one of the following options above..."
+            + System.Environment.NewLine
+            + System.Environment.NewLine,
+            Dock = DockStyle.Fill
+        };
+
+        // Figure out the current status of our working directory
+        var status = Git.Status();
+        if (status == null)
+        {
+            description.Text += System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Current status: No pending changes.";
+        }
+        else
+        {
+            // Check if a turn has been made
+            bool maybe_new_turn = Git.CheckIfFileExists(status.Modified, ".trn");
+
+            string status_description = maybe_new_turn ? "New turn has been detected" : "A save has been detected";
+
+            description.Text += System.Environment.NewLine
+            + System.Environment.NewLine
+            + $"Current status: {status_description}!"
+            + System.Environment.NewLine;
+
+            groupBox_modified_files.Location = new System.Drawing.Point(5, 100);
+            groupBox_modified_files.Size = new System.Drawing.Size(220, 100);
+            groupBox_modified_files.Text = "Modified Files";
+            groupBox_modified_files.ForeColor = Color.Orange;
+
+            Label modified_files = new()
+            {
+                Dock = DockStyle.Fill
+            };
+
+            status.Modified.ToList().ForEach(status => modified_files.Text += $"{status.FilePath + System.Environment.NewLine}");
+
+            groupBox_modified_files.Controls.Add(modified_files);
+            Game.UI.BottomPanel?.Controls.Add(groupBox_modified_files);
+        }
+
+        Game.UI.TopPanel?.Controls.Add(groupBox_snapshot);
+        Game.UI.BottomPanel?.Controls.Add(description);
+
+        PersistButton.Click += (sender, e) => { TimeTravel.ReplayMode.Persist(); };
+        DiscardButton.Click += (sender, e) => { TimeTravel.ReplayMode.Discard(); };
 
     }
 }

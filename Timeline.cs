@@ -241,7 +241,7 @@ public partial class Timeline : Form
 
             Label description = new()
             {
-                Text = $"This is the root of Timeline - {Game.Name}."
+                Text = $"This is the beginning of Timeline - {Game.Name}."
                 + System.Environment.NewLine
                 + System.Environment.NewLine
                 + $"This Timeline is part of the following branch : [{Git.CurrentBranch()}]"
@@ -922,7 +922,7 @@ public partial class Timeline : Form
             + "At some point, you decide to explore a different plot idea, but you don’t want to mess up the main storyline."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "So, you create a new timeline (a branch)."
+            + "So, you create an alternate timeline (a branch) based on the main timeline events."
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "In this alternate timeline, you can make changes to the plot, develop characters differently, or experiment with new ideas."
@@ -971,7 +971,7 @@ public partial class Timeline : Form
 
     }
 
-static void ReplayButton_Click(object? send, EventArgs e)
+    static void ReplayButton_Click(object? send, EventArgs e)
     {
         // Display UI and confirm user action
         Game.UI.BottomPanel?.Controls.Clear();
@@ -998,8 +998,8 @@ static void ReplayButton_Click(object? send, EventArgs e)
             + System.Environment.NewLine
             + "[Persist], [Discard] or [Continue]"
             + System.Environment.NewLine
-            + System.Environment.NewLine            
-            + "You may play as many turns as you wish however they will only persist if you decide to do so."            
+            + System.Environment.NewLine
+            + "You may play as many turns as you wish however they will only persist if you decide to do so."
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "Selecting [Persist] will ask you to name your new branch which will now be based on your replay session."
@@ -1034,9 +1034,9 @@ static void ReplayButton_Click(object? send, EventArgs e)
         Game.UI.BottomPanel?.Controls.Add(EnableReplayButton);
         Game.UI.BottomPanel?.Controls.Add(groupBox_branch_description);
         Game.UI.BottomPanel?.Controls.Add(description);
-        EnableReplayButton.Click += (sender, e) => { /* TimeTravel.BranchOff(textBoxField_branch_name.Text); */ };
+        EnableReplayButton.Click += (sender, e) => { TimeTravel.ReplayMode.Enable(); };
 
-    }    
+    }
 
     private static void Notes_TextChanged(TextBox notes)
     {
@@ -1049,14 +1049,14 @@ static void ReplayButton_Click(object? send, EventArgs e)
     private static void Initialize_Settings_DB()
     {
         DB.Open();
-        DB.Query("CREATE TABLE IF NOT EXISTS settings (game VARCHAR(23), branch VARCHAR(100), auto_commit BOOLEAN, prefix VARCHAR(10), suffix VARCHAR(10), turn INT, sq_turn DOUBLE, compound_turn DOUBLE, PRIMARY KEY (game, branch))").ExecuteNonQuery();
+        DB.Query("CREATE TABLE IF NOT EXISTS settings (game VARCHAR(23), branch VARCHAR(100), auto_commit BOOLEAN, prefix VARCHAR(10), suffix VARCHAR(10), turn INT, sq_turn DOUBLE, compound_turn DOUBLE, replay_mode BOOLEAN, PRIMARY KEY (game, branch))").ExecuteNonQuery();
         DB.Close();
     }
 
     public static void Retrieve_Settings()
     {
         DB.Open();
-        SqliteCommand statement = DB.Query("SELECT auto_commit, prefix, suffix, turn, sq_turn, compound_turn FROM settings WHERE game = @game AND branch = @branch");
+        SqliteCommand statement = DB.Query("SELECT auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode FROM settings WHERE game = @game AND branch = @branch");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         DB.ReadData(statement, DB.LoadSettingsData);
@@ -1137,6 +1137,7 @@ static void ReplayButton_Click(object? send, EventArgs e)
     {
         if (!Game.Settings.Auto_commit)
         {
+            Console.WriteLine("Replay_mode via Enable_Manual_Snapshot: " + Game.Settings.Replay_Mode);
             TreeNode newCommitNode = new("New snapshot");
             newCommitNode.Name = "new_snapshot";
             Game.UI.TreeViewLeft?.Nodes.Add(newCommitNode);

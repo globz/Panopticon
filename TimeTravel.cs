@@ -282,4 +282,78 @@ public class TimeTravel
         Timeline.Initialize_Timeline_Root();
 
     }
+
+    public static class ReplayMode
+    {
+
+        public static bool Enable()
+        {
+            // Start replay mode (detached HEAD)
+            // git checkout <commit hash>
+            // Retrieve current selected node sequence
+            DB.Open();
+            SqliteCommand statement = DB.Query("SELECT node_seq FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+            statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
+            var data = statement.ExecuteScalar();
+            DB.Close();
+
+            int? node_seq = Convert.ToInt32(data);
+
+            // Retrieve the commit hash of the node that HEAD will point to.
+            DB.Open();
+            statement = DB.Query("SELECT commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+            statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = node_seq;
+            data = statement.ExecuteScalar();
+            DB.Close();
+
+            string? commit_hash = data?.ToString();
+
+            Branch replay_branch = Git.Detached_Head(commit_hash);
+            Console.WriteLine("ReplayMode Enabled (branch): " + replay_branch);
+
+            // Disable auto-commit, user may or not want to persist this replay session
+            // By forcing manual mode we are now allowing this choice.
+            Game.Settings.Auto_commit = false;
+
+            // Enable Replay Mode setting
+            Game.Settings.Replay_Mode = true;
+
+            // Refresh timeline UI
+            Timeline.Refresh_Timeline_Nodes();
+
+            return true;
+        }
+
+        public static bool Disable()
+        {
+            // Discard all changes made while Replay mode was active - Go back to previous branch
+            // git switch - 
+            return true;
+        }
+
+        public static bool Discard()
+        {
+            // Call ReplayMode.Disable
+            // UI update & possible clean ups?
+            return true;
+        }
+
+        public static bool Persist()
+        {
+            // Everything done during Replay mode may be saved to a new branch
+            // git switch -c <new-branch-name>
+            return true;
+        }
+
+        public static bool Continue()
+        {
+            // Stay in replay mode...
+            return true;
+        }
+
+    }
 }

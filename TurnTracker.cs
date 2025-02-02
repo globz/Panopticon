@@ -58,7 +58,14 @@ public partial class TurnTracker
             Game.UI.BottomPanel?.Invoke((MethodInvoker)delegate
             {
                 // Call Snapshot.InitializeComponent() to refresh the UI
-                Snapshot.InitializeComponent();
+                if (Game.Settings.Replay_Mode)
+                {
+                    Snapshot.InitializeReplayComponent();
+                }
+                else {
+                    Snapshot.InitializeDefaultComponent();
+                }
+                
             });
         }
     }

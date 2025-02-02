@@ -145,7 +145,7 @@
 
  TODO:
 - FileWatcherManager ~ perhaps implement an Adaptive Debounce Delay?
-- Renamed column "sq_turn" to "saved_turn" in table timelines
+- Renamed column "sq_turn" to "saved_turn" in table setings
 - Implement TimeTravel.BranchOff (Implemented 2024-10-25)
 - Fix Tab index on all forms
 - Ability to delete branches from Timeline - (Implemented 2024-11-05)
@@ -200,3 +200,13 @@ git switch -c <new-branch-name>
 
 // Discard all changes made while Replay mode was active - Go back to previous branch
 git switch - 
+
+When ReplayMode is Enabled the following should happen:
++ Disable auto-commit (Implemented 2025-02-02)
++ Enable replay mode (Implemented 2025-02-02)
++ Persist replay setting (TRUE) ON THE CURRENT BRANCH! ie; [root] was selected then we will enable replay_mode on [root]
++ Snapshot UI & logic must be adapted to work in ReplayMode or dispatch to a new handler via TurnTracker.Refresh_UI: 
+ - Ask if user wish to [Persist], [Discard] or [Continue]
+ - Selecting [Persist] will ask you to name your new branch which will now be based on your replay session.
+ - Selecting [Discard], will discard the outcome of your replay session.
+ - Selecting [Continue] will resume your replay session and you may continue with a new turn.

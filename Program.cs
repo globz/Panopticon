@@ -26,6 +26,7 @@ static class Program
         Game.Settings.Prefix = "";
         Game.Settings.Suffix = "_TURN_";
         Game.Settings.Auto_commit = true;
+        Game.Settings.Replay_Mode = false;
 
         Application.Run(new Home());
     }
@@ -102,6 +103,7 @@ public static class Game
         public static int Turn { get; set; }
         public static double SQ_Turn { get; set; }
         public static double Compound_Turn { get; set; }
+        public static bool Replay_Mode { get; set; }
     }
 
 }
@@ -143,7 +145,7 @@ public static class DB
     public static void SaveAllSettings()
     {
         Open();
-        SqliteCommand statement = Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn");
+        SqliteCommand statement = Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn, @replay_mode) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn, replay_mode = @replay_mode");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
@@ -152,6 +154,7 @@ public static class DB
         statement.Parameters.Add("@turn", SqliteType.Integer).Value = Game.Settings.Turn;
         statement.Parameters.Add("@sq_turn", SqliteType.Text).Value = Game.Settings.SQ_Turn;
         statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = Game.Settings.Compound_Turn;
+        statement.Parameters.Add("@replay_mode", SqliteType.Text).Value = Game.Settings.Replay_Mode;
         statement.ExecuteNonQuery();
         Close();
     }
@@ -164,6 +167,7 @@ public static class DB
         Game.Settings.Turn = Convert.ToInt32(settings["turn"]);
         Game.Settings.SQ_Turn = (double)settings["sq_turn"];
         Game.Settings.Compound_Turn = (double)settings["compound_turn"];
+        Game.Settings.Replay_Mode = Convert.ToBoolean(settings["replay_mode"]);
     }
 
     public static void SaveTimeline(string title)
@@ -333,7 +337,7 @@ public static class Git
         }
     }
 
-    public static Branch Detached_Head(string commit_hash)
+    public static Branch Detached_Head(string? commit_hash)
     {
         using var repo = new Repository(Game.Path);
         Branch detached_head = Commands.Checkout(repo, commit_hash);
