@@ -204,7 +204,14 @@ git switch -
 When ReplayMode is Enabled the following should happen:
 + Disable auto-commit (Implemented 2025-02-02)
 + Enable replay mode (Implemented 2025-02-02)
-+ Persist replay setting (TRUE) ON THE CURRENT BRANCH! ie; [root] was selected then we will enable replay_mode on [root]
++ Persist replay_mode setting (TRUE) on curren game + (no branch) (Implemented 2025-02-02)
++ Maybe persist turn, saved_turn, compound_turn settings for game + (no branch)
++ Persist previousBranch unto the game + (no branch) setting
++ Force manual commit mode - User should not be able to enable auto-commit
++ Remove timeline_root node when using replay node (Implemented 2025-02-03)
++ Re-enable ReplayMode if the client was closed and re-open (on startup)
++ Force Git.Checkout add a checkoutOptions and use the following modifier => CheckoutModifiers.Force
+
 + Snapshot UI & logic must be adapted to work in ReplayMode or dispatch to a new handler via TurnTracker.Refresh_UI: 
  - Ask if user wish to [Persist], [Discard] or [Continue]
  - Selecting [Persist] will ask you to name your new branch which will now be based on your replay session.

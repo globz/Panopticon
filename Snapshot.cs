@@ -2,23 +2,11 @@ using System.CodeDom;
 using System.Reflection;
 using Accessibility;
 using LibGit2Sharp;
+using static Panopticon.Settings;
 
 namespace Panopticon;
 public class Snapshot
 {
-
-    public static void InitializeComponent()
-    {
-
-        if (!Game.Settings.Replay_Mode)
-        {
-            InitializeDefaultComponent();
-        }
-        else
-        {
-            InitializeReplayComponent();
-        }
-    }
     public static void InitializeDefaultComponent()
     {
         var groupBox_snapshot = new System.Windows.Forms.GroupBox();
@@ -168,10 +156,10 @@ public class Snapshot
         Game.UI.TopPanel?.Controls.Clear();
         Game.UI.BottomPanel?.Controls.Clear();
 
-        Button PersistButton = new()
+        Button DiscardButton = new()
         {
-            Location = new System.Drawing.Point(20, 20),
-            Text = "Persist",
+            Location = new System.Drawing.Point(10, 20),
+            Text = "Discard",
             BackColor = Color.LightSteelBlue,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
@@ -179,19 +167,19 @@ public class Snapshot
             AutoSizeMode = AutoSizeMode.GrowAndShrink
         };
 
-        Button DiscardButton = new()
+        Button ContinueButton = new()
         {
-            Location = new System.Drawing.Point(110, 20),
-            Text = "Discard",
+            Location = new System.Drawing.Point(80, 20),
+            Text = "Continue",
             BackColor = Color.LightSteelBlue,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
             AutoSize = true,
             AutoSizeMode = AutoSizeMode.GrowAndShrink
-        };        
+        };
 
-        groupBox_snapshot.Controls.Add(PersistButton);
         groupBox_snapshot.Controls.Add(DiscardButton);
+        groupBox_snapshot.Controls.Add(ContinueButton);
         groupBox_snapshot.Location = new System.Drawing.Point(10, 5);
         groupBox_snapshot.Size = new System.Drawing.Size(220, 115);
         groupBox_snapshot.Text = "Replay Mode";
@@ -203,9 +191,6 @@ public class Snapshot
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "You are currently using manual Timeline node creation. (forced)"
-            + System.Environment.NewLine
-            + System.Environment.NewLine
-            + "Choose one of the following options above..."
             + System.Environment.NewLine
             + System.Environment.NewLine,
             Dock = DockStyle.Fill
@@ -231,7 +216,7 @@ public class Snapshot
             + $"Current status: {status_description}!"
             + System.Environment.NewLine;
 
-            groupBox_modified_files.Location = new System.Drawing.Point(5, 100);
+            groupBox_modified_files.Location = new System.Drawing.Point(5, 250);
             groupBox_modified_files.Size = new System.Drawing.Size(220, 100);
             groupBox_modified_files.Text = "Modified Files";
             groupBox_modified_files.ForeColor = Color.Orange;
@@ -243,15 +228,40 @@ public class Snapshot
 
             status.Modified.ToList().ForEach(status => modified_files.Text += $"{status.FilePath + System.Environment.NewLine}");
 
+            Button PersistButton = new()
+            {
+                Location = new System.Drawing.Point(5, 175),
+                Size = new System.Drawing.Size(100, 25),
+                Text = "Persist",
+                BackColor = Color.Purple,
+                ForeColor = Game.UI.ForeColor,
+                Padding = new(2),
+                TabIndex = 2
+            };
+
+            var textBoxField_branch_name = new TextBoxField("Branch name:")
+            {
+                TabIndex = 1,
+                Location = new System.Drawing.Point(5, 145),
+                ForeColor = Game.UI.ForeColor,
+                MaxLength = 50
+            };
+
+
+            Game.UI.BottomPanel?.Controls.Add(PersistButton);
+            Game.UI.BottomPanel?.Controls.Add(textBoxField_branch_name);
+
             groupBox_modified_files.Controls.Add(modified_files);
             Game.UI.BottomPanel?.Controls.Add(groupBox_modified_files);
+
+            PersistButton.Click += (sender, e) => { TimeTravel.ReplayMode.Persist(); };
         }
 
         Game.UI.TopPanel?.Controls.Add(groupBox_snapshot);
         Game.UI.BottomPanel?.Controls.Add(description);
 
-        PersistButton.Click += (sender, e) => { TimeTravel.ReplayMode.Persist(); };
         DiscardButton.Click += (sender, e) => { TimeTravel.ReplayMode.Discard(); };
+        ContinueButton.Click += (sender, e) => { TimeTravel.ReplayMode.Continue(); };
 
     }
 }

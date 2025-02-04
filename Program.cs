@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using LibGit2Sharp;
+using System.Diagnostics;
 
 namespace Panopticon;
 
@@ -280,7 +281,6 @@ public static class Git
             return "root";
         }
     }
-
     public static int CommitCount()
     {
         using var repo = new Repository(Game.Path);

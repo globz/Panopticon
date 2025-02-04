@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Reflection.Metadata;
 using System.Windows.Forms.VisualStyles;
 using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
@@ -37,8 +38,11 @@ public partial class Timeline : Form
             _fileWatcher?.Dispose();
         };
 
-        // Enable manual snapshot mode if needed
-        Enable_Manual_Snapshot();
+        // Enable manual snapshot node if needed
+        Manual_Snapshot_Node();
+
+        // Enable replay mode node if needed
+        Replay_Mode_Node();        
     }
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -220,8 +224,11 @@ public partial class Timeline : Form
                 Initialize_Timeline_Root();
                 break;
             case "new_snapshot":
-                Snapshot.InitializeComponent();
+                Snapshot.InitializeDefaultComponent();
                 break;
+            case "replay_mode":
+                Snapshot.InitializeReplayComponent();
+                break;                
             default:
                 Initialize_Timeline_Node(e.Node?.Name);
                 break;
@@ -913,22 +920,22 @@ public partial class Timeline : Form
 
         Label branch_description = new()
         {
-            Text = "A branch is like an alternate timeline in a story."
+            Text = "A branch is like an alternate storyline within a timeline."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "Imagine you’re writing a novel, and the main timeline is the published book, the [root] branch."
+            + "Imagine you’re writing a novel, and the main story is the published book, the [root] branch."
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "At some point, you decide to explore a different plot idea, but you don’t want to mess up the main storyline."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "So, you create an alternate timeline (a branch) based on the main timeline events."
+            + "So, you create an alternate story (a branch) based on the main timeline events."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "In this alternate timeline, you can make changes to the plot, develop characters differently, or experiment with new ideas."
+            + "In this alternate story, you can make changes to the plot, develop characters differently, or experiment with new ideas."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "As you work, your changes stay within this alternate timeline, leaving the main timeline (root) untouched."
+            + "As you work, your changes stay within this alternate story, leaving the main storyline (root) untouched."
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "In short, a branch allows you to explore different what-if scenarios in your game",
@@ -1133,15 +1140,46 @@ public partial class Timeline : Form
         return Notes;
     }
 
-    public static void Enable_Manual_Snapshot()
+    public static void Manual_Snapshot_Node()
     {
-        if (!Game.Settings.Auto_commit)
+        if (!Game.Settings.Auto_commit && !Game.Settings.Replay_Mode)
         {
-            Console.WriteLine("Replay_mode via Enable_Manual_Snapshot: " + Game.Settings.Replay_Mode);
             TreeNode newCommitNode = new("New snapshot");
             newCommitNode.Name = "new_snapshot";
             Game.UI.TreeViewLeft?.Nodes.Add(newCommitNode);
         }
+        else if (Game.Settings.Auto_commit || Game.Settings.Replay_Mode)
+        {
+            TreeNode? node_to_delete = new TreeNode();
+            node_to_delete = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "new_snapshot");
+            if (node_to_delete != null)
+            {
+                Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
+            }
+        }
     }
+
+    public static void Replay_Mode_Node()
+    {
+        if (!Game.Settings.Auto_commit && Game.Settings.Replay_Mode)
+        {
+            TreeNode newCommitNode = new("Replay Mode");
+            newCommitNode.Name = "replay_mode";
+            TreeNode? node_to_delete = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "timeline_root");
+            if (node_to_delete != null)
+            {
+                Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
+            }            
+            Game.UI.TreeViewLeft?.Nodes.Add(newCommitNode);                     
+        }
+        else if (Game.Settings.Auto_commit || !Game.Settings.Replay_Mode)
+        {
+            TreeNode? node_to_delete = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "replay_mode");
+            if (node_to_delete != null)
+            {
+                Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
+            }
+        }
+    }    
 }
 

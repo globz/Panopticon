@@ -139,7 +139,7 @@ public class Settings
                     {
                         case "ManualMode":
                             Game.Settings.Auto_commit = false;
-                            Timeline.Enable_Manual_Snapshot();
+                            Timeline.Manual_Snapshot_Node();
                             break;
                         case "AutoMode":
                             Game.Settings.Auto_commit = true;
