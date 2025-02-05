@@ -167,10 +167,10 @@ public class Snapshot
             AutoSizeMode = AutoSizeMode.GrowAndShrink
         };
 
-        Button ContinueButton = new()
+        Button ExitButton = new()
         {
             Location = new System.Drawing.Point(80, 20),
-            Text = "Continue",
+            Text = "Exit",
             BackColor = Color.LightSteelBlue,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
@@ -179,7 +179,7 @@ public class Snapshot
         };
 
         groupBox_snapshot.Controls.Add(DiscardButton);
-        groupBox_snapshot.Controls.Add(ContinueButton);
+        groupBox_snapshot.Controls.Add(ExitButton);
         groupBox_snapshot.Location = new System.Drawing.Point(10, 5);
         groupBox_snapshot.Size = new System.Drawing.Size(220, 115);
         groupBox_snapshot.Text = "Replay Mode";
@@ -254,14 +254,14 @@ public class Snapshot
             groupBox_modified_files.Controls.Add(modified_files);
             Game.UI.BottomPanel?.Controls.Add(groupBox_modified_files);
 
-            PersistButton.Click += (sender, e) => { TimeTravel.ReplayMode.Persist(); };
+            PersistButton.Click += (sender, e) => { TimeTravel.ReplayMode.Persist(textBoxField_branch_name.Text, maybe_new_turn); };
         }
 
         Game.UI.TopPanel?.Controls.Add(groupBox_snapshot);
         Game.UI.BottomPanel?.Controls.Add(description);
 
         DiscardButton.Click += (sender, e) => { TimeTravel.ReplayMode.Discard(); };
-        ContinueButton.Click += (sender, e) => { TimeTravel.ReplayMode.Continue(); };
+        ExitButton.Click += (sender, e) => { TimeTravel.ReplayMode.Exit(); };
 
     }
 }

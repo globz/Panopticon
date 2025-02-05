@@ -713,11 +713,6 @@ public partial class Timeline : Form
 
         var groupBox_TimeTravelActions = new System.Windows.Forms.GroupBox();
 
-        // TODO
-        // Replay this turn (block action when selected node is HEAD)
-        // Branch off
-        // Create new game
-
         Label description = new()
         {
             Text = $"This node is part of your Timeline - {Game.Name}"
@@ -908,7 +903,7 @@ public partial class Timeline : Form
 
         Label description = new()
         {
-            Text = $"You are about to create an alternate timeline based on the following snapshot:"
+            Text = $"You are about to create a new branch based on the following snapshot:"
             + System.Environment.NewLine
             + System.Environment.NewLine
             + $"Turn: {Game.UI.SelectedNode?.Name} & branch: [{Git.CurrentBranch()}]"
@@ -1009,13 +1004,13 @@ public partial class Timeline : Form
             + "You may play as many turns as you wish however they will only persist if you decide to do so."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "Selecting [Persist] will ask you to name your new branch which will now be based on your replay session."
+            + "Selecting [Persist] will save your replay session to a new branch and exit replay mode."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "Selecting [Discard], will discard the outcome of your replay session."
+            + "Selecting [Discard], will discard the latest change made in during your replay session."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "Selecting [Continue] will resume your replay session and you may continue with a new turn.",
+            + "Selecting [Exit] will exit replay mode discarding all changes.",
             Dock = DockStyle.Fill
         };
 

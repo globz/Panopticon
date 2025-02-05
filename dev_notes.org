@@ -155,6 +155,7 @@
 - Implement settings at the branch level, right now settings are global to a specific game. (Implemented 2024-10-15)
 - Remove Save Notes button once inside a TimeTravel option menu - (Implemented 2024-10-18)
 - Call TurnTracker.Update_Turn() on missed turn(s), this is needed for the snapshot implementation. (Implemented 2024-10-24)
+- Save panopticon.db per game file, no need for global DB, this will let users load other player's game into their own Panopticon.
 
 
 BUG:
@@ -195,25 +196,51 @@ This is exactly what we need for the "Replay" feature - https://www.inmotionhost
 // Start replay mode (detached HEAD)
 git checkout <commit hash>
 
+// Persist & Exit replay mode
 // Everything done during Replay mode may be saved to a new branch
 git switch -c <new-branch-name> 
 
-// Discard all changes made while Replay mode was active - Go back to previous branch
-git switch - 
+// Discard the latest change made while replay mode is active (no branch)
+git checkout -- * or git reset --hard
+
+// Exit replay mode discarding ALL CHANGES and returning to previous branch
+git switch - || git checkout <branch> --force
 
 When ReplayMode is Enabled the following should happen:
 + Disable auto-commit (Implemented 2025-02-02)
 + Enable replay mode (Implemented 2025-02-02)
 + Persist replay_mode setting (TRUE) on curren game + (no branch) (Implemented 2025-02-02)
 + Maybe persist turn, saved_turn, compound_turn settings for game + (no branch)
-+ Persist previousBranch unto the game + (no branch) setting
-+ Force manual commit mode - User should not be able to enable auto-commit
++ Persist previousBranch (new column) unto the game + (no branch) setting
++ Force manual commit mode - User should not be able to enable auto-commit (Implemented 2025-02-04)
 + Remove timeline_root node when using replay node (Implemented 2025-02-03)
-+ Re-enable ReplayMode if the client was closed and re-open (on startup)
-+ Force Git.Checkout add a checkoutOptions and use the following modifier => CheckoutModifiers.Force
++ Force SwitchBranch & Git.Checkout add a checkoutOptions and use the following modifier => CheckoutModifiers.Force
++ Fix missing timeline node when Exiting replay mode
 
 + Snapshot UI & logic must be adapted to work in ReplayMode or dispatch to a new handler via TurnTracker.Refresh_UI: 
  - Ask if user wish to [Persist], [Discard] or [Continue]
  - Selecting [Persist] will ask you to name your new branch which will now be based on your replay session.
  - Selecting [Discard], will discard the outcome of your replay session.
  - Selecting [Continue] will resume your replay session and you may continue with a new turn.
+
+ using LibGit2Sharp;
+
+public void ForceCheckout(string repositoryPath, string branchName)
+{
+    using (var repo = new Repository(repositoryPath))
+    {
+        // Create checkout options with force flag
+        var checkoutOptions = new CheckoutOptions
+        {
+            CheckoutModifiers = CheckoutModifiers.Force,
+            OnCheckoutProgress = (path, completed, total) => 
+            {
+                // Optional: Add progress tracking if needed
+                Console.WriteLine($"Checking out: {path} ({completed}/{total})");
+            }
+        };
+
+        // Checkout the specified branch forcefully
+        Commands.Checkout(repo, branchName, checkoutOptions);
+    }
+}

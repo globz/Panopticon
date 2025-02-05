@@ -296,8 +296,9 @@ public class TimeTravel
 
         public static bool Enable()
         {
-            // Start replay mode (detached HEAD)
+            // Enable Replay mode (detached HEAD)
             // git checkout <commit hash>
+
             // Retrieve current selected node sequence
             DB.Open();
             SqliteCommand statement = DB.Query("SELECT node_seq FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
@@ -320,8 +321,8 @@ public class TimeTravel
 
             string? commit_hash = data?.ToString();
 
+            // Detach HEAD to targetted commit hash
             Branch replay_branch = Git.Detached_Head(commit_hash);
-            Console.WriteLine("ReplayMode Enabled (branch): " + replay_branch.FriendlyName);
 
             // Disable auto-commit, user may or not want to persist this replay session
             // By forcing manual mode we are now allowing this choice.
@@ -330,8 +331,15 @@ public class TimeTravel
             // Enable Replay Mode setting
             Game.Settings.Replay_Mode = true;
 
+            // Update Turn
+            // Update SQ_turn
+            // Update Compound turn
+
             // Persist Replay Mode setting
             DB.SaveAllSettings();
+
+            // Reload all settings from this current branch
+            Timeline.Retrieve_Settings();
 
             // Refresh timeline UI
             Timeline.Refresh_Timeline_Nodes();
@@ -354,10 +362,9 @@ public class TimeTravel
 
             // Persist Replay Mode setting
             DB.Open();
-            SqliteCommand statement = DB.Query("INSERT INTO settings (game, branch, replay_mode) VALUES (@game, @branch, @replay_mode) ON CONFLICT(game, branch) DO UPDATE SET replay_mode = @replay_mode");
+            SqliteCommand statement = DB.Query("DELETE FROM settings WHERE game = @game AND branch = @branch");
             statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-            statement.Parameters.Add("@replay_mode", SqliteType.Text).Value = Game.Settings.Replay_Mode;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = "(no branch)";
             statement.ExecuteNonQuery();
             DB.Close();
 
@@ -367,13 +374,7 @@ public class TimeTravel
         public static bool Discard()
         {
             // Discard all changes made while Replay mode was active - Go back to previous branch
-            // git checkout previousBranch --force
-
-            // Call ReplayMode.Disable
-            ReplayMode.Disable();
-
-            // Checkout previous branch
-            // TODO
+            // git checkout -- * or git reset --hard
 
             // Refresh timeline UI
             Timeline.Refresh_Timeline_Nodes();
@@ -384,17 +385,69 @@ public class TimeTravel
             return true;
         }
 
-        public static bool Persist()
+        public static bool Persist(string branch_name, bool maybe_new_turn)
         {
             // Everything done during Replay mode may be saved to a new branch
             // git switch -c <new-branch-name>
-            return true;
+
+            // Commit changes from DETACHED HEAD, create new branch and checkout
+            var new_branch_result = Git.Switch_c(branch_name, Git.Commit_title(maybe_new_turn));
+
+            if (!new_branch_result.IsSuccess)
+            {
+                MessageBox.Show($"An error occured while attempting to create a branch - {new_branch_result.ErrorMessage}");
+                return false;
+            }
+            else
+            {
+                // Persisting a replay will kick the user out of replay mode
+                ReplayMode.Disable();
+
+                // Persist new branch settings
+                DB.Open();
+                SqliteCommand statement = DB.Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn, @replay_mode) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn, replay_mode = @replay_mode");
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
+                statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
+                statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
+                statement.Parameters.Add("@turn", SqliteType.Integer).Value = Game.Settings.Turn;
+                statement.Parameters.Add("@sq_turn", SqliteType.Text).Value = Game.Settings.SQ_Turn;
+                statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = Game.Settings.Compound_Turn;
+                statement.Parameters.Add("@replay_mode", SqliteType.Text).Value = false;
+                statement.ExecuteNonQuery();
+                DB.Close();
+
+                // Create a timeline for this new branch
+
+                // Refresh timeline UI
+                Timeline.Refresh_Timeline_Nodes();
+
+                // Refresh timeline TopPanel
+                Timeline.Initialize_Timeline_Root();
+
+                // Enable Replay Mode Node OR  disable Manual snapshot Node if needed
+                Timeline.Manual_Snapshot_Node();
+                Timeline.Replay_Mode_Node();
+
+                return true;
+            }
+
         }
 
-        public static bool Continue()
+        public static void Exit()
         {
-            // Stay in replay mode...
-            return true;
+
+            // Discard all changes made while Replay mode was active - Go back to previous branch
+            // git checkout <previous-branch> --force
+
+            // Call ReplayMode.Disable
+            ReplayMode.Disable();
+
+            // TODO retrieve proper branch_name and use checkout --force
+            SwitchBranch("root");
+
+
         }
 
     }

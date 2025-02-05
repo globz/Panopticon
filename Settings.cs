@@ -101,7 +101,7 @@ public class Settings
             radioButton_autoMode.Size = new System.Drawing.Size(70, 30);
             radioButton_autoMode.Name = "AutoMode";
             radioButton_autoMode.Text = "Auto";
-            radioButton_autoMode.ForeColor = Game.UI.ForeColor;
+            radioButton_autoMode.ForeColor = Color.Orange;
 
             radioButton_manualMode.Location = new System.Drawing.Point(31, 20);
             radioButton_manualMode.Name = "ManualMode";
@@ -129,6 +129,12 @@ public class Settings
             radioButton_autoMode.CheckedChanged += new EventHandler(RB_CreationMode_CheckedChanged);
             radioButton_manualMode.CheckedChanged += new EventHandler(RB_CreationMode_CheckedChanged);
 
+            // Disable Auto commit radio button when replay mode is active
+            if (Game.Settings.Replay_Mode)
+            {
+                radioButton_autoMode.Enabled = false;
+            }
+
             static void RB_CreationMode_CheckedChanged(object? sender, EventArgs e)
             {
                 RadioButton rb = sender as RadioButton ?? throw new ArgumentException();
@@ -139,15 +145,13 @@ public class Settings
                     {
                         case "ManualMode":
                             Game.Settings.Auto_commit = false;
+                            // Enable Manual Snapshot Node
                             Timeline.Manual_Snapshot_Node();
                             break;
                         case "AutoMode":
-                            Game.Settings.Auto_commit = true;
-                            TreeNode? new_snapshot_node = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "new_snapshot");
-                            if (new_snapshot_node != null)
-                            {
-                                Game.UI.TreeViewLeft.Nodes.Remove(new_snapshot_node);
-                            }
+                            Game.Settings.Auto_commit = true; 
+                            // Disable Manual Snapshot Node
+                            Timeline.Manual_Snapshot_Node();
                             break;
                         default:
                             break;

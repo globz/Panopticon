@@ -17,7 +17,7 @@ static class Program
         ApplicationConfiguration.Initialize();
 
         // Set UI theme        
-        Game.UI.Theme = ColorTranslator.FromHtml("#313338");
+        Game.UI.Theme = ColorTranslator.FromHtml("#050505");
         Game.UI.ForeColor = Color.GhostWhite;
 
         // Set default Settings values
@@ -404,6 +404,30 @@ public static class Git
                         .Replace("refs/heads/", ""));
 
         return branches.Count();
+    }
+
+    public static BranchResult Switch_c(string newBranchName, string? title)
+    {
+        using var repo = new Repository(Game.Path);
+
+        // Stage all the working directory changes.
+        Commands.Stage(repo, "*");
+
+        // Commit changes
+        var author = new Signature(userName, userEmail, DateTimeOffset.Now);
+        var committer = author;
+        var commit = repo.Commit(title, author, committer);
+
+        // Create and checkout new branch in one step
+        Branch newBranch = repo.CreateBranch(newBranchName);
+        BranchResult current_branch = Checkout(newBranch.FriendlyName);
+
+        // Retrieve hash of current commit
+        var head = (SymbolicReference)repo.Refs.Head;
+        head_commit_hash = head.ResolveToDirectReference().Target.Sha;
+        Console.WriteLine($"Commit hash {head_commit_hash}");
+        return current_branch;
+
     }
 
 }
