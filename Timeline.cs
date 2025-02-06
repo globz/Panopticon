@@ -42,7 +42,7 @@ public partial class Timeline : Form
         Manual_Snapshot_Node();
 
         // Enable replay mode node if needed
-        Replay_Mode_Node();        
+        Replay_Mode_Node();
     }
 
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -228,7 +228,7 @@ public partial class Timeline : Form
                 break;
             case "replay_mode":
                 Snapshot.InitializeReplayComponent();
-                break;                
+                break;
             default:
                 Initialize_Timeline_Node(e.Node?.Name);
                 break;
@@ -1164,8 +1164,8 @@ public partial class Timeline : Form
             if (node_to_delete != null)
             {
                 Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
-            }            
-            Game.UI.TreeViewLeft?.Nodes.Add(newCommitNode);                     
+            }
+            Game.UI.TreeViewLeft?.Nodes.Add(newCommitNode);
         }
         else if (Game.Settings.Auto_commit || !Game.Settings.Replay_Mode)
         {
@@ -1173,8 +1173,13 @@ public partial class Timeline : Form
             if (node_to_delete != null)
             {
                 Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
+
+                // Rebuild timeline history
+                Game.UI.TreeViewLeft.Nodes.Add(Game.UI.Timeline_history);
+                Game.UI.TreeViewLeft.ExpandAll();
+                Game.UI.TreeViewLeft.PerformLayout();
             }
         }
-    }    
+    }
 }
 

@@ -299,30 +299,65 @@ public class TimeTravel
             // Enable Replay mode (detached HEAD)
             // git checkout <commit hash>
 
-            // Retrieve current selected node sequence
+            /*             // Retrieve current selected node sequence
+                        DB.Open();
+                        SqliteCommand statement = DB.Query("SELECT node_seq FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
+                        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                        statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
+                        var data = statement.ExecuteScalar();
+                        DB.Close();
+
+                        int? node_seq = Convert.ToInt32(data);
+
+                        // Retrieve the commit hash of the node that HEAD will point to.
+                        DB.Open();
+                        statement = DB.Query("SELECT commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
+                        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                        statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = node_seq;
+                        data = statement.ExecuteScalar();
+                        DB.Close(); */
+
+            // string? commit_hash = data?.ToString();
+
+            // Retrieve information tied to this node
             DB.Open();
-            SqliteCommand statement = DB.Query("SELECT node_seq FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
+            SqliteCommand statement = DB.Query("SELECT node_seq, compound_turn, commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
             statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
             statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
             statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
-            var data = statement.ExecuteScalar();
+            SqliteDataReader node_info = statement.ExecuteReader();
+
+            int node_seq_end = 0;
+            string commit_hash = "";
+            double compoundTurnValue = 0.0;
+            while (node_info.Read())
+            {
+                node_seq_end = Convert.ToInt32(node_info["node_seq"]);
+                commit_hash = (string)node_info["commit_hash"];
+                compoundTurnValue = Convert.ToDouble(node_info["compound_turn"] ?? 0.00);
+            }
             DB.Close();
 
-            int? node_seq = Convert.ToInt32(data);
+            string compoundTurnString = compoundTurnValue.ToString("0.00");
+            Console.WriteLine(node_seq_end);
+            Console.WriteLine(commit_hash);
+            Console.WriteLine(compoundTurnString);
 
-            // Retrieve the commit hash of the node that HEAD will point to.
-            DB.Open();
-            statement = DB.Query("SELECT commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-            statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = node_seq;
-            data = statement.ExecuteScalar();
-            DB.Close();
+            // Retrieve turn, sq_turn & compound_turn with the compound_turn found in timelines
+            // Keep default prefix & suffix
+            // Keep default auto_commit value
+            string pattern = @"(\d+)\.(\d+)";
+            var match = Regex.Match(compoundTurnString, pattern);
 
-            string? commit_hash = data?.ToString();
+            int branch_turn = int.Parse(match.Groups[1].Value);
+            double branch_sq_turn = double.Parse(match.Groups[2].Value) / 100.0;
+            double branch_compound_turn = branch_turn + branch_sq_turn;
 
             // Detach HEAD to targetted commit hash
             Branch replay_branch = Git.Detached_Head(commit_hash);
+            Console.WriteLine(replay_branch); //TODO remove
 
             // Disable auto-commit, user may or not want to persist this replay session
             // By forcing manual mode we are now allowing this choice.
@@ -332,8 +367,12 @@ public class TimeTravel
             Game.Settings.Replay_Mode = true;
 
             // Update Turn
-            // Update SQ_turn
+            Game.Settings.Turn = node_seq_end; //TODO do I use node_seq_end or branch_turn??
+            // TODO Update SQ_turn
+            Game.Settings.SQ_Turn = branch_sq_turn;
+
             // Update Compound turn
+            Game.Settings.Compound_Turn = branch_compound_turn;
 
             // Persist Replay Mode setting
             DB.SaveAllSettings();
@@ -418,13 +457,13 @@ public class TimeTravel
                 statement.ExecuteNonQuery();
                 DB.Close();
 
-                // Create a timeline for this new branch
+                // TODO Create a timeline for this new branch
 
                 // Refresh timeline UI
                 Timeline.Refresh_Timeline_Nodes();
 
                 // Refresh timeline TopPanel
-                Timeline.Initialize_Timeline_Root();
+                //Timeline.Initialize_Timeline_Root();
 
                 // Enable Replay Mode Node OR  disable Manual snapshot Node if needed
                 Timeline.Manual_Snapshot_Node();
@@ -446,7 +485,6 @@ public class TimeTravel
 
             // TODO retrieve proper branch_name and use checkout --force
             SwitchBranch("root");
-
 
         }
 

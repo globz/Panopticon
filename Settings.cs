@@ -101,7 +101,7 @@ public class Settings
             radioButton_autoMode.Size = new System.Drawing.Size(70, 30);
             radioButton_autoMode.Name = "AutoMode";
             radioButton_autoMode.Text = "Auto";
-            radioButton_autoMode.ForeColor = Color.Orange;
+            radioButton_autoMode.ForeColor = Game.UI.ForeColor;
 
             radioButton_manualMode.Location = new System.Drawing.Point(31, 20);
             radioButton_manualMode.Name = "ManualMode";
@@ -119,6 +119,23 @@ public class Settings
                 radioButton_autoMode.Checked = true;
             }
 
+            // Disable Auto commit radio button when replay mode is active
+            if (Game.Settings.Replay_Mode)
+            {
+                radioButton_autoMode.Enabled = false;
+                radioButton_autoMode.Paint += new PaintEventHandler(Disabled_Text_Override_Paint);
+            }
+
+            static void Disabled_Text_Override_Paint(object? sender, PaintEventArgs e)
+            {
+                if (sender is RadioButton rb)
+                {
+                    e.Graphics.Clear(rb.BackColor); // Clear background
+                    TextRenderer.DrawText(e.Graphics, rb.Text, rb.Font,
+                        rb.ClientRectangle, Color.Red, TextFormatFlags.Left);
+                }
+            }                 
+
             groupBox_creationMode.Controls.Add(radioButton_autoMode);
             groupBox_creationMode.Controls.Add(radioButton_manualMode);
 
@@ -128,12 +145,6 @@ public class Settings
 
             radioButton_autoMode.CheckedChanged += new EventHandler(RB_CreationMode_CheckedChanged);
             radioButton_manualMode.CheckedChanged += new EventHandler(RB_CreationMode_CheckedChanged);
-
-            // Disable Auto commit radio button when replay mode is active
-            if (Game.Settings.Replay_Mode)
-            {
-                radioButton_autoMode.Enabled = false;
-            }
 
             static void RB_CreationMode_CheckedChanged(object? sender, EventArgs e)
             {

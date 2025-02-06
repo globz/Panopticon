@@ -145,7 +145,7 @@
 
  TODO:
 - FileWatcherManager ~ perhaps implement an Adaptive Debounce Delay?
-- Renamed column "sq_turn" to "saved_turn" in table setings
+- Renamed column "sq_turn" to "saved_turn" in table setings (Might not be needed...)
 - Implement TimeTravel.BranchOff (Implemented 2024-10-25)
 - Fix Tab index on all forms
 - Ability to delete branches from Timeline - (Implemented 2024-11-05)
@@ -210,12 +210,13 @@ When ReplayMode is Enabled the following should happen:
 + Disable auto-commit (Implemented 2025-02-02)
 + Enable replay mode (Implemented 2025-02-02)
 + Persist replay_mode setting (TRUE) on curren game + (no branch) (Implemented 2025-02-02)
-+ Maybe persist turn, saved_turn, compound_turn settings for game + (no branch)
++ Maybe persist turn, sq_turn, compound_turn settings for game + (no branch) - (Implemented 2025-02-04)
 + Persist previousBranch (new column) unto the game + (no branch) setting
 + Force manual commit mode - User should not be able to enable auto-commit (Implemented 2025-02-04)
 + Remove timeline_root node when using replay node (Implemented 2025-02-03)
 + Force SwitchBranch & Git.Checkout add a checkoutOptions and use the following modifier => CheckoutModifiers.Force
-+ Fix missing timeline node when Exiting replay mode
++ Fix missing timeline node when Exiting replay mode (Implemented 2025-02-05)
++ Fix Auto UI text in settings when radio button is disabled (Implemented 2025-02-05)
 
 + Snapshot UI & logic must be adapted to work in ReplayMode or dispatch to a new handler via TurnTracker.Refresh_UI: 
  - Ask if user wish to [Persist], [Discard] or [Continue]
