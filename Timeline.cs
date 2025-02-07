@@ -852,7 +852,7 @@ public partial class Timeline : Form
             Game.UI.BottomPanel?.Controls.Add(ProceedUnDoButton);
             ProceedUnDoButton.Click += (sender, e) =>
             {
-                var confirmDeletion = MessageBox.Show($"Please exit your game before undoing this turn.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and undo this turn?",
+                var confirmDeletion = MessageBox.Show($"Please exit your Dominion game [{Game.Name}] before undoing this turn.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and undo this turn?",
                 $"Confirm deletion",
                 MessageBoxButtons.YesNo);
                 if (confirmDeletion == DialogResult.Yes)
@@ -969,7 +969,26 @@ public partial class Timeline : Form
         Game.UI.BottomPanel?.Controls.Add(textBoxField_branch_name);
         Game.UI.BottomPanel?.Controls.Add(groupBox_branch_description);
         Game.UI.BottomPanel?.Controls.Add(description);
-        CreateBranchButton.Click += (sender, e) => { TimeTravel.BranchOff(textBoxField_branch_name.Text); };
+        CreateBranchButton.Click += (sender, e) =>
+        {
+            var confirmBranchCreation = MessageBox.Show($"Please exit your Dominion game [{Game.Name}] before branching this turn.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and create a new branch?",
+            $"Confirm branch creation",
+            MessageBoxButtons.YesNo);
+            if (confirmBranchCreation == DialogResult.Yes && !string.IsNullOrWhiteSpace(textBoxField_branch_name.Text))
+            {
+
+                TimeTravel.BranchOff(textBoxField_branch_name.Text);
+            }
+            else if (confirmBranchCreation == DialogResult.Yes && string.IsNullOrWhiteSpace(textBoxField_branch_name.Text))
+            {
+                MessageBox.Show("A branch name is required.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else if (confirmBranchCreation == DialogResult.No)
+            {
+                return;
+            }
+
+        };
 
     }
 
@@ -998,7 +1017,7 @@ public partial class Timeline : Form
             + "Once enabled, at the end of each new turn you will be asked to make the following choice:"
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "[Persist], [Discard] or [Continue]"
+            + "[Persist], [Discard], [Continue] or [Exit]"
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "You may play as many turns as you wish however they will only persist if you decide to do so."
@@ -1007,20 +1026,23 @@ public partial class Timeline : Form
             + "Selecting [Persist] will save your replay session to a new branch and exit replay mode."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "Selecting [Discard], will discard the latest change made in during your replay session."
+            + "Selecting [Discard], will discard the latest change made during your replay session."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "Selecting [Exit] will exit replay mode discarding all changes.",
+            + "Selecting [Continue], will protect your latest turn from being removed when using [Discard]"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Selecting [Exit], will exit replay mode discarding all changes and bring you back to your previous branch.",
             Dock = DockStyle.Fill
         };
 
-        var groupBox_branch_description = new System.Windows.Forms.GroupBox();
-        groupBox_branch_description.Location = new System.Drawing.Point(5, 200);
-        groupBox_branch_description.Size = new System.Drawing.Size(520, 250);
-        groupBox_branch_description.Text = "How does replay work?";
-        groupBox_branch_description.ForeColor = Color.Orange;
-        groupBox_branch_description.Controls.Add(replay_description);
-        groupBox_branch_description.Dock = DockStyle.Bottom;
+        var groupBox_replay_description = new System.Windows.Forms.GroupBox();
+        groupBox_replay_description.Location = new System.Drawing.Point(5, 200);
+        groupBox_replay_description.Size = new System.Drawing.Size(520, 280);
+        groupBox_replay_description.Text = "How does replay work?";
+        groupBox_replay_description.ForeColor = Color.Orange;
+        groupBox_replay_description.Controls.Add(replay_description);
+        groupBox_replay_description.Dock = DockStyle.Bottom;
 
         Button EnableReplayButton = new()
         {
@@ -1034,9 +1056,25 @@ public partial class Timeline : Form
         };
 
         Game.UI.BottomPanel?.Controls.Add(EnableReplayButton);
-        Game.UI.BottomPanel?.Controls.Add(groupBox_branch_description);
+        Game.UI.BottomPanel?.Controls.Add(groupBox_replay_description);
         Game.UI.BottomPanel?.Controls.Add(description);
-        EnableReplayButton.Click += (sender, e) => { TimeTravel.ReplayMode.Enable(); };
+        EnableReplayButton.Click += (sender, e) =>
+        {
+            var confirmEnableReplay = MessageBox.Show($"Please exit your Dominion game [{Game.Name}] before starting a replay session.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and enable replay mode?",
+            $"Confirm replay mode",
+            MessageBoxButtons.YesNo);
+
+            if (confirmEnableReplay == DialogResult.Yes)
+            {
+
+                TimeTravel.ReplayMode.Enable();
+            }
+            else
+            {
+                return;
+            }
+            
+        };
 
     }
 
@@ -1173,7 +1211,6 @@ public partial class Timeline : Form
             if (node_to_delete != null)
             {
                 Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
-
                 // Rebuild timeline history
                 Game.UI.TreeViewLeft.Nodes.Add(Game.UI.Timeline_history);
                 Game.UI.TreeViewLeft.ExpandAll();

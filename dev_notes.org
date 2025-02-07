@@ -148,6 +148,8 @@
 - Renamed column "sq_turn" to "saved_turn" in table setings (Might not be needed...)
 - Implement TimeTravel.BranchOff (Implemented 2024-10-25)
 - Fix Tab index on all forms
+- Revise and remove ALL TODO
+- Remove all uncessary Console.WriteLine
 - Ability to delete branches from Timeline - (Implemented 2024-11-05)
 - Branch switching menu - (Implemented 2024-10-25)
 - Add Confirmation Dialog when undoing turn(s) (Implemented 2024-10-27)
@@ -156,7 +158,7 @@
 - Remove Save Notes button once inside a TimeTravel option menu - (Implemented 2024-10-18)
 - Call TurnTracker.Update_Turn() on missed turn(s), this is needed for the snapshot implementation. (Implemented 2024-10-24)
 - Save panopticon.db per game file, no need for global DB, this will let users load other player's game into their own Panopticon.
-
+- Check if branch_name is empty before calling BranchOff (Implemented 2025-02-05)
 
 BUG:
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, resulting in no new calculated turn. 
@@ -210,20 +212,22 @@ When ReplayMode is Enabled the following should happen:
 + Disable auto-commit (Implemented 2025-02-02)
 + Enable replay mode (Implemented 2025-02-02)
 + Persist replay_mode setting (TRUE) on curren game + (no branch) (Implemented 2025-02-02)
-+ Maybe persist turn, sq_turn, compound_turn settings for game + (no branch) - (Implemented 2025-02-04)
-+ Persist previousBranch (new column) unto the game + (no branch) setting
++ Maybe persist turn, sq_turn, compound_turn settings for Game.Name + (no branch) - (Implemented 2025-02-04)
++ Persist Git.previous_branch (new column) unto the game + (no branch) setting
 + Force manual commit mode - User should not be able to enable auto-commit (Implemented 2025-02-04)
 + Remove timeline_root node when using replay node (Implemented 2025-02-03)
-+ Force SwitchBranch & Git.Checkout add a checkoutOptions and use the following modifier => CheckoutModifiers.Force
 + Fix missing timeline node when Exiting replay mode (Implemented 2025-02-05)
-+ Fix Auto UI text in settings when radio button is disabled (Implemented 2025-02-05)
++ Fix "Auto" UI control text in settings when radio button is disabled (Implemented 2025-02-05)
++ Check if branch_name is empty before [Persist] (Implemented 2025-02-06)
++ Fix TimeTravel.ReplayMode.Exit not switching to the previous branch before detaching HEAD to x commit (Implemented 2025-02-06)
 
 + Snapshot UI & logic must be adapted to work in ReplayMode or dispatch to a new handler via TurnTracker.Refresh_UI: 
- - Ask if user wish to [Persist], [Discard] or [Continue]
+ - Ask if user wish to [Persist], [Discard], [Continue] or [Exit] (Implemented 2025-02-06)
  - Selecting [Persist] will ask you to name your new branch which will now be based on your replay session.
- - Selecting [Discard], will discard the outcome of your replay session.
- - Selecting [Continue] will resume your replay session and you may continue with a new turn.
-
+ - Selecting [Discard], will discard the outcome of your replay session. (Implemented 2025-02-06)
+ - Selecting [Continue], will protect your latest turn from being removed when using [Discard]
+ - Selecting [Exit] will discarding ALL CHANGES made during replay session and return to previous branch (Implemented 2025-02-06)
+ 
  using LibGit2Sharp;
 
 public void ForceCheckout(string repositoryPath, string branchName)

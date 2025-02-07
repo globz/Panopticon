@@ -265,7 +265,7 @@ public class TimeTravel
 
     }
 
-    public static void SwitchBranch(string branch)
+    public static void SwitchBranch(string? branch)
     {
 
         var checkout_branch = Git.Checkout(branch);
@@ -296,30 +296,8 @@ public class TimeTravel
 
         public static bool Enable()
         {
-            // Enable Replay mode (detached HEAD)
-            // git checkout <commit hash>
-
-            /*             // Retrieve current selected node sequence
-                        DB.Open();
-                        SqliteCommand statement = DB.Query("SELECT node_seq FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
-                        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-                        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-                        statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
-                        var data = statement.ExecuteScalar();
-                        DB.Close();
-
-                        int? node_seq = Convert.ToInt32(data);
-
-                        // Retrieve the commit hash of the node that HEAD will point to.
-                        DB.Open();
-                        statement = DB.Query("SELECT commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
-                        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-                        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-                        statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = node_seq;
-                        data = statement.ExecuteScalar();
-                        DB.Close(); */
-
-            // string? commit_hash = data?.ToString();
+            // # Enable Replay mode (detached HEAD)
+            // # git checkout <commit hash>
 
             // Retrieve information tied to this node
             DB.Open();
@@ -357,6 +335,7 @@ public class TimeTravel
 
             // Detach HEAD to targetted commit hash
             Branch replay_branch = Git.Detached_Head(commit_hash);
+
             Console.WriteLine(replay_branch); //TODO remove
 
             // Disable auto-commit, user may or not want to persist this replay session
@@ -412,24 +391,42 @@ public class TimeTravel
 
         public static bool Discard()
         {
-            // Discard all changes made while Replay mode was active - Go back to previous branch
-            // git checkout -- * or git reset --hard
+            // # Discard all uncomitted changes made while Replay mode was active
+            // # git reset --hard
+
+            Git.ResetHard();
 
             // Refresh timeline UI
             Timeline.Refresh_Timeline_Nodes();
 
-            // Refresh timeline TopPanel (switch between Delete Timeline & Delete Branch button)
-            Timeline.Initialize_Timeline_Root();
+            // Refresh Replay component
+            Snapshot.InitializeReplayComponent();
+
+            return true;
+        }
+
+        public static bool Continue()
+        {
+            // # Commit all uncomitted changes made while Replay mode was active to DETACHED HEAD (no branch)
+
+            var status = Git.Status();
+            if (status != null)
+            {
+                bool maybe_new_turn = Git.CheckIfFileExists(status.Modified, ".trn");
+                Git.Commit(Game.Path, Git.Commit_title(maybe_new_turn));
+            }
+
+            Snapshot.InitializeReplayComponent();
 
             return true;
         }
 
         public static bool Persist(string branch_name, bool maybe_new_turn)
         {
-            // Everything done during Replay mode may be saved to a new branch
-            // git switch -c <new-branch-name>
+            // # Everything done during Replay mode may be saved to a new branch
+            // # git switch -c <new-branch-name>
 
-            // Commit changes from DETACHED HEAD, create new branch and checkout
+            // Commit changes from DETACHED HEAD if needed, create new branch and checkout
             var new_branch_result = Git.Switch_c(branch_name, Git.Commit_title(maybe_new_turn));
 
             if (!new_branch_result.IsSuccess)
@@ -476,15 +473,18 @@ public class TimeTravel
 
         public static void Exit()
         {
+            // # Discard all uncommitted changes made while Replay mode was active and switch to previous branch
 
-            // Discard all changes made while Replay mode was active - Go back to previous branch
-            // git checkout <previous-branch> --force
+            Git.ResetHard();
 
             // Call ReplayMode.Disable
             ReplayMode.Disable();
 
-            // TODO retrieve proper branch_name and use checkout --force
-            SwitchBranch("root");
+            // Switch back to previous branch, if user did not exit Panopticon while still in replay mode, 
+            // previous_branch_name will use whichever branch was selected prior to the initation of this replay session.
+            // IF Panopticon was closed while still in replay mode, the switch  will default to 'root branch.
+            // TODO this value could be persisted in 'settings' and avoid defaulting to 'root' when re-opening the client on an active replay session.
+            SwitchBranch(Git.previous_branch_name);
 
         }
 

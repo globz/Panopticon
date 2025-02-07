@@ -29,6 +29,11 @@ static class Program
         Game.Settings.Auto_commit = true;
         Game.Settings.Replay_Mode = false;
 
+        // Default Git setting
+        Git.userName = Environment.GetEnvironmentVariable("GIT_USER_NAME") ?? "Panopticon";
+        Git.userEmail = Environment.GetEnvironmentVariable("GIT_USER_EMAIL") ?? "panopticon@kittybomber.com";
+        Git.previous_branch_name = "root";
+
         Application.Run(new Home());
     }
 
@@ -201,9 +206,11 @@ public static class DB
 
 public static class Git
 {
-    public static string userName = Environment.GetEnvironmentVariable("GIT_USER_NAME") ?? "Panopticon";
-    public static string userEmail = Environment.GetEnvironmentVariable("GIT_USER_EMAIL") ?? "panopticon@kittybomber.com";
+    public static string? userName { get; set; }
+    public static string? userEmail { get; set; }
     public static string? head_commit_hash { get; set; }
+    public static string? original_detached_head_commit_hash { get; set; }
+    public static string? previous_branch_name { get; set; }
 
     public static string Commit_title(bool maybe_new_turn)
     {
@@ -241,11 +248,42 @@ public static class Git
         var committer = author;
         var commit = repo.Commit(title, author, committer);
 
-        // Retrieve hash of current commit
-        var head = (SymbolicReference)repo.Refs.Head;
-        head_commit_hash = head.ResolveToDirectReference().Target.Sha;
+        // Retrieve hash of current commit & store current HEAD commit
+        if (!Head_isDetached())
+        {
+            var head = (SymbolicReference)repo.Refs.Head;
+            Git.head_commit_hash = head.ResolveToDirectReference().Target.Sha;
+            Console.WriteLine($"HEAD Commit hash {head_commit_hash}");
+        }
 
-        Console.WriteLine($"Commit hash {head_commit_hash}");
+    }
+
+    public static bool HasUnreferencedCommits()
+    {
+
+        if (Head_isDetached())
+        {
+
+            using var repo = new Repository(Game.Path);
+
+            // Check if current HEAD match the original detached head commit which was save upon detaching HEAD
+            bool hasUnreferencedCommits = repo.Head.Tip.Sha != original_detached_head_commit_hash;
+
+            if (hasUnreferencedCommits)
+            {
+                Console.WriteLine("New commits have been made in detached HEAD.");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine("No new commits have been made in detached HEAD.");
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public static void Delete_Repo(string? path)
@@ -328,20 +366,37 @@ public static class Git
         return hasMatchingEntry;
     }
 
-    public static void ResetHard(string? commit_hash)
+    public static void ResetHard(string? commit_hash = null)
     {
         using var repo = new Repository(Game.Path);
         if (commit_hash != null)
         {
             repo.Reset(ResetMode.Hard, commit_hash);
         }
+        else
+        {
+            repo.Reset(ResetMode.Hard);
+        }
+
+
     }
 
     public static Branch Detached_Head(string? commit_hash)
     {
         using var repo = new Repository(Game.Path);
+        Git.previous_branch_name = repo.Head.FriendlyName;
         Branch detached_head = Commands.Checkout(repo, commit_hash);
+        Git.original_detached_head_commit_hash = repo.Head.Tip.Sha;
+        Console.WriteLine($"HEAD is detached at commit {repo.Head.Tip.Sha}");
         return detached_head;
+    }
+
+    public static bool Head_isDetached()
+    {
+        using var repo = new Repository(Game.Path);
+
+        // Check if HEAD is detached
+        return repo.Head.Reference.TargetIdentifier == repo.Head.Tip.Sha;
     }
 
     public class BranchResult
@@ -410,13 +465,11 @@ public static class Git
     {
         using var repo = new Repository(Game.Path);
 
-        // Stage all the working directory changes.
-        Commands.Stage(repo, "*");
-
-        // Commit changes
-        var author = new Signature(userName, userEmail, DateTimeOffset.Now);
-        var committer = author;
-        var commit = repo.Commit(title, author, committer);
+        var status = Git.Status();
+        if (status != null)
+        {
+            Commit(Game.Path, title);
+        }
 
         // Create and checkout new branch in one step
         Branch newBranch = repo.CreateBranch(newBranchName);
