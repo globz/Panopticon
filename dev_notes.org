@@ -212,20 +212,25 @@ When ReplayMode is Enabled the following should happen:
 + Disable auto-commit (Implemented 2025-02-02)
 + Enable replay mode (Implemented 2025-02-02)
 + Persist replay_mode setting (TRUE) on curren game + (no branch) (Implemented 2025-02-02)
-+ Maybe persist turn, sq_turn, compound_turn settings for Game.Name + (no branch) - (Implemented 2025-02-04)
-+ Persist Git.previous_branch (new column) unto the game + (no branch) setting
++ Persist turn, sq_turn, compound_turn settings for Game.Name + (no branch) - (Implemented 2025-02-04)
 + Force manual commit mode - User should not be able to enable auto-commit (Implemented 2025-02-04)
 + Remove timeline_root node when using replay node (Implemented 2025-02-03)
 + Fix missing timeline node when Exiting replay mode (Implemented 2025-02-05)
 + Fix "Auto" UI control text in settings when radio button is disabled (Implemented 2025-02-05)
 + Check if branch_name is empty before [Persist] (Implemented 2025-02-06)
 + Fix TimeTravel.ReplayMode.Exit not switching to the previous branch before detaching HEAD to x commit (Implemented 2025-02-06)
++ When enabling replay_mode, example replay turn 4, then save turn 1 to 4 as (no branch) in timelines db (Implemented 2025-02-25)
++ When persisting replay_mode rename all (no branch) timeline history to the new branch name (Implemented 2025-02-25)
++ [BUG] When enabling a replay session, settings.turn will be +1 instead of of what has been selected, example of the problem: (replay turn 4 -> settings.turn = 5) (Implemented 2025-02-17)
++ [BUG] When persisting to a new branch, if there is a pending commit it will not carry over (Implemented 2025-02-25)
++ Maybe Persist Git.previous_branch (new column) unto the game + (no branch) setting
++ When branching off or persisting a DETACHED HEAD, it should also carry all the notes associated with each nodes
 
 + Snapshot UI & logic must be adapted to work in ReplayMode or dispatch to a new handler via TurnTracker.Refresh_UI: 
  - Ask if user wish to [Persist], [Discard], [Continue] or [Exit] (Implemented 2025-02-06)
- - Selecting [Persist] will ask you to name your new branch which will now be based on your replay session.
+ - Selecting [Persist] will ask you to name your new branch which will now be based on your replay session. (Implemented 2025-02-25)
  - Selecting [Discard], will discard the outcome of your replay session. (Implemented 2025-02-06)
- - Selecting [Continue], will protect your latest turn from being removed when using [Discard]
+ - Selecting [Continue], will protect your latest turn from being removed when using [Discard] (Implemented 2025-02-25)
  - Selecting [Exit] will discarding ALL CHANGES made during replay session and return to previous branch (Implemented 2025-02-06)
  
  using LibGit2Sharp;

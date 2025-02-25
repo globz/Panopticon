@@ -83,7 +83,7 @@ public class Snapshot
         NewSnapshotButton.Click += new EventHandler(NewSnapshotButton_Click);
     }
 
-    static void NewSnapshotButton_Click(object? sender, EventArgs e)
+    static public void Create()
     {
         var status = Git.Status();
         if (status != null)
@@ -145,7 +145,11 @@ public class Snapshot
         {
             MessageBox.Show("There are no pending changes!");
         }
+    }
 
+    static void NewSnapshotButton_Click(object? sender, EventArgs e)
+    {
+        Create();
     }
 
     public static void InitializeReplayComponent()
@@ -215,7 +219,7 @@ public class Snapshot
                 Game.UI.BottomPanel?.Controls.Add(PersistButton);
                 Game.UI.BottomPanel?.Controls.Add(textBoxField_branch_name);
 
-                PersistButton.Click += (sender, e) => { PersistButon_Click(textBoxField_branch_name.Text, true); };
+                PersistButton.Click += (sender, e) => { PersistButon_Click(textBoxField_branch_name.Text); };
             }
 
         }
@@ -317,7 +321,7 @@ public class Snapshot
             Game.UI.BottomPanel?.Controls.Add(groupBox_modified_files);
             Game.UI.BottomPanel?.Controls.Add(groupBox_replay_description);
 
-            PersistButton.Click += (sender, e) => { PersistButon_Click(textBoxField_branch_name.Text, maybe_new_turn); };
+            PersistButton.Click += (sender, e) => { PersistButon_Click(textBoxField_branch_name.Text); };
 
             ContinueButton.Click += (sender, e) => { TimeTravel.ReplayMode.Continue(); };
 
@@ -336,7 +340,7 @@ public class Snapshot
                 {
                     return;
                 }
-                
+
             };
         }
 
@@ -347,7 +351,7 @@ public class Snapshot
 
     }
 
-    private static void PersistButon_Click(string? branch_name, bool maybe_new_turn)
+    private static void PersistButon_Click(string? branch_name)
     {
         var confirmPersistence = MessageBox.Show($"Please exit your Dominion game [{Game.Name}] before persisting your replay session.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and persist your replay session?",
         $"Confirm replay session persistence",
@@ -355,7 +359,7 @@ public class Snapshot
         if (confirmPersistence == DialogResult.Yes && !string.IsNullOrWhiteSpace(branch_name))
         {
 
-            TimeTravel.ReplayMode.Persist(branch_name, maybe_new_turn);
+            TimeTravel.ReplayMode.Persist(branch_name);
         }
         else if (confirmPersistence == DialogResult.Yes && string.IsNullOrWhiteSpace(branch_name))
         {

@@ -228,7 +228,7 @@ public class TimeTravel
             // Reload all settings from this current branch
             Timeline.Retrieve_Settings();
 
-            // Find all previous node(s) FROM 
+            // Find all previous node(s)
             // This information has to come from branch_before_checkout since this is our reference branch
             // Persist them to timelines table under this new branch
             int node_seq_start = 1;
@@ -301,17 +301,19 @@ public class TimeTravel
 
             // Retrieve information tied to this node
             DB.Open();
-            SqliteCommand statement = DB.Query("SELECT node_seq, compound_turn, commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
+            SqliteCommand statement = DB.Query("SELECT branch, node_seq, compound_turn, commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
             statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
             statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
             statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
             SqliteDataReader node_info = statement.ExecuteReader();
 
+            string old_branch = "";
             int node_seq_end = 0;
             string commit_hash = "";
             double compoundTurnValue = 0.0;
             while (node_info.Read())
             {
+                old_branch = (string)node_info["branch"];
                 node_seq_end = Convert.ToInt32(node_info["node_seq"]);
                 commit_hash = (string)node_info["commit_hash"];
                 compoundTurnValue = Convert.ToDouble(node_info["compound_turn"] ?? 0.00);
@@ -334,42 +336,76 @@ public class TimeTravel
             double branch_compound_turn = branch_turn + branch_sq_turn;
 
             // Detach HEAD to targetted commit hash
-            Branch replay_branch = Git.Detached_Head(commit_hash);
+            var replay_branch = Git.Detached_Head(commit_hash);
 
-            Console.WriteLine(replay_branch); //TODO remove
+            if (replay_branch.IsSuccess)
+            {
 
-            // Disable auto-commit, user may or not want to persist this replay session
-            // By forcing manual mode we are now allowing this choice.
-            Game.Settings.Auto_commit = false;
+                // Find all previous node(s)
+                // This information has to come from branch_before_checkout since this is our reference branch
+                // Persist them to timelines table under this new branch
+                int node_seq_start = 1;
+                DB.Open();
+                SqliteCommand insertStatement = DB.Query(@"
+                INSERT INTO timelines (game, branch, node_name, node_seq, compound_turn, commit_hash)
+                SELECT @game, @new_branch, node_name, node_seq, compound_turn, commit_hash
+                FROM timelines
+                WHERE game = @game
+                AND branch = @old_branch
+                AND node_seq BETWEEN @node_seq_start AND @node_seq_end
+                ORDER BY node_seq");
 
-            // Enable Replay Mode setting
-            Game.Settings.Replay_Mode = true;
+                insertStatement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                insertStatement.Parameters.Add("@new_branch", SqliteType.Text).Value = Git.CurrentBranch();
+                insertStatement.Parameters.Add("@old_branch", SqliteType.Text).Value = old_branch;
+                insertStatement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
+                insertStatement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
+                insertStatement.ExecuteNonQuery();
+                DB.Close();
 
-            // Update Turn
-            Game.Settings.Turn = node_seq_end; //TODO do I use node_seq_end or branch_turn??
-            // TODO Update SQ_turn
-            Game.Settings.SQ_Turn = branch_sq_turn;
+                // Disable auto-commit, user may or not want to persist this replay session
+                // By forcing manual mode we are now allowing this choice.
+                Game.Settings.Auto_commit = false;
 
-            // Update Compound turn
-            Game.Settings.Compound_Turn = branch_compound_turn;
+                // Enable Replay Mode setting
+                Game.Settings.Replay_Mode = true;
 
-            // Persist Replay Mode setting
-            DB.SaveAllSettings();
+                // Update Turn
+                Game.Settings.Turn = branch_turn;
 
-            // Reload all settings from this current branch
-            Timeline.Retrieve_Settings();
+                // Update SQ_turn
+                Game.Settings.SQ_Turn = branch_sq_turn;
 
-            // Refresh timeline UI
-            Timeline.Refresh_Timeline_Nodes();
+                // Update Compound turn
+                Game.Settings.Compound_Turn = branch_compound_turn;
 
-            // Refresh timeline TopPanel
-            Timeline.Initialize_Timeline_Root();
+                // Update Head commit hash reference
+                Git.head_commit_hash = Git.original_detached_head_commit_hash;
 
-            // Enable Replay Mode Node OR  disable Manual snapshot Node if needed
-            Timeline.Manual_Snapshot_Node();
-            Timeline.Replay_Mode_Node();
+                // Persist Replay Mode setting
+                DB.SaveAllSettings();
 
-            return true;
+                // Reload all settings from this current branch
+                Timeline.Retrieve_Settings();
+
+                // Refresh timeline UI
+                Timeline.Refresh_Timeline_Nodes();
+
+                // Refresh timeline TopPanel
+                Timeline.Initialize_Timeline_Root();
+
+                // Enable Replay Mode Node OR  disable Manual snapshot Node if needed
+                Timeline.Manual_Snapshot_Node();
+                Timeline.Replay_Mode_Node();
+
+                return true;
+
+            }
+            else
+            {
+                return false;
+            }
+
         }
 
         public static bool Disable()
@@ -378,9 +414,17 @@ public class TimeTravel
             // Disable Replay Mode setting
             Game.Settings.Replay_Mode = false;
 
-            // Persist Replay Mode setting
+            // Remove Replay Mode setting
             DB.Open();
             SqliteCommand statement = DB.Query("DELETE FROM settings WHERE game = @game AND branch = @branch");
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = "(no branch)";
+            statement.ExecuteNonQuery();
+            DB.Close();
+
+            // Remove temporary persisted (no branch) in timelines
+            DB.Open();
+            statement = DB.Query("DELETE FROM timelines WHERE game = @game AND branch = @branch");
             statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
             statement.Parameters.Add("@branch", SqliteType.Text).Value = "(no branch)";
             statement.ExecuteNonQuery();
@@ -402,6 +446,11 @@ public class TimeTravel
             // Refresh Replay component
             Snapshot.InitializeReplayComponent();
 
+            // TODO remove 1 turn from settings (turn, sq_turn?? & compound_turn)
+            // TODO test for dicarding an sq_turn scenario
+            Game.Settings.Turn--;
+            Game.Settings.Compound_Turn--;
+
             return true;
         }
 
@@ -409,25 +458,20 @@ public class TimeTravel
         {
             // # Commit all uncomitted changes made while Replay mode was active to DETACHED HEAD (no branch)
 
-            var status = Git.Status();
-            if (status != null)
-            {
-                bool maybe_new_turn = Git.CheckIfFileExists(status.Modified, ".trn");
-                Git.Commit(Game.Path, Git.Commit_title(maybe_new_turn));
-            }
+            Snapshot.Create();
 
             Snapshot.InitializeReplayComponent();
 
             return true;
         }
 
-        public static bool Persist(string branch_name, bool maybe_new_turn)
+        public static bool Persist(string branch_name)
         {
             // # Everything done during Replay mode may be saved to a new branch
             // # git switch -c <new-branch-name>
 
             // Commit changes from DETACHED HEAD if needed, create new branch and checkout
-            var new_branch_result = Git.Switch_c(branch_name, Git.Commit_title(maybe_new_turn));
+            var new_branch_result = Git.Switch_c(branch_name);
 
             if (!new_branch_result.IsSuccess)
             {
@@ -436,8 +480,6 @@ public class TimeTravel
             }
             else
             {
-                // Persisting a replay will kick the user out of replay mode
-                ReplayMode.Disable();
 
                 // Persist new branch settings
                 DB.Open();
@@ -454,15 +496,24 @@ public class TimeTravel
                 statement.ExecuteNonQuery();
                 DB.Close();
 
-                // TODO Create a timeline for this new branch
+                // Rename all previously saved timeline nodes (via continue) to this new branch name
+                DB.Open();
+                statement = DB.Query("UPDATE timelines SET branch = @new_branch WHERE branch = @old_branch");
+                statement.Parameters.Add("@new_branch", SqliteType.Text).Value = Git.CurrentBranch();
+                statement.Parameters.Add("@old_branch", SqliteType.Text).Value = "(no branch)";
+                statement.ExecuteNonQuery();
+                DB.Close();
+
+                // Persisting a replay will kick the user out of replay mode
+                ReplayMode.Disable();                
 
                 // Refresh timeline UI
                 Timeline.Refresh_Timeline_Nodes();
 
                 // Refresh timeline TopPanel
-                //Timeline.Initialize_Timeline_Root();
+                Timeline.Initialize_Timeline_Root();
 
-                // Enable Replay Mode Node OR  disable Manual snapshot Node if needed
+                // Enable Replay Mode Node OR disable Manual snapshot Node if needed
                 Timeline.Manual_Snapshot_Node();
                 Timeline.Replay_Mode_Node();
 
@@ -473,7 +524,7 @@ public class TimeTravel
 
         public static void Exit()
         {
-            // # Discard all uncommitted changes made while Replay mode was active and switch to previous branch
+            // # Discard all changes made while Replay mode was active and switch to previous branch
 
             Git.ResetHard();
 

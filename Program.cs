@@ -247,14 +247,17 @@ public static class Git
         var author = new Signature(userName, userEmail, DateTimeOffset.Now);
         var committer = author;
         var commit = repo.Commit(title, author, committer);
+        Git.head_commit_hash = repo.Head.Tip.Sha;
+        Console.WriteLine($"HEAD Commit hash {repo.Head.Tip.Sha}");
 
         // Retrieve hash of current commit & store current HEAD commit
-        if (!Head_isDetached())
-        {
-            var head = (SymbolicReference)repo.Refs.Head;
-            Git.head_commit_hash = head.ResolveToDirectReference().Target.Sha;
-            Console.WriteLine($"HEAD Commit hash {head_commit_hash}");
-        }
+        // TODO No longer needed...DELETE
+        /*         if (!Head_isDetached())
+                {
+                    var head = (SymbolicReference)repo.Refs.Head;
+                    Git.head_commit_hash = head.ResolveToDirectReference().Target.Sha;
+                    Console.WriteLine($"HEAD Commit hash {head_commit_hash}");
+                } */
 
     }
 
@@ -381,14 +384,21 @@ public static class Git
 
     }
 
-    public static Branch Detached_Head(string? commit_hash)
+    public static BranchResult Detached_Head(string? commit_hash)
     {
-        using var repo = new Repository(Game.Path);
-        Git.previous_branch_name = repo.Head.FriendlyName;
-        Branch detached_head = Commands.Checkout(repo, commit_hash);
-        Git.original_detached_head_commit_hash = repo.Head.Tip.Sha;
-        Console.WriteLine($"HEAD is detached at commit {repo.Head.Tip.Sha}");
-        return detached_head;
+        try
+        {
+            using var repo = new Repository(Game.Path);
+            Git.previous_branch_name = repo.Head.FriendlyName;
+            Branch detached_head = Commands.Checkout(repo, commit_hash);
+            Git.original_detached_head_commit_hash = repo.Head.Tip.Sha;
+            Console.WriteLine($"HEAD is detached at commit {repo.Head.Tip.Sha}");
+            return new BranchResult { Branch = detached_head };
+        }
+        catch (Exception ex)
+        {
+            return new BranchResult { ErrorMessage = ex.Message };
+        }
     }
 
     public static bool Head_isDetached()
@@ -461,15 +471,12 @@ public static class Git
         return branches.Count();
     }
 
-    public static BranchResult Switch_c(string newBranchName, string? title)
+    public static BranchResult Switch_c(string newBranchName)
     {
         using var repo = new Repository(Game.Path);
 
-        var status = Git.Status();
-        if (status != null)
-        {
-            Commit(Game.Path, title);
-        }
+        // Save uncommited changes if available
+        Snapshot.Create();
 
         // Create and checkout new branch in one step
         Branch newBranch = repo.CreateBranch(newBranchName);
