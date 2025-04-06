@@ -479,4 +479,18 @@ public static class Git
 
     }
 
+    public static void CreateGitIgnore(string? path)
+    {
+        string gitignore_path = @$"{path}\.gitignore";
+
+        // Create the file, or overwrite if the file exists.
+        using (FileStream fs = File.Create(gitignore_path, 1024))
+        {
+            byte[] info = new System.Text.UTF8Encoding(true).GetBytes("panopticon.db\n.gitignore");
+            // Add some information to the file.
+            fs.Write(info, 0, info.Length);
+        }
+  
+    }
+
 }

@@ -16,6 +16,9 @@ public partial class Timeline : Form
     {
         InitializeComponent();
 
+        // TODO add .gitignore to Game.Path (ignoring panopticon.db)
+        Git.CreateGitIgnore(Game.Path);
+
         // Initialize the settings database
         Initialize_Settings_DB();
 

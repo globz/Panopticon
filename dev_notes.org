@@ -156,6 +156,7 @@
 - Call TurnTracker.Update_Turn() on missed turn(s), this is needed for the snapshot implementation. (Implemented 2024-10-24)
 - Save panopticon.db per game file, no need for global DB, this will let users load other player's game into their own Panopticon. (Implemented 2025-04-06)
 - Check if branch_name is empty before calling BranchOff (Implemented 2025-02-05)
+- [BUG] add panopticon.db to .gitignore
 - Fix Tab index on all forms
 - Revise and remove ALL TODO
 - Remove unnecessary Console call
