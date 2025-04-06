@@ -249,16 +249,6 @@ public static class Git
         var commit = repo.Commit(title, author, committer);
         Git.head_commit_hash = repo.Head.Tip.Sha;
         Console.WriteLine($"HEAD Commit hash {repo.Head.Tip.Sha}");
-
-        // Retrieve hash of current commit & store current HEAD commit
-        // TODO No longer needed...DELETE
-        /*         if (!Head_isDetached())
-                {
-                    var head = (SymbolicReference)repo.Refs.Head;
-                    Git.head_commit_hash = head.ResolveToDirectReference().Target.Sha;
-                    Console.WriteLine($"HEAD Commit hash {head_commit_hash}");
-                } */
-
     }
 
     public static bool HasUnreferencedCommits()
