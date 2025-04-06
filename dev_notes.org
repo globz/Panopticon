@@ -147,19 +147,20 @@
 - FileWatcherManager ~ perhaps implement an Adaptive Debounce Delay?
 - Renamed column "sq_turn" to "saved_turn" in table setings (Might not be needed...)
 - Implement TimeTravel.BranchOff (Implemented 2024-10-25)
+- Ability to delete branches from Timeline - (Implemented 2024-11-05)
+- Branch switching menu - (Implemented 2024-10-25)
+- Add Confirmation Dialog when undoing turn(s) (Implemented 2024-10-27)
+- Ability to rename nodes? (Future update, after release?)
+- Implement settings at the branch level, right now settings are global to a specific game. (Implemented 2024-10-15)
+- Remove Save Notes button once inside a TimeTravel option menu - (Implemented 2024-10-18)
+- Call TurnTracker.Update_Turn() on missed turn(s), this is needed for the snapshot implementation. (Implemented 2024-10-24)
+- Save panopticon.db per game file, no need for global DB, this will let users load other player's game into their own Panopticon. (Implemented 2025-04-06)
+- Check if branch_name is empty before calling BranchOff (Implemented 2025-02-05)
 - Fix Tab index on all forms
 - Revise and remove ALL TODO
 - Remove unnecessary Console call
 - Remove all unnecessary Console.WriteLine
-- Ability to delete branches from Timeline - (Implemented 2024-11-05)
-- Branch switching menu - (Implemented 2024-10-25)
-- Add Confirmation Dialog when undoing turn(s) (Implemented 2024-10-27)
-- Ability to rename nodes?
-- Implement settings at the branch level, right now settings are global to a specific game. (Implemented 2024-10-15)
-- Remove Save Notes button once inside a TimeTravel option menu - (Implemented 2024-10-18)
-- Call TurnTracker.Update_Turn() on missed turn(s), this is needed for the snapshot implementation. (Implemented 2024-10-24)
-- Save panopticon.db per game file, no need for global DB, this will let users load other player's game into their own Panopticon.
-- Check if branch_name is empty before calling BranchOff (Implemented 2025-02-05)
+- Finish implementation details of Replay
 
 BUG:
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, resulting in no new calculated turn. 
