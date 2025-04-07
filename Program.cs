@@ -483,14 +483,18 @@ public static class Git
     {
         string gitignore_path = @$"{path}\.gitignore";
 
-        // Create the file, or overwrite if the file exists.
-        using (FileStream fs = File.Create(gitignore_path, 1024))
+        // Check if file does not already exist.
+        if (!File.Exists(gitignore_path))
         {
-            byte[] info = new System.Text.UTF8Encoding(true).GetBytes("panopticon.db\n.gitignore");
-            // Add some information to the file.
-            fs.Write(info, 0, info.Length);
+            // Create the file, or overwrite if the file exists.
+            using (FileStream fs = File.Create(gitignore_path, 1024))
+            {
+                byte[] info = new System.Text.UTF8Encoding(true).GetBytes("panopticon.db\n.gitignore");
+                // Add some information to the file.
+                fs.Write(info, 0, info.Length);
+            }
         }
-  
+
     }
 
 }
