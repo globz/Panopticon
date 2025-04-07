@@ -612,6 +612,13 @@ public partial class Timeline : Form
     static void SwitchTimelineBranchButton_Click(object? sender, EventArgs e)
     {
         Game.UI.BottomPanel?.Controls.Clear();
+        
+        Button? node_to_delete  = Game.UI.FindControlByName(Game.UI.TopPanel, "saveNotes", typeof(Button));
+        if (node_to_delete != null)
+        {
+            node_to_delete.Hide();
+            
+        }
 
         var groupBox_overview = new System.Windows.Forms.GroupBox();
         groupBox_overview.Location = new System.Drawing.Point(10, 100);
@@ -1076,7 +1083,7 @@ public partial class Timeline : Form
             {
                 return;
             }
-            
+
         };
 
     }
