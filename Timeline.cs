@@ -634,7 +634,7 @@ public partial class Timeline : Form
             + "If you ever switch branch while your game is running, please select [Quit without saving] to exit your game."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "Once your is game closed, you may proceed and switch branch.",
+            + "Once your game is closed, you may proceed and switch branch.",
             Dock = DockStyle.Fill
         };
 
@@ -824,7 +824,7 @@ public partial class Timeline : Form
             + "If you ever undo this turn while your game is running, please select [Quit without saving] to exit your game."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "Once your is game closed, you may proceed to permanently delete the following snapshot(s) from existence.",
+            + "Once your game is closed, you may proceed to permanently delete the following snapshot(s) from existence.",
             Dock = DockStyle.Fill
         };
 
