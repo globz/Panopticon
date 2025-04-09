@@ -331,22 +331,10 @@ public static class Git
         return diffs;
     }
 
-    public static RepositoryStatus? Status()
+    public static RepositoryStatus Status()
     {
-        RepositoryStatus? status = null;
-
-        if (Exist(Game.Path))
-        {
-            using var repo = new Repository(Game.Path);
-            status = repo.RetrieveStatus();
-
-            if (!status.Any())
-            {
-                status = null;
-            }
-        }
-
-        return status;
+        using var repo = new Repository(Game.Path);
+        return repo.RetrieveStatus();
     }
 
     public static bool CheckIfFileExists(IEnumerable<StatusEntry> modifiedEntries, string file)
@@ -369,8 +357,6 @@ public static class Git
         {
             repo.Reset(ResetMode.Hard);
         }
-
-
     }
 
     public static BranchResult Detached_Head(string? commit_hash)

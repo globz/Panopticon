@@ -6,8 +6,8 @@ public partial class TurnTracker
 {
     public static void Process()
     {
-        var status = Git.Status();
-        if (status != null)
+        LibGit2Sharp.RepositoryStatus status = Git.Status();
+        if (status.Modified.Any())
         {
             // Check if a turn has been made
             bool maybe_new_turn = Git.CheckIfFileExists(status.Modified, ".trn");

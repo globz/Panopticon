@@ -42,8 +42,8 @@ public class Snapshot
         };
 
         // Figure out the current status of our working directory
-        var status = Git.Status();
-        if (status == null)
+        RepositoryStatus status = Git.Status();
+        if (!status.Modified.Any())
         {
             description.Text += System.Environment.NewLine
             + System.Environment.NewLine
@@ -85,8 +85,8 @@ public class Snapshot
 
     static public void Create()
     {
-        var status = Git.Status();
-        if (status != null)
+        RepositoryStatus status = Git.Status();
+        if (status.Modified.Any())
         {
             // Check if a turn has been made
             bool maybe_new_turn = Git.CheckIfFileExists(status.Modified, ".trn");
@@ -186,8 +186,8 @@ public class Snapshot
         };
 
         // Figure out the current status of our working directory
-        var status = Git.Status();
-        if (status == null)
+        RepositoryStatus status = Git.Status();
+        if (!status.Modified.Any())
         {
             description.Text += System.Environment.NewLine
             + System.Environment.NewLine
