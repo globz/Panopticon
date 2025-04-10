@@ -214,8 +214,38 @@ public partial class Timeline : Form
 
     protected void TreeViewLeft_AfterSelect(object? sender, System.Windows.Forms.TreeViewEventArgs e)
     {
+
+        // @ HACK to cancel default selection behaviour when window is losing focus.
+        // This action is always unknown (!ByMouse || !ByKeyboard)
+        // When detected, check the current SelectedNode against the previous SelectedNode (which has yet to be updated)
+        // If they are not equal then return immediately so that the previous SelectedNode stays selected.
+        if (e.Action == TreeViewAction.Unknown)
+        {
+            if (Game.UI.TreeViewLeft.SelectedNode != Game.UI.SelectedNode && Game.UI.SelectedNode != null)
+            {
+                return;
+            }
+        }
+
+        // Reset ForeColor of previous selected node
+        if (Game.UI.SelectedNode != null)
+        {
+            Game.UI.SelectedNode.ForeColor = Color.GhostWhite;
+        }
+
         // Update reference to the current selected node
         Game.UI.SelectedNode = e.Node;
+
+        // Update ForeColor of current selected node
+        if (Game.UI.SelectedNode != null)
+        {
+            Game.UI.SelectedNode.ForeColor = Color.PaleGreen;
+            Game.UI.SelectedNode.BackColor = Color.Empty;
+        }
+
+        // Reset SelectedNode so we can retrigger this event if the user select the same node again
+        // @@ When losing window focus, the default targetted node is settings (THIS SUCKS!)
+        Game.UI.TreeViewLeft.SelectedNode = null;
 
         // Dispatch based on selected node name
         switch (e.Node?.Name)
@@ -591,7 +621,7 @@ public partial class Timeline : Form
             // Retrieve current branch to delete
             string branch_to_delete = Git.CurrentBranch();
 
-            // Switch back to Timeline root branch since we can remove HEAD
+            // Switch back to Timeline root branch
             TimeTravel.SwitchBranch("root");
 
             // Delete git branch
@@ -612,16 +642,16 @@ public partial class Timeline : Form
     static void SwitchTimelineBranchButton_Click(object? sender, EventArgs e)
     {
         Game.UI.BottomPanel?.Controls.Clear();
-        
-        Button? node_to_delete  = Game.UI.FindControlByName(Game.UI.TopPanel, "saveNotes", typeof(Button));
+
+        Button? node_to_delete = Game.UI.FindControlByName(Game.UI.TopPanel, "saveNotes", typeof(Button));
         if (node_to_delete != null)
         {
             node_to_delete.Hide();
-            
+
         }
 
         var groupBox_overview = new System.Windows.Forms.GroupBox();
-        groupBox_overview.Location = new System.Drawing.Point(10, 100);
+        groupBox_overview.Location = new System.Drawing.Point(10, 120);
         groupBox_overview.Text = $"Branches overview";
         groupBox_overview.ForeColor = Color.Orange;
         groupBox_overview.AutoSize = true;
@@ -634,7 +664,10 @@ public partial class Timeline : Form
             + "If you ever switch branch while your game is running, please select [Quit without saving] to exit your game."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "Once your game is closed, you may proceed and switch branch.",
+            + "Once your game is closed, you may proceed and switch branch."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + $"You care currently on branch : [{Git.CurrentBranch()}]",
             Dock = DockStyle.Fill
         };
 
@@ -660,6 +693,7 @@ public partial class Timeline : Form
 
             branches.ToList().ForEach(branch =>
             {
+
                 Button branchButton = new Button
                 {
                     Text = branch,
@@ -668,7 +702,7 @@ public partial class Timeline : Form
                     Size = new Size(BUTTON_WIDTH, BUTTON_HEIGHT),
                     // Optional: Add tooltip
                     UseVisualStyleBackColor = true,
-                    BackColor = Color.IndianRed,
+                    BackColor = (branch == Git.CurrentBranch()) ? Color.DarkGreen : Color.IndianRed,
                     ForeColor = Game.UI.ForeColor,
                     Padding = new(2),
                     AutoSize = true,
