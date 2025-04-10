@@ -219,6 +219,8 @@ public partial class Timeline : Form
         // This action is always unknown (!ByMouse || !ByKeyboard)
         // When detected, check the current SelectedNode against the previous SelectedNode (which has yet to be updated)
         // If they are not equal then return immediately so that the previous SelectedNode stays selected.
+        // A null check is also made on the previous SelectedNode because on fresh start this value
+        // will be null, therefor it has to go through the flow to properly initialize the node.
         if (e.Action == TreeViewAction.Unknown)
         {
             if (Game.UI.TreeViewLeft.SelectedNode != Game.UI.SelectedNode && Game.UI.SelectedNode != null)
