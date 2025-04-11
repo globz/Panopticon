@@ -451,6 +451,7 @@ public static class Git
         using var repo = new Repository(Game.Path);
 
         // Save uncommited changes if available
+        // Does not matter if it return false
         Snapshot.Create();
 
         // Create and checkout new branch in one step

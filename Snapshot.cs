@@ -83,7 +83,7 @@ public class Snapshot
         NewSnapshotButton.Click += new EventHandler(NewSnapshotButton_Click);
     }
 
-    static public void Create()
+    static public bool Create()
     {
         RepositoryStatus status = Git.Status();
         if (status.Modified.Any())
@@ -140,16 +140,20 @@ public class Snapshot
                 // Refresh Snapshot UI
                 InitializeDefaultComponent();
             }
+
+            return true;
         }
         else
-        {
-            MessageBox.Show("There are no pending changes!");
+        {            
+            return false;
         }
     }
 
     static void NewSnapshotButton_Click(object? sender, EventArgs e)
     {
-        Create();
+        if (!Create()) {
+            MessageBox.Show("There are no pending changes!");
+        }
     }
 
     public static void InitializeReplayComponent()

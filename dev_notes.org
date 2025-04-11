@@ -157,15 +157,16 @@
 - Save panopticon.db per game file, no need for global DB, this will let users load other player's game into their own Panopticon. (Implemented 2025-04-06)
 - Check if branch_name is empty before calling BranchOff (Implemented 2025-02-05)
 - Check if .gitignore already exist before creating the file (Implemented 2025-04-06)
+- In the branches overview, set the current active branch to green (Implemented 2025-04-08)
+- Clicking the same node in TreeviewLeft should reset the view (act as a back button) (Implemented 2025-04-08) - Still not sastified with the result, 
+  when losing window focus it will reset to selecting the settings node. (Implemented 2025-04-10)
+- Highlight selected node in green in TreeviewLeft (Implemented 2025-04-08)
 - Fix Tab index on all forms
 - Revise and remove ALL TODO
 - Remove unnecessary Console call
 - Remove all unnecessary Console.WriteLine
 - Finish implementation details of Replay
-- In the branches overview, set the current active branch to green (Implemented 2025-04-08)
-- Clicking the same node in TreeviewLeft should reset the view (act as a back button) (Implemented 2025-04-08) - Still not sastified with the result, 
-  when losing window focus it will reset to selecting the settings node. (Implemented 2025-04-10)
-- Highlight selected node in green in TreeviewLeft (Implemented 2025-04-08)
+- When persisting Replay, you do not need to exit Dominion (Remove messageBox)
 
 BUG:
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, resulting in no new calculated turn. 
@@ -175,43 +176,14 @@ BUG:
 - Add panopticon.db to .gitignore (Implemented 2025-04-06)
 - Undoing the latest turn will cause a bug related to Git.Commit ('LibGit2Sharp.EmptyCommitException' in LibGit2Sharp.dll: 'No changes; nothing to commit.')
 - Replay mode - Persist should be disabled if there is no commit to be made or find a way to force it since we wish to persist to a new branch - This will trigger the bug above.
-  This is now "fixed" however the messageBox "There a no pending changes" will be displayed - Make it so that it only commits if needed when persisting the branch.
+  This is now "fixed" however the messageBox "There a no pending changes" will be displayed - Snapshot.Create() will now return a boolean, the messageBox logic is now handled outside
+  of this function. (Implemented 2025-04-10)
 - ('LibGit2Sharp.EmptyCommitException' in LibGit2Sharp.dll: 'No changes; nothing to commit.') - The FileWatcherManager is always active while switching branch, when creation mode
   is set to "Auto" it will trigger a commit but there is nothing to commit, however the files did change and caused the trigger. (Implemented 2025-04-08)
 - LibGit2Sharp.RepositoryStatus? status = Git.Status(); This will never return null, perhaps use status.modified (Implemented 2025-04-08)
 - Validate all Git.Status() call in Snapshot.cs (Implemented 2025-04-08)
 - Validate new branch name (Exception thrown: 'LibGit2Sharp.InvalidSpecificationException' in LibGit2Sharp.dll: 'the given reference name 'refs/heads/Good start' is not valid')
-
-
-    public static RepositoryStatus? Status()
-    {
-        RepositoryStatus? status = null;
-
-        if (Exist(Game.Path))
-        {
-            using var repo = new Repository(Game.Path);
-            status = repo.RetrieveStatus();
-
-            if (!status.Any())
-            {
-                status = null;
-            }
-        }
-
-        return status;
-    }
-
-    public static RepositoryStatus? Status()
-    {
-        RepositoryStatus? status = null;
-
-        if (Exist(Game.Path))
-        {
-            using var repo = new Repository(Game.Path);
-            return status = repo.RetrieveStatus();
-        }
-        return status;
-    }    
+- When entering replay mode, the UI will display the old SelectedNode (this is caused by our new HACK in TreeViewLeft_AfterSelect (timeline))
 
 HEAD - 85b14ecf7cae4b9db7f0cac429654647f82d3cbe
 
