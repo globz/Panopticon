@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Net;
 using System.Reflection.Metadata;
 using System.Windows.Forms.VisualStyles;
 using LibGit2Sharp;
@@ -212,22 +213,29 @@ public partial class Timeline : Form
         Cursor.Current = System.Windows.Forms.Cursors.Default;
     }
 
+    protected static bool TreeViewLeft_Node_Selection_Behaviour(TreeViewAction action, TreeNode current_SelectedNode, TreeNode? previous_SelectedNode)
+    {
+        Console.WriteLine("Game.UI.TreeViewLeft.SelectedNode: " + Game.UI.TreeViewLeft.SelectedNode.Name);
+        Console.WriteLine("Game.UI.SelectedNode: " + Game.UI.SelectedNode?.Name);
+
+        if (action != TreeViewAction.Unknown) { return false; }
+        if (current_SelectedNode.Name == "replay_mode") { return false; }
+        if (previous_SelectedNode?.Name == "replay_mode") { return false; }
+        if (current_SelectedNode == previous_SelectedNode) { return false; }
+        if (previous_SelectedNode == null) { return false; }
+        return true;
+    }
+
     protected void TreeViewLeft_AfterSelect(object? sender, System.Windows.Forms.TreeViewEventArgs e)
     {
 
-        // @ HACK to cancel default selection behaviour when window is losing focus.
-        // This action is always unknown (!ByMouse || !ByKeyboard)
-        // When detected, check the current SelectedNode against the previous SelectedNode (which has yet to be updated)
-        // If they are not equal then return immediately so that the previous SelectedNode stays selected.
-        // A null check is also made on the previous SelectedNode because on fresh start this value
-        // will be null, therefor it has to go through the flow to properly initialize the node.
-        if (e.Action == TreeViewAction.Unknown)
-        {
-            if (Game.UI.TreeViewLeft.SelectedNode != Game.UI.SelectedNode && Game.UI.SelectedNode != null)
-            {
-                return;
-            }
-        }
+        // @ HACK to cancel default selection behaviour when window is losing focus or while navigating without user action.
+        // This action is always "Unknown" and does not match "ByMouse" or "ByKeyboard".
+        // We return early so we do not update the selectedNode from "TreeViewAction.Unknown" 
+        // See which implementation detail of the function call, whenever it return TRUE the logic below will be skipped entirely.
+        bool maybe_skip_logic_below = TreeViewLeft_Node_Selection_Behaviour(e.Action, Game.UI.TreeViewLeft.SelectedNode, Game.UI.SelectedNode);
+        Console.WriteLine(maybe_skip_logic_below);
+        if (maybe_skip_logic_below) { return; }
 
         // Reset ForeColor of previous selected node
         if (Game.UI.SelectedNode != null)
@@ -246,7 +254,7 @@ public partial class Timeline : Form
         }
 
         // Reset SelectedNode so we can retrigger this event if the user select the same node again
-        // @@ When losing window focus, the default targetted node is settings (THIS SUCKS!)
+        // @ HACK - When losing window focus, the default targetted node is settings (THIS SUCKS!)
         Game.UI.TreeViewLeft.SelectedNode = null;
 
         // Dispatch based on selected node name
@@ -1223,14 +1231,17 @@ public partial class Timeline : Form
     {
         if (!Game.Settings.Auto_commit && !Game.Settings.Replay_Mode)
         {
-            TreeNode newCommitNode = new("New snapshot");
-            newCommitNode.Name = "new_snapshot";
-            Game.UI.TreeViewLeft?.Nodes.Add(newCommitNode);
+            TreeNode? node_to_delete = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "new_snapshot");
+            if (node_to_delete == null)
+            {
+                TreeNode newCommitNode = new("New snapshot");
+                newCommitNode.Name = "new_snapshot";
+                Game.UI.TreeViewLeft?.Nodes.Add(newCommitNode);
+            }
         }
         else if (Game.Settings.Auto_commit || Game.Settings.Replay_Mode)
         {
-            TreeNode? node_to_delete = new TreeNode();
-            node_to_delete = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "new_snapshot");
+            TreeNode? node_to_delete = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "new_snapshot");
             if (node_to_delete != null)
             {
                 Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
@@ -1242,14 +1253,15 @@ public partial class Timeline : Form
     {
         if (!Game.Settings.Auto_commit && Game.Settings.Replay_Mode)
         {
-            TreeNode newCommitNode = new("Replay Mode");
-            newCommitNode.Name = "replay_mode";
+            TreeNode replayNode = new("Replay Mode");
+            replayNode.Name = "replay_mode";
             TreeNode? node_to_delete = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "timeline_root");
             if (node_to_delete != null)
             {
                 Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
             }
-            Game.UI.TreeViewLeft?.Nodes.Add(newCommitNode);
+            Game.UI.TreeViewLeft.Nodes.Add(replayNode);
+            Game.UI.TreeViewLeft.SelectedNode = replayNode;
         }
         else if (Game.Settings.Auto_commit || !Game.Settings.Replay_Mode)
         {
@@ -1261,6 +1273,8 @@ public partial class Timeline : Form
                 Game.UI.TreeViewLeft.Nodes.Add(Game.UI.Timeline_history);
                 Game.UI.TreeViewLeft.ExpandAll();
                 Game.UI.TreeViewLeft.PerformLayout();
+                TreeNode? timeline_root = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "timeline_root");
+                Game.UI.TreeViewLeft.SelectedNode = timeline_root;
             }
         }
     }
