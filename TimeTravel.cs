@@ -89,7 +89,7 @@ public class TimeTravel
         if (permanent)
         {
             // Do not undo the first commit (Delete and rebuild a new timeline instead!)
-            if (node_seq != 1)
+            if (node_seq > 1)
             {
                 // git reset --hard using the parent_node commit_hash
                 Git.ResetHard(commit_hash);
