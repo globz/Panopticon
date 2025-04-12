@@ -235,7 +235,7 @@ public partial class Timeline : Form
         // See which implementation detail of the function call, whenever it return TRUE the logic below will be skipped entirely.
         bool maybe_skip_logic_below = TreeViewLeft_Node_Selection_Behaviour(e.Action, Game.UI.TreeViewLeft.SelectedNode, Game.UI.SelectedNode);
         Console.WriteLine(maybe_skip_logic_below);
-        if (maybe_skip_logic_below) { return; }
+        if (maybe_skip_logic_below) { Game.UI.TreeViewLeft.SelectedNode = null; return; }
 
         // Reset ForeColor of previous selected node
         if (Game.UI.SelectedNode != null)
