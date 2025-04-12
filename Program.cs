@@ -98,7 +98,22 @@ public static class Game
             }
             return null; // No matching button found
         }
+        public static TreeNode? GetLastNode(TreeView treeView)
+        {
+            if (treeView.Nodes.Count == 0)
+                return null;
 
+            // Start from the last root node
+            TreeNode lastNode = treeView.Nodes[^1];
+
+            // Recursively find the last child node
+            while (lastNode.Nodes.Count > 0)
+            {
+                lastNode = lastNode.Nodes[^1];
+            }
+
+            return lastNode;
+        }
     }
 
     public static class Settings

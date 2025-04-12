@@ -187,7 +187,7 @@ BUG:
 - When exiting replay mode, the UI will display timeline_root without it being selected (this is caused by our new HACK in TreeViewLeft_AfterSelect (timeline)) - (Implemented 2025-04-11)
 - Validate new branch name (Exception thrown: 'LibGit2Sharp.InvalidSpecificationException' in LibGit2Sharp.dll: 'the given reference name 'refs/heads/Good start' is not valid')
 - @@@DATALOSS via TimeTravel.Undo() - You are able to undo the same turn UI, the UI does not correctly refresh the node selection so you can still undo the same turn, 
-  this causes your whole timeline to be deleted from panopticon.db
+  this causes your whole timeline to be deleted from panopticon.db (Implemented 2025-04-12)
 
 HEAD - 85b14ecf7cae4b9db7f0cac429654647f82d3cbe
 

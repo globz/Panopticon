@@ -219,8 +219,6 @@ public partial class Timeline : Form
         Console.WriteLine("Game.UI.SelectedNode: " + Game.UI.SelectedNode?.Name);
 
         if (action != TreeViewAction.Unknown) { return false; }
-        if (current_SelectedNode.Name == "replay_mode") { return false; }
-        if (previous_SelectedNode?.Name == "replay_mode") { return false; }
         if (current_SelectedNode == previous_SelectedNode) { return false; }
         if (previous_SelectedNode == null) { return false; }
         return true;
@@ -228,11 +226,10 @@ public partial class Timeline : Form
 
     protected void TreeViewLeft_AfterSelect(object? sender, System.Windows.Forms.TreeViewEventArgs e)
     {
-
         // @ HACK to cancel default selection behaviour when window is losing focus or while navigating without user action.
         // This action is always "Unknown" and does not match "ByMouse" or "ByKeyboard".
         // We return early so we do not update the selectedNode from "TreeViewAction.Unknown" 
-        // See which implementation detail of the function call, whenever it return TRUE the logic below will be skipped entirely.
+        // See implementation details of the function call, whenever it return TRUE the logic below will be skipped entirely.
         bool maybe_skip_logic_below = TreeViewLeft_Node_Selection_Behaviour(e.Action, Game.UI.TreeViewLeft.SelectedNode, Game.UI.SelectedNode);
         Console.WriteLine(maybe_skip_logic_below);
         if (maybe_skip_logic_below) { Game.UI.TreeViewLeft.SelectedNode = null; return; }
@@ -276,7 +273,6 @@ public partial class Timeline : Form
                 Initialize_Timeline_Node(e.Node?.Name);
                 break;
         }
-
     }
 
     public static void Initialize_Timeline_Root()
@@ -1261,6 +1257,9 @@ public partial class Timeline : Form
                 Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
             }
             Game.UI.TreeViewLeft.Nodes.Add(replayNode);
+
+            // @ HACK to force selection of replay_node
+            Game.UI.SelectedNode = replayNode;
             Game.UI.TreeViewLeft.SelectedNode = replayNode;
         }
         else if (Game.Settings.Auto_commit || !Game.Settings.Replay_Mode)
@@ -1274,7 +1273,10 @@ public partial class Timeline : Form
                 Game.UI.TreeViewLeft.ExpandAll();
                 Game.UI.TreeViewLeft.PerformLayout();
                 TreeNode? timeline_root = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "timeline_root");
-                Game.UI.TreeViewLeft.SelectedNode = timeline_root;
+                /*                 Game.UI.TreeViewLeft.SelectedNode = timeline_root; */
+                // @ HACK to force selection of timeline_root
+                Game.UI.SelectedNode = Game.UI.TreeViewLeft.Nodes["timeline_root"];
+                Game.UI.TreeViewLeft.SelectedNode = Game.UI.TreeViewLeft.Nodes["timeline_root"];
             }
         }
     }

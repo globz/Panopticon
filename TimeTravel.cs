@@ -16,10 +16,10 @@ public class TimeTravel
         var data = statement.ExecuteScalar();
         DB.Close();
 
-        int? node_seq = Convert.ToInt32(data);
+        int node_seq = Convert.ToInt32(data);
 
         // Retrieve parent node sequence
-        int? parent_node_seq = node_seq - 1;
+        int parent_node_seq = node_seq - 1;
 
         // Retrieve the commit hash of the node that HEAD will point to.
         DB.Open();
@@ -147,6 +147,11 @@ public class TimeTravel
                 // Reload settings
                 Timeline.Retrieve_Settings();
 
+                // @ HACK to force selection of the latest node of TreeViewLeft
+                TreeNode? lastNode = Game.UI.GetLastNode(Game.UI.TreeViewLeft);
+                Game.UI.SelectedNode = lastNode;
+                Game.UI.TreeViewLeft.SelectedNode = lastNode;
+
             }
         }
         return timeline_nodes_name;
@@ -255,6 +260,10 @@ public class TimeTravel
 
             // Refresh timeline TopPanel
             Timeline.Initialize_Timeline_Root();
+
+            // @ HACK to force selection of timeline_root
+            Game.UI.SelectedNode = Game.UI.TreeViewLeft.Nodes["timeline_root"];
+            Game.UI.TreeViewLeft.SelectedNode = Game.UI.TreeViewLeft.Nodes["timeline_root"];
 
         }
         else
@@ -505,7 +514,7 @@ public class TimeTravel
                 DB.Close();
 
                 // Persisting a replay will kick the user out of replay mode
-                ReplayMode.Disable();                
+                ReplayMode.Disable();
 
                 // Refresh timeline UI
                 Timeline.Refresh_Timeline_Nodes();
