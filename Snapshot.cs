@@ -205,9 +205,9 @@ public class Snapshot
                 var textBox_branch_name = new TextBox
                 {
                     TabIndex = 1,
-                    Location = new System.Drawing.Point(5, 100),
                     ForeColor = Game.UI.ForeColor,
-                    MaxLength = 50
+                    MaxLength = 50,
+                    Dock = DockStyle.Left
                 };
 
                 ErrorProvider branchName_errorProvider = new ErrorProvider
@@ -217,7 +217,7 @@ public class Snapshot
 
                 Button PersistButton = new()
                 {
-                    Location = new System.Drawing.Point(5, 140),
+                    Location = new System.Drawing.Point(5, 150),
                     Size = new System.Drawing.Size(100, 25),
                     Text = "Persist",
                     BackColor = Color.Purple,
@@ -226,8 +226,15 @@ public class Snapshot
                     TabIndex = 2
                 };
 
+                var groupBox_branch_name_textbox = new System.Windows.Forms.GroupBox();
+                groupBox_branch_name_textbox.Location = new System.Drawing.Point(5, 100);
+                groupBox_branch_name_textbox.Size = new System.Drawing.Size(130, 50);
+                groupBox_branch_name_textbox.Text = "branch name";
+                groupBox_branch_name_textbox.ForeColor = Color.Orange;
+                groupBox_branch_name_textbox.Controls.Add(textBox_branch_name);
+
                 Game.UI.BottomPanel?.Controls.Add(PersistButton);
-                Game.UI.BottomPanel?.Controls.Add(textBox_branch_name);
+                Game.UI.BottomPanel?.Controls.Add(groupBox_branch_name_textbox);
 
                 textBox_branch_name.TextChanged += (sender, e) => Game.UI.TextBox_branch_name_TextChanged(textBox_branch_name, branchName_errorProvider);
                 textBox_branch_name.Validating += (sender, e) => Game.UI.TextBox_branch_name_Validating(sender, e, textBox_branch_name);
@@ -308,9 +315,9 @@ public class Snapshot
             var textBox_branch_name = new TextBox
             {
                 TabIndex = 1,
-                Location = new System.Drawing.Point(5, 100),
                 ForeColor = Game.UI.ForeColor,
-                MaxLength = 50
+                MaxLength = 50,
+                Dock = DockStyle.Left
             };
 
             ErrorProvider branchName_errorProvider = new ErrorProvider
@@ -320,7 +327,7 @@ public class Snapshot
 
             Button PersistButton = new()
             {
-                Location = new System.Drawing.Point(5, 140),
+                Location = new System.Drawing.Point(5, 150),
                 Size = new System.Drawing.Size(100, 25),
                 Text = "Persist",
                 BackColor = Color.Purple,
@@ -329,8 +336,15 @@ public class Snapshot
                 TabIndex = 2
             };
 
+            var groupBox_branch_name_textbox = new System.Windows.Forms.GroupBox();
+            groupBox_branch_name_textbox.Location = new System.Drawing.Point(5, 100);
+            groupBox_branch_name_textbox.Size = new System.Drawing.Size(130, 50);
+            groupBox_branch_name_textbox.Text = "branch name";
+            groupBox_branch_name_textbox.ForeColor = Color.Orange;
+            groupBox_branch_name_textbox.Controls.Add(textBox_branch_name);
+
             Game.UI.BottomPanel?.Controls.Add(PersistButton);
-            Game.UI.BottomPanel?.Controls.Add(textBox_branch_name);
+            Game.UI.BottomPanel?.Controls.Add(groupBox_branch_name_textbox);
 
             textBox_branch_name.TextChanged += (sender, e) => Game.UI.TextBox_branch_name_TextChanged(textBox_branch_name, branchName_errorProvider);
             textBox_branch_name.Validating += (sender, e) => Game.UI.TextBox_branch_name_Validating(sender, e, textBox_branch_name);

@@ -998,7 +998,7 @@ public partial class Timeline : Form
 
         Button CreateBranchButton = new()
         {
-            Location = new System.Drawing.Point(5, 145),
+            Location = new System.Drawing.Point(5, 150),
             Size = new System.Drawing.Size(100, 25),
             Text = "Create branch",
             BackColor = Color.Purple,
@@ -1010,9 +1010,9 @@ public partial class Timeline : Form
         var textBox_branch_name = new TextBox
         {
             TabIndex = 1,
-            Location = new System.Drawing.Point(5, 100),
             ForeColor = Game.UI.ForeColor,
-            MaxLength = 50
+            MaxLength = 50,
+            Dock = DockStyle.Left
         };
 
         ErrorProvider branchName_errorProvider = new ErrorProvider
@@ -1020,8 +1020,15 @@ public partial class Timeline : Form
             BlinkStyle = ErrorBlinkStyle.BlinkIfDifferentError // Optional: Blink when error changes
         };
 
+        var groupBox_branch_name_textbox = new System.Windows.Forms.GroupBox();
+        groupBox_branch_name_textbox.Location = new System.Drawing.Point(5, 100);
+        groupBox_branch_name_textbox.Size = new System.Drawing.Size(130, 50);
+        groupBox_branch_name_textbox.Text = "branch name";
+        groupBox_branch_name_textbox.ForeColor = Color.Orange;
+        groupBox_branch_name_textbox.Controls.Add(textBox_branch_name);
+
         Game.UI.BottomPanel?.Controls.Add(CreateBranchButton);
-        Game.UI.BottomPanel?.Controls.Add(textBox_branch_name);
+        Game.UI.BottomPanel?.Controls.Add(groupBox_branch_name_textbox);
         Game.UI.BottomPanel?.Controls.Add(groupBox_branch_description);
         Game.UI.BottomPanel?.Controls.Add(description);
 
