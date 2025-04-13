@@ -144,14 +144,15 @@ public class Snapshot
             return true;
         }
         else
-        {            
+        {
             return false;
         }
     }
 
     static void NewSnapshotButton_Click(object? sender, EventArgs e)
     {
-        if (!Create()) {
+        if (!Create())
+        {
             MessageBox.Show("There are no pending changes!");
         }
     }
@@ -201,12 +202,17 @@ public class Snapshot
             // If true enable [Persist] option
             if (Git.HasUnreferencedCommits())
             {
-                var textBoxField_branch_name = new TextBoxField("Branch name:")
+                var textBox_branch_name = new TextBox
                 {
                     TabIndex = 1,
                     Location = new System.Drawing.Point(5, 100),
                     ForeColor = Game.UI.ForeColor,
                     MaxLength = 50
+                };
+
+                ErrorProvider branchName_errorProvider = new ErrorProvider
+                {
+                    BlinkStyle = ErrorBlinkStyle.BlinkIfDifferentError // Optional: Blink when error changes
                 };
 
                 Button PersistButton = new()
@@ -221,9 +227,12 @@ public class Snapshot
                 };
 
                 Game.UI.BottomPanel?.Controls.Add(PersistButton);
-                Game.UI.BottomPanel?.Controls.Add(textBoxField_branch_name);
+                Game.UI.BottomPanel?.Controls.Add(textBox_branch_name);
 
-                PersistButton.Click += (sender, e) => { PersistButon_Click(textBoxField_branch_name.Text); };
+                textBox_branch_name.TextChanged += (sender, e) => Game.UI.TextBox_branch_name_TextChanged(textBox_branch_name, branchName_errorProvider);
+                textBox_branch_name.Validating += (sender, e) => Game.UI.TextBox_branch_name_Validating(sender, e, textBox_branch_name);
+
+                PersistButton.Click += (sender, e) => { PersistButon_Click(textBox_branch_name.Text); };
             }
 
         }
@@ -296,12 +305,17 @@ public class Snapshot
                 AutoSizeMode = AutoSizeMode.GrowAndShrink
             };
 
-            var textBoxField_branch_name = new TextBoxField("Branch name:")
+            var textBox_branch_name = new TextBox
             {
                 TabIndex = 1,
                 Location = new System.Drawing.Point(5, 100),
                 ForeColor = Game.UI.ForeColor,
                 MaxLength = 50
+            };
+
+            ErrorProvider branchName_errorProvider = new ErrorProvider
+            {
+                BlinkStyle = ErrorBlinkStyle.BlinkIfDifferentError // Optional: Blink when error changes
             };
 
             Button PersistButton = new()
@@ -316,7 +330,10 @@ public class Snapshot
             };
 
             Game.UI.BottomPanel?.Controls.Add(PersistButton);
-            Game.UI.BottomPanel?.Controls.Add(textBoxField_branch_name);
+            Game.UI.BottomPanel?.Controls.Add(textBox_branch_name);
+
+            textBox_branch_name.TextChanged += (sender, e) => Game.UI.TextBox_branch_name_TextChanged(textBox_branch_name, branchName_errorProvider);
+            textBox_branch_name.Validating += (sender, e) => Game.UI.TextBox_branch_name_Validating(sender, e, textBox_branch_name);
 
             groupBox_snapshot.Controls.Add(DiscardButton);
             groupBox_snapshot.Controls.Add(ContinueButton);
@@ -325,7 +342,7 @@ public class Snapshot
             Game.UI.BottomPanel?.Controls.Add(groupBox_modified_files);
             Game.UI.BottomPanel?.Controls.Add(groupBox_replay_description);
 
-            PersistButton.Click += (sender, e) => { PersistButon_Click(textBoxField_branch_name.Text); };
+            PersistButton.Click += (sender, e) => { PersistButon_Click(textBox_branch_name.Text); };
 
             ContinueButton.Click += (sender, e) => { TimeTravel.ReplayMode.Continue(); };
 

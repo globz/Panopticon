@@ -127,6 +127,35 @@ public static class Game
                 Game.UI.TreeViewLeft.SelectedNode = selection;
             }
         }
+
+        public static void TextBox_branch_name_TextChanged(TextBox t, ErrorProvider _errorProvider)
+        {
+            if (!Git.IsValidGitBranchName(t.Text))
+            {
+                t.ForeColor = Color.MediumVioletRed;
+                _errorProvider.SetError(t,
+                    "Invalid branch name. Branch names cannot:\n" +
+                    "- Start with a dot\n" +
+                    "- Contain consecutive dots, spaces, or ~^:?*[]{}\n" +
+                    "- End with / or .lock\n" +
+                    "- Contain control characters or be empty");
+            }
+            else
+            {
+                t.ForeColor = Color.Black;
+                t.BackColor = Color.GhostWhite;
+                _errorProvider.SetError(t, string.Empty);
+            }
+        }
+
+        public static void TextBox_branch_name_Validating(object? sender, System.ComponentModel.CancelEventArgs e, TextBox t)
+        {
+            if (!Git.IsValidGitBranchName(t.Text))
+            {
+                e.Cancel = true; // Prevent focus change
+                                 // ErrorProvider already set by TextChanged, so no need to set again
+            }
+        }
     }
 
     public static class Settings
@@ -261,6 +290,16 @@ public static class Git
     public static void Init(string? path)
     {
         Repository.Init(path);
+    }
+
+    public static bool IsValidGitBranchName(string branchName)
+    {
+        if (string.IsNullOrEmpty(branchName))
+            return false;
+
+        // Git branch names are stored as refs/heads/<branchName>
+        string refName = $"refs/heads/{branchName.Trim()}";
+        return Reference.IsValidName(refName);
     }
 
     public static void Commit(string? path, string? title)

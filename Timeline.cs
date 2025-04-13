@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Net;
 using System.Reflection.Metadata;
+using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
@@ -664,7 +665,7 @@ public partial class Timeline : Form
 
         Label description = new()
         {
-            Text = $"This game cannot run while Dominion is active"
+            Text = $"Please quit your game before proceeding."
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "If you ever switch branch while your game is running, please select [Quit without saving] to exit your game."
@@ -858,7 +859,7 @@ public partial class Timeline : Form
 
         Label description = new()
         {
-            Text = $"This game cannot run while Dominion is active."
+            Text = $"Please quit your game before proceeding."
             + System.Environment.NewLine
             + System.Environment.NewLine
             + "If you ever undo this turn while your game is running, please select [Quit without saving] to exit your game."
@@ -1006,7 +1007,7 @@ public partial class Timeline : Form
             TabIndex = 2
         };
 
-        var textBoxField_branch_name = new TextBoxField("Branch name:")
+        var textBox_branch_name = new TextBox
         {
             TabIndex = 1,
             Location = new System.Drawing.Point(5, 100),
@@ -1014,34 +1015,36 @@ public partial class Timeline : Form
             MaxLength = 50
         };
 
+        ErrorProvider branchName_errorProvider = new ErrorProvider
+        {
+            BlinkStyle = ErrorBlinkStyle.BlinkIfDifferentError // Optional: Blink when error changes
+        };
 
         Game.UI.BottomPanel?.Controls.Add(CreateBranchButton);
-        Game.UI.BottomPanel?.Controls.Add(textBoxField_branch_name);
+        Game.UI.BottomPanel?.Controls.Add(textBox_branch_name);
         Game.UI.BottomPanel?.Controls.Add(groupBox_branch_description);
         Game.UI.BottomPanel?.Controls.Add(description);
+
+        textBox_branch_name.TextChanged += (sender, e) => Game.UI.TextBox_branch_name_TextChanged(textBox_branch_name, branchName_errorProvider);
+        textBox_branch_name.Validating += (sender, e) => Game.UI.TextBox_branch_name_Validating(sender, e, textBox_branch_name);
+
         CreateBranchButton.Click += (sender, e) =>
         {
             var confirmBranchCreation = MessageBox.Show($"Please exit your Dominion game [{Game.Name}] before branching this turn.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and create a new branch?",
             $"Confirm branch creation",
             MessageBoxButtons.YesNo);
-            if (confirmBranchCreation == DialogResult.Yes && !string.IsNullOrWhiteSpace(textBoxField_branch_name.Text))
+            if (confirmBranchCreation == DialogResult.Yes)
             {
 
-                TimeTravel.BranchOff(textBoxField_branch_name.Text);
-            }
-            else if (confirmBranchCreation == DialogResult.Yes && string.IsNullOrWhiteSpace(textBoxField_branch_name.Text))
-            {
-                MessageBox.Show("A branch name is required.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                TimeTravel.BranchOff(textBox_branch_name.Text.Trim());
             }
             else if (confirmBranchCreation == DialogResult.No)
             {
                 return;
             }
-
         };
 
     }
-
     static void ReplayButton_Click(object? send, EventArgs e)
     {
         // Display UI and confirm user action
@@ -1271,7 +1274,7 @@ public partial class Timeline : Form
                 Game.UI.TreeViewLeft.Nodes.Add(Game.UI.Timeline_history);
                 Game.UI.TreeViewLeft.ExpandAll();
                 Game.UI.TreeViewLeft.PerformLayout();
-                
+
                 // @ HACK to force selection of timeline_root
                 Game.UI.ForceNodeSelection(Game.UI.TreeViewLeft.Nodes["timeline_root"]);
             }
