@@ -149,9 +149,7 @@ public class TimeTravel
 
                 // @ HACK to force selection of the latest node of TreeViewLeft
                 TreeNode? lastNode = Game.UI.GetLastNode(Game.UI.TreeViewLeft);
-                Game.UI.SelectedNode = lastNode;
-                Game.UI.TreeViewLeft.SelectedNode = lastNode;
-
+                Game.UI.ForceNodeSelection(lastNode);
             }
         }
         return timeline_nodes_name;
@@ -262,9 +260,7 @@ public class TimeTravel
             Timeline.Initialize_Timeline_Root();
 
             // @ HACK to force selection of timeline_root
-            Game.UI.SelectedNode = Game.UI.TreeViewLeft.Nodes["timeline_root"];
-            Game.UI.TreeViewLeft.SelectedNode = Game.UI.TreeViewLeft.Nodes["timeline_root"];
-
+            Game.UI.ForceNodeSelection(Game.UI.TreeViewLeft.Nodes["timeline_root"]);
         }
         else
         {

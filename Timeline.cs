@@ -1259,8 +1259,7 @@ public partial class Timeline : Form
             Game.UI.TreeViewLeft.Nodes.Add(replayNode);
 
             // @ HACK to force selection of replay_node
-            Game.UI.SelectedNode = replayNode;
-            Game.UI.TreeViewLeft.SelectedNode = replayNode;
+            Game.UI.ForceNodeSelection(replayNode);
         }
         else if (Game.Settings.Auto_commit || !Game.Settings.Replay_Mode)
         {
@@ -1272,11 +1271,9 @@ public partial class Timeline : Form
                 Game.UI.TreeViewLeft.Nodes.Add(Game.UI.Timeline_history);
                 Game.UI.TreeViewLeft.ExpandAll();
                 Game.UI.TreeViewLeft.PerformLayout();
-                TreeNode? timeline_root = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "timeline_root");
-                /*                 Game.UI.TreeViewLeft.SelectedNode = timeline_root; */
+                
                 // @ HACK to force selection of timeline_root
-                Game.UI.SelectedNode = Game.UI.TreeViewLeft.Nodes["timeline_root"];
-                Game.UI.TreeViewLeft.SelectedNode = Game.UI.TreeViewLeft.Nodes["timeline_root"];
+                Game.UI.ForceNodeSelection(Game.UI.TreeViewLeft.Nodes["timeline_root"]);
             }
         }
     }

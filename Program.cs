@@ -114,6 +114,19 @@ public static class Game
 
             return lastNode;
         }
+
+        // @ HACK to force node selection
+        // This will force TreeViewLeft_Node_Selection_Behaviour to always return false
+        // This is needed to deal with all of this hacky logic to bypass the lostFocus 
+        // default behaviour on node selection.
+        public static void ForceNodeSelection(TreeNode? selection)
+        {
+            if (selection != null)
+            {
+                Game.UI.SelectedNode = selection;
+                Game.UI.TreeViewLeft.SelectedNode = selection;
+            }
+        }
     }
 
     public static class Settings

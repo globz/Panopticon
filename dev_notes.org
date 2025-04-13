@@ -168,6 +168,7 @@
 - Finish implementation details of Replay
 - Implement (New Game) mode
 - When persisting Replay, you do not need to exit Dominion (Remove messageBox)
+- Isolate the @ Hack for force node selection (if we refactor this crap at least it will be all in the same function) - (Implemented 2025-04-12)
 
 BUG:
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, resulting in no new calculated turn. 
