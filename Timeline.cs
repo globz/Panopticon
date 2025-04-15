@@ -18,7 +18,7 @@ public partial class Timeline : Form
     {
         InitializeComponent();
 
-        // TODO add .gitignore to Game.Path (ignoring panopticon.db)
+        // Add .gitignore to Game.Path (ignoring panopticon.db)
         Git.CreateGitIgnore(Game.Path);
 
         // Initialize the settings database
@@ -515,7 +515,7 @@ public partial class Timeline : Form
     static void CreateTimelineButton_Click(object? sender, EventArgs e)
     {
 
-        // Initialize the timelines database
+        // Initialize the timeline database
         Initialize_Timelines_DB();
 
         // Initialize the notes database
@@ -534,7 +534,7 @@ public partial class Timeline : Form
         using var repo = new Repository(Game.Path);
         repo.Branches.Rename("master", "root");
 
-        // Save current commit information to timelines DB
+        // Save current commit information to timeline DB
         DB.SaveTimeline(Git.Commit_title(true));
 
         // Refresh Timeline nodes
@@ -563,7 +563,7 @@ public partial class Timeline : Form
 
             // Delete timeline
             DB.Open();
-            statement = DB.Query("DELETE FROM timelines WHERE game = @game");
+            statement = DB.Query("DELETE FROM timeline WHERE game = @game");
             statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
             statement.ExecuteNonQuery();
             DB.Close();
@@ -611,7 +611,7 @@ public partial class Timeline : Form
 
             // Delete timeline associated to this branch
             DB.Open();
-            statement = DB.Query("DELETE FROM timelines WHERE game = @game AND branch = @branch");
+            statement = DB.Query("DELETE FROM timeline WHERE game = @game AND branch = @branch");
             statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
             statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
             statement.ExecuteNonQuery();
@@ -1166,7 +1166,7 @@ public partial class Timeline : Form
     private static void Initialize_Timelines_DB()
     {
         DB.Open();
-        DB.Query("CREATE TABLE IF NOT EXISTS timelines (game VARCHAR(23), branch VARCHAR(100), node_name VARCHAR(43), node_seq INT, compound_turn DOUBLE, commit_hash TEXT NOT NULL, PRIMARY KEY (game, branch, node_name))").ExecuteNonQuery();
+        DB.Query("CREATE TABLE IF NOT EXISTS timeline (game VARCHAR(23), branch VARCHAR(100), node_name VARCHAR(43), node_seq INT, compound_turn DOUBLE, commit_hash TEXT NOT NULL, PRIMARY KEY (game, branch, node_name))").ExecuteNonQuery();
         DB.Close();
     }
 
@@ -1175,7 +1175,7 @@ public partial class Timeline : Form
         var timeline_nodes = new Dictionary<int, string> { };
 
         DB.Open();
-        SqliteCommand statement = DB.Query("SELECT node_name, node_seq FROM timelines WHERE game = @game AND branch = @branch ORDER BY node_seq");
+        SqliteCommand statement = DB.Query("SELECT node_name, node_seq FROM timeline WHERE game = @game AND branch = @branch ORDER BY node_seq");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         SqliteDataReader timeline = statement.ExecuteReader();

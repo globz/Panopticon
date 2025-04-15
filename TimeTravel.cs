@@ -9,7 +9,7 @@ public class TimeTravel
     {
         // Retrieve current selected node sequence
         DB.Open();
-        SqliteCommand statement = DB.Query("SELECT node_seq FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
+        SqliteCommand statement = DB.Query("SELECT node_seq FROM timeline WHERE game = @game AND branch = @branch AND node_name = @node_name");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
@@ -23,7 +23,7 @@ public class TimeTravel
 
         // Retrieve the commit hash of the node that HEAD will point to.
         DB.Open();
-        statement = DB.Query("SELECT commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
+        statement = DB.Query("SELECT commit_hash FROM timeline WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = parent_node_seq;
@@ -34,7 +34,7 @@ public class TimeTravel
 
         // Retrieve max node_seq associated to this timeline & branch
         DB.Open();
-        statement = DB.Query("SELECT MAX(node_seq) FROM timelines WHERE game = @game AND branch = @branch");
+        statement = DB.Query("SELECT MAX(node_seq) FROM timeline WHERE game = @game AND branch = @branch");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         data = statement.ExecuteScalar();
@@ -67,7 +67,7 @@ public class TimeTravel
         // Retrieve node_name(s) associated with this commit_hash along with subsequent nodes
         List<string> timeline_nodes_name = new List<string>();
         DB.Open();
-        statement = DB.Query("SELECT node_name FROM timelines WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end ORDER BY node_seq");
+        statement = DB.Query("SELECT node_name FROM timeline WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end ORDER BY node_seq");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
@@ -106,7 +106,7 @@ public class TimeTravel
                 });
 
                 DB.Open();
-                statement = DB.Query("DELETE FROM timelines WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end");
+                statement = DB.Query("DELETE FROM timeline WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end");
                 statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
                 statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
                 statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
@@ -116,7 +116,7 @@ public class TimeTravel
 
                 // Retrieve the compound turn of the node that HEAD will point to.
                 DB.Open();
-                statement = DB.Query("SELECT compound_turn FROM timelines WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
+                statement = DB.Query("SELECT compound_turn FROM timeline WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
                 statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
                 statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
                 statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = parent_node_seq;
@@ -161,7 +161,7 @@ public class TimeTravel
 
         // Retrieve information tied to this node
         DB.Open();
-        SqliteCommand statement = DB.Query("SELECT node_seq, compound_turn, commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
+        SqliteCommand statement = DB.Query("SELECT node_seq, compound_turn, commit_hash FROM timeline WHERE game = @game AND branch = @branch AND node_name = @node_name");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
@@ -203,7 +203,7 @@ public class TimeTravel
 
             var new_branch = checkout_branch.Branch;
 
-            // Retrieve turn, sq_turn & compound_turn with the compound_turn found in timelines
+            // Retrieve turn, sq_turn & compound_turn with the compound_turn found in timeline table
             // Keep default prefix & suffix
             // Keep default auto_commit value
             string pattern = @"(\d+)\.(\d+)";
@@ -233,13 +233,13 @@ public class TimeTravel
 
             // Find all previous node(s)
             // This information has to come from branch_before_checkout since this is our reference branch
-            // Persist them to timelines table under this new branch
+            // Persist them to timeline table under this new branch
             int node_seq_start = 1;
             DB.Open();
             SqliteCommand insertStatement = DB.Query(@"
-            INSERT INTO timelines (game, branch, node_name, node_seq, compound_turn, commit_hash)
+            INSERT INTO timeline (game, branch, node_name, node_seq, compound_turn, commit_hash)
             SELECT @game, @new_branch, node_name, node_seq, compound_turn, commit_hash
-            FROM timelines 
+            FROM timeline 
             WHERE game = @game 
             AND branch = @old_branch 
             AND node_seq BETWEEN @node_seq_start AND @node_seq_end
@@ -306,7 +306,7 @@ public class TimeTravel
 
             // Retrieve information tied to this node
             DB.Open();
-            SqliteCommand statement = DB.Query("SELECT branch, node_seq, compound_turn, commit_hash FROM timelines WHERE game = @game AND branch = @branch AND node_name = @node_name");
+            SqliteCommand statement = DB.Query("SELECT branch, node_seq, compound_turn, commit_hash FROM timeline WHERE game = @game AND branch = @branch AND node_name = @node_name");
             statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
             statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
             statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
@@ -330,7 +330,7 @@ public class TimeTravel
             Console.WriteLine(commit_hash);
             Console.WriteLine(compoundTurnString);
 
-            // Retrieve turn, sq_turn & compound_turn with the compound_turn found in timelines
+            // Retrieve turn, sq_turn & compound_turn with the compound_turn found in timeline
             // Keep default prefix & suffix
             // Keep default auto_commit value
             string pattern = @"(\d+)\.(\d+)";
@@ -348,13 +348,13 @@ public class TimeTravel
 
                 // Find all previous node(s)
                 // This information has to come from branch_before_checkout since this is our reference branch
-                // Persist them to timelines table under this new branch
+                // Persist them to timeline table under this new branch
                 int node_seq_start = 1;
                 DB.Open();
                 SqliteCommand insertStatement = DB.Query(@"
-                INSERT INTO timelines (game, branch, node_name, node_seq, compound_turn, commit_hash)
+                INSERT INTO timeline (game, branch, node_name, node_seq, compound_turn, commit_hash)
                 SELECT @game, @new_branch, node_name, node_seq, compound_turn, commit_hash
-                FROM timelines
+                FROM timeline
                 WHERE game = @game
                 AND branch = @old_branch
                 AND node_seq BETWEEN @node_seq_start AND @node_seq_end
@@ -427,9 +427,9 @@ public class TimeTravel
             statement.ExecuteNonQuery();
             DB.Close();
 
-            // Remove temporary persisted (no branch) in timelines
+            // Remove temporary persisted (no branch) in timeline
             DB.Open();
-            statement = DB.Query("DELETE FROM timelines WHERE game = @game AND branch = @branch");
+            statement = DB.Query("DELETE FROM timeline WHERE game = @game AND branch = @branch");
             statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
             statement.Parameters.Add("@branch", SqliteType.Text).Value = "(no branch)";
             statement.ExecuteNonQuery();
@@ -503,7 +503,7 @@ public class TimeTravel
 
                 // Rename all previously saved timeline nodes (via continue) to this new branch name
                 DB.Open();
-                statement = DB.Query("UPDATE timelines SET branch = @new_branch WHERE branch = @old_branch");
+                statement = DB.Query("UPDATE timeline SET branch = @new_branch WHERE branch = @old_branch");
                 statement.Parameters.Add("@new_branch", SqliteType.Text).Value = Git.CurrentBranch();
                 statement.Parameters.Add("@old_branch", SqliteType.Text).Value = "(no branch)";
                 statement.ExecuteNonQuery();

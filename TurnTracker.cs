@@ -80,7 +80,7 @@ public partial class TurnTracker
             // Commit all changes
             Git.Commit(Game.Path, Git.Commit_title(maybe_new_turn));
 
-            // Save current commit information to timelines DB
+            // Save current commit information to timeline table
             DB.SaveTimeline(Git.Commit_title(maybe_new_turn));
 
             // Save settings (Turn(s) have been updated)
@@ -103,10 +103,10 @@ public partial class TurnTracker
     {
         DB.Open();
         SqliteCommand statement = DB.Query(
-        "SELECT node_name FROM timelines " +
+        "SELECT node_name FROM timeline " +
         "WHERE game = @game AND branch = @branch " +
         "AND node_seq = (" +
-        "SELECT MAX(node_seq) FROM timelines " +
+        "SELECT MAX(node_seq) FROM timeline " +
         "WHERE game = @game AND branch = @branch)");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();

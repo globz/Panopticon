@@ -106,7 +106,7 @@ public class Snapshot
                 // Commit all changes
                 Git.Commit(Game.Path, Git.Commit_title(maybe_new_turn));
 
-                // Save current commit information to timelines DB
+                // Save current commit information to timeline table
                 DB.SaveTimeline(Git.Commit_title(maybe_new_turn));
 
                 // Save settings (Turn have been updated & commited)
@@ -125,7 +125,7 @@ public class Snapshot
                 // Commit all changes
                 Git.Commit(Game.Path, Git.Commit_title(maybe_new_turn));
 
-                // Save current commit information to timelines DB
+                // Save current commit information to timeline table
                 DB.SaveTimeline(Git.Commit_title(maybe_new_turn));
 
                 // Save settings (Turn(s) have been updated & commited)

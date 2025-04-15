@@ -235,7 +235,7 @@ public static class DB
     public static void SaveTimeline(string title)
     {
         Open();
-        SqliteCommand statement = Query("INSERT INTO timelines (game, branch, node_name, node_seq, compound_turn, commit_hash) VALUES (@game, @branch, @node_name, @node_seq, @compound_turn, @commit_hash)");
+        SqliteCommand statement = Query("INSERT INTO timeline (game, branch, node_name, node_seq, compound_turn, commit_hash) VALUES (@game, @branch, @node_name, @node_seq, @compound_turn, @commit_hash)");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         statement.Parameters.Add("@node_name", SqliteType.Text).Value = title;

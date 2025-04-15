@@ -170,6 +170,7 @@
 - Implement (New Game) mode
 - When persisting Replay, you do not need to exit Dominion (Remove messageBox)
 - Polish UI related to new branch name (add groupbox or label so that we can add "branch name:") - (Implemented 2025-04-13)
+- Rename timelines to timeline since we now have 1 db per game folder. (Implemented 2025-04-14)
 
 BUG:
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, resulting in no new calculated turn. 
@@ -190,6 +191,7 @@ BUG:
 - Validate new branch name (Exception thrown: 'LibGit2Sharp.InvalidSpecificationException' in LibGit2Sharp.dll: 'the given reference name 'refs/heads/Good start' is not valid') - (Implemented 2025-04-12)
 - @@@DATALOSS via TimeTravel.Undo() - You are able to undo the same turn UI, the UI does not correctly refresh the node selection so you can still undo the same turn, 
   this causes your whole timeline to be deleted from panopticon.db (Implemented 2025-04-12)
+- Switching game without closing the game seems to not reset the DB.DatabasePath so all the writes and read goes to the wrong database.
 
 HEAD - 85b14ecf7cae4b9db7f0cac429654647f82d3cbe
 
