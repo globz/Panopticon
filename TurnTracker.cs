@@ -40,6 +40,9 @@ public partial class TurnTracker
         // Compound turn must always be updated
         Game.Settings.Compound_Turn = Math.Round(Game.Settings.Turn + Game.Settings.SQ_Turn, 2);
 
+        // Save settings (Turn(s) have been updated)
+        DB.SaveAllSettings();
+
     }
 
     public static void Refresh_UI(bool auto_commit)
@@ -85,9 +88,6 @@ public partial class TurnTracker
 
             // Save current commit information to timeline table
             DB.SaveTimeline(Git.Commit_title(maybe_new_turn));
-
-            // Save settings (Turn(s) have been updated)
-            DB.SaveAllSettings();
 
             if (!maybe_new_turn)
             {

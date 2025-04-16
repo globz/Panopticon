@@ -108,9 +108,6 @@ public class Snapshot
                 // Save current commit information to timeline table
                 DB.SaveTimeline(Git.Commit_title(maybe_new_turn));
 
-                // Save settings (Turn have been updated & commited)
-                DB.SaveAllSettings();
-
                 // Refresh Timeline nodes
                 Timeline.Refresh_Timeline_Nodes();
 
@@ -128,7 +125,7 @@ public class Snapshot
                 DB.SaveTimeline(Git.Commit_title(maybe_new_turn));
 
                 // Save settings (Turn(s) have been updated & commited)
-                DB.SaveAllSettings();
+                //DB.SaveAllSettings();
 
                 // Added default timeline notes for Saves
                 DB.SaveTimelineNotes($"Save on turn {Game.Settings.Turn}", Git.Commit_title(maybe_new_turn));
