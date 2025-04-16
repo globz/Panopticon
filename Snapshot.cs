@@ -11,7 +11,6 @@ public class Snapshot
     {
         var groupBox_snapshot = new System.Windows.Forms.GroupBox();
         var groupBox_modified_files = new System.Windows.Forms.GroupBox();
-
         Game.UI.TopPanel?.Controls.Clear();
         Game.UI.BottomPanel?.Controls.Clear();
 

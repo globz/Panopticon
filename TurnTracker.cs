@@ -29,12 +29,12 @@ public partial class TurnTracker
         {
             // New turn detected
             Game.Settings.Turn++;
-            Game.Settings.SQ_Turn = 0.00;            
+            Game.Settings.SQ_Turn = 0.00;
         }
         else
         {
             // Save detected
-            Game.Settings.SQ_Turn += 0.01;            
+            Game.Settings.SQ_Turn += 0.01;
         }
 
         // Compound turn must always be updated
@@ -62,10 +62,13 @@ public partial class TurnTracker
                 {
                     Snapshot.InitializeReplayComponent();
                 }
-                else {
+                else
+                {
+                    TreeNode? new_snapshot = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "new_snapshot");
+                    Game.UI.ForceNodeSelection(new_snapshot);
                     Snapshot.InitializeDefaultComponent();
                 }
-                
+
             });
         }
     }
@@ -101,7 +104,7 @@ public partial class TurnTracker
 
     public static bool Maybe_missed_turn()
     {
-        
+
         using var statement = DB.Query(
         "SELECT node_name FROM timeline " +
         "WHERE game = @game AND branch = @branch " +
