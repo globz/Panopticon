@@ -72,6 +72,9 @@ public partial class NewTimeline : Form
 
     private void ContinueButton_Click(object? sender, EventArgs e)
     {
+        // Update the game path and refresh the connection
+        DB.UpdateGamePath(Game.Path);
+
         var TimeLine = new Timeline
         {
             Location = this.Location,

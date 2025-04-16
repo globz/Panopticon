@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace Panopticon;
 
 public partial class LoadTimeline : Form
@@ -73,6 +75,9 @@ public partial class LoadTimeline : Form
 
     private void ContinueButton_Click(object? sender, EventArgs e)
     {
+        // Update the game path and refresh the connection
+        DB.UpdateGamePath(Game.Path);
+
         var TimeLine = new Timeline
         {
             Location = this.Location,

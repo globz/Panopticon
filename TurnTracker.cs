@@ -101,8 +101,8 @@ public partial class TurnTracker
 
     public static bool Maybe_missed_turn()
     {
-        DB.Open();
-        SqliteCommand statement = DB.Query(
+        
+        using var statement = DB.Query(
         "SELECT node_name FROM timeline " +
         "WHERE game = @game AND branch = @branch " +
         "AND node_seq = (" +
@@ -112,7 +112,6 @@ public partial class TurnTracker
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         var data = statement.ExecuteScalar();
         string? current_saved_title = (data != null) ? data.ToString() : "";
-        DB.Close();
 
         bool hasDecimal = !string.IsNullOrEmpty(current_saved_title) && DecimalPattern().IsMatch(current_saved_title);
 

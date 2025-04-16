@@ -41,6 +41,7 @@ public partial class Timeline : Form
         this.FormClosing += (s, e) =>
         {
             _fileWatcher?.Dispose();
+            DB.Cleanup();
         };
 
         // Enable manual snapshot node if needed
@@ -555,25 +556,26 @@ public partial class Timeline : Form
         if (confirmDeletion == DialogResult.Yes)
         {
             // Delete timeline settings
-            DB.Open();
-            SqliteCommand statement = DB.Query("DELETE FROM settings WHERE game = @game");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.ExecuteNonQuery();
-            DB.Close();
+            using (var statement = DB.Query("DELETE FROM settings WHERE game = @game"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.ExecuteNonQuery();
+            }
+
 
             // Delete timeline
-            DB.Open();
-            statement = DB.Query("DELETE FROM timeline WHERE game = @game");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.ExecuteNonQuery();
-            DB.Close();
+            using (var statement = DB.Query("DELETE FROM timeline WHERE game = @game"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.ExecuteNonQuery();
+            }
 
             // Delete notes
-            DB.Open();
-            statement = DB.Query("DELETE FROM notes WHERE game = @game");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.ExecuteNonQuery();
-            DB.Close();
+            using (var statement = DB.Query("DELETE FROM notes WHERE game = @game"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.ExecuteNonQuery();
+            }
 
             // Delete git repo
             Git.Delete_Repo(Game.Path);
@@ -602,28 +604,28 @@ public partial class Timeline : Form
         if (confirmDeletion == DialogResult.Yes)
         {
             // Delete timeline branch settings
-            DB.Open();
-            SqliteCommand statement = DB.Query("DELETE FROM settings WHERE game = @game AND branch = @branch");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-            statement.ExecuteNonQuery();
-            DB.Close();
+            using (var statement = DB.Query("DELETE FROM settings WHERE game = @game AND branch = @branch"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                statement.ExecuteNonQuery();
+            }
 
             // Delete timeline associated to this branch
-            DB.Open();
-            statement = DB.Query("DELETE FROM timeline WHERE game = @game AND branch = @branch");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-            statement.ExecuteNonQuery();
-            DB.Close();
+            using (var statement = DB.Query("DELETE FROM timeline WHERE game = @game AND branch = @branch"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                statement.ExecuteNonQuery();
+            }
 
             // Delete notes related to this branch
-            DB.Open();
-            statement = DB.Query("DELETE FROM notes WHERE game = @game AND branch = @branch");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-            statement.ExecuteNonQuery();
-            DB.Close();
+            using (var statement = DB.Query("DELETE FROM notes WHERE game = @game AND branch = @branch"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                statement.ExecuteNonQuery();
+            }
 
             // Retrieve current branch to delete
             string branch_to_delete = Git.CurrentBranch();
@@ -1147,35 +1149,32 @@ public partial class Timeline : Form
     }
 
     private static void Initialize_Settings_DB()
-    {
-        DB.Open();
-        DB.Query("CREATE TABLE IF NOT EXISTS settings (game VARCHAR(23), branch VARCHAR(100), auto_commit BOOLEAN, prefix VARCHAR(10), suffix VARCHAR(10), turn INT, sq_turn DOUBLE, compound_turn DOUBLE, replay_mode BOOLEAN, PRIMARY KEY (game, branch))").ExecuteNonQuery();
-        DB.Close();
+    {        
+        using var statement = DB.Query("CREATE TABLE IF NOT EXISTS settings (game VARCHAR(23), branch VARCHAR(100), auto_commit BOOLEAN, prefix VARCHAR(10), suffix VARCHAR(10), turn INT, sq_turn DOUBLE, compound_turn DOUBLE, replay_mode BOOLEAN, PRIMARY KEY (game, branch))");
+        statement.ExecuteNonQuery();
     }
 
     public static void Retrieve_Settings()
     {
-        DB.Open();
-        SqliteCommand statement = DB.Query("SELECT auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode FROM settings WHERE game = @game AND branch = @branch");
+        
+        using var statement = DB.Query("SELECT auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode FROM settings WHERE game = @game AND branch = @branch");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         DB.ReadData(statement, DB.LoadSettingsData);
-        DB.Close();
+        
     }
 
     private static void Initialize_Timelines_DB()
     {
-        DB.Open();
-        DB.Query("CREATE TABLE IF NOT EXISTS timeline (game VARCHAR(23), branch VARCHAR(100), node_name VARCHAR(43), node_seq INT, compound_turn DOUBLE, commit_hash TEXT NOT NULL, PRIMARY KEY (game, branch, node_name))").ExecuteNonQuery();
-        DB.Close();
+        using var statement = DB.Query("CREATE TABLE IF NOT EXISTS timeline (game VARCHAR(23), branch VARCHAR(100), node_name VARCHAR(43), node_seq INT, compound_turn DOUBLE, commit_hash TEXT NOT NULL, PRIMARY KEY (game, branch, node_name))");
+        statement.ExecuteNonQuery();
     }
 
     private static Dictionary<int, string> Retrieve_TimelineNodes()
     {
         var timeline_nodes = new Dictionary<int, string> { };
 
-        DB.Open();
-        SqliteCommand statement = DB.Query("SELECT node_name, node_seq FROM timeline WHERE game = @game AND branch = @branch ORDER BY node_seq");
+        using var statement = DB.Query("SELECT node_name, node_seq FROM timeline WHERE game = @game AND branch = @branch ORDER BY node_seq");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         SqliteDataReader timeline = statement.ExecuteReader();
@@ -1184,7 +1183,6 @@ public partial class Timeline : Form
         {
             timeline_nodes.Add(Convert.ToInt32(timeline["node_seq"]), (string)timeline["node_name"]);
         }
-        DB.Close();
 
         return timeline_nodes;
     }
@@ -1215,21 +1213,19 @@ public partial class Timeline : Form
 
     private static void Initialize_Notes_DB()
     {
-        DB.Open();
-        DB.Query("CREATE TABLE IF NOT EXISTS notes (game VARCHAR(23), branch VARCHAR(100), node_name VARCHAR(43), notes TEXT, PRIMARY KEY (game, branch, node_name))").ExecuteNonQuery();
-        DB.Close();
+        using var statement = DB.Query("CREATE TABLE IF NOT EXISTS notes (game VARCHAR(23), branch VARCHAR(100), node_name VARCHAR(43), notes TEXT, PRIMARY KEY (game, branch, node_name))");
+        statement.ExecuteNonQuery();
     }
 
     private static string? Retrieve_Timeline_Notes()
     {
-        DB.Open();
-        SqliteCommand statement = DB.Query("SELECT notes FROM notes WHERE game = @game AND branch = @branch AND node_name = @node_name");
+     
+        using var statement = DB.Query("SELECT notes FROM notes WHERE game = @game AND branch = @branch AND node_name = @node_name");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
         var data = statement.ExecuteScalar();
         string? Notes = (data != null) ? data.ToString() : "Add a description.";
-        DB.Close();
         return Notes;
     }
 

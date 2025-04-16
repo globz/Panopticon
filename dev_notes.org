@@ -191,7 +191,11 @@ BUG:
 - Validate new branch name (Exception thrown: 'LibGit2Sharp.InvalidSpecificationException' in LibGit2Sharp.dll: 'the given reference name 'refs/heads/Good start' is not valid') - (Implemented 2025-04-12)
 - @@@DATALOSS via TimeTravel.Undo() - You are able to undo the same turn UI, the UI does not correctly refresh the node selection so you can still undo the same turn, 
   this causes your whole timeline to be deleted from panopticon.db (Implemented 2025-04-12)
-- Switching game without closing the game seems to not reset the DB.DatabasePath so all the writes and read goes to the wrong database.
+- Switching game without closing the game seems to not reset the DB.DatabasePath so all the writes and read goes to the wrong database. (Implemented 2025-04-14)
+- Exception thrown: 'System.InvalidOperationException' in Microsoft.Data.Sqlite.dll: 'Invalid attempt to call Read when reader is closed.' - (Implemented 2025-04-15)
+
+
+
 
 HEAD - 85b14ecf7cae4b9db7f0cac429654647f82d3cbe
 
@@ -280,4 +284,94 @@ public void ForceCheckout(string repositoryPath, string branchName)
         // Checkout the specified branch forcefully
         Commands.Checkout(repo, branchName, checkoutOptions);
     }
+}
+
+public static class DB
+{
+    // Types : https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/types
+    public static readonly string DatabasePath = Game.Path + @"\panopticon.db";
+    public static readonly string DatabaseSource = $"Data Source={DatabasePath}";
+    public static readonly SqliteConnection Connection = new(DatabaseSource);
+
+    public static void Open()
+    {
+        Console.WriteLine(Connection.DataSource);
+        Connection.Open();
+    }
+
+    public static void Close()
+    {
+        Connection.Close();
+    }
+
+    public static SqliteCommand Query(string text)
+    {
+        var statement = Connection.CreateCommand();
+        statement.CommandText = text;
+        return statement;
+    }
+
+    public static void ReadData(SqliteCommand statement, Action<SqliteDataReader> reader)
+    {
+        SqliteDataReader sdr = statement.ExecuteReader();
+        while (sdr.Read())
+        {
+            reader(sdr);
+        }
+    }
+
+    public static void SaveAllSettings()
+    {
+        Open();
+        SqliteCommand statement = Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn, @replay_mode) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn, replay_mode = @replay_mode");
+        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+        statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
+        statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
+        statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
+        statement.Parameters.Add("@turn", SqliteType.Integer).Value = Game.Settings.Turn;
+        statement.Parameters.Add("@sq_turn", SqliteType.Text).Value = Game.Settings.SQ_Turn;
+        statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = Game.Settings.Compound_Turn;
+        statement.Parameters.Add("@replay_mode", SqliteType.Text).Value = Game.Settings.Replay_Mode;
+        statement.ExecuteNonQuery();
+        Close();
+    }
+
+    public static void LoadSettingsData(SqliteDataReader settings)
+    {
+        Game.Settings.Auto_commit = Convert.ToBoolean(settings["auto_commit"]);
+        Game.Settings.Prefix = (string)settings["prefix"];
+        Game.Settings.Suffix = (string)settings["suffix"];
+        Game.Settings.Turn = Convert.ToInt32(settings["turn"]);
+        Game.Settings.SQ_Turn = (double)settings["sq_turn"];
+        Game.Settings.Compound_Turn = (double)settings["compound_turn"];
+        Game.Settings.Replay_Mode = Convert.ToBoolean(settings["replay_mode"]);
+    }
+
+    public static void SaveTimeline(string title)
+    {
+        Open();
+        SqliteCommand statement = Query("INSERT INTO timeline (game, branch, node_name, node_seq, compound_turn, commit_hash) VALUES (@game, @branch, @node_name, @node_seq, @compound_turn, @commit_hash)");
+        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+        statement.Parameters.Add("@node_name", SqliteType.Text).Value = title;
+        statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = Git.CommitCount();
+        statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = Game.Settings.Compound_Turn;
+        statement.Parameters.Add("@commit_hash", SqliteType.Text).Value = Git.head_commit_hash;
+        statement.ExecuteNonQuery();
+        Close();
+    }
+
+    public static void SaveTimelineNotes(string notes, string? nodeName = null)
+    {
+        Open();
+        SqliteCommand statement = Query("INSERT INTO notes (game, branch, node_name, notes) VALUES (@game, @branch, @node_name, @notes) ON CONFLICT(game, branch, node_name) DO UPDATE SET notes = @notes");
+        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+        statement.Parameters.Add("@node_name", SqliteType.Text).Value = nodeName ?? Game.UI.SelectedNode?.Name;
+        statement.Parameters.Add("@notes", SqliteType.Text).Value = notes;
+        statement.ExecuteNonQuery();
+        Close();
+    }
+
 }

@@ -173,91 +173,176 @@ public static class Game
 
 public static class DB
 {
-    // Types : https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/types
-    public static readonly string DatabasePath = Game.Path + @"\panopticon.db";
-    private static readonly string DatabaseSource = $"Data Source={DatabasePath}";
-    private static readonly SqliteConnection Connection = new(DatabaseSource);
+    private static string _databasePath = Game.Path + @"\panopticon.db";
+    private static string _databaseSource => $"Data Source={_databasePath}";
+    private static SqliteConnection? _connection;
 
-    public static void Open()
+    // Property to access the connection
+    public static SqliteConnection Connection
     {
-        Connection.Open();
+        get
+        {
+            EnsureConnection();
+            return _connection!;
+        }
     }
 
-    public static void Close()
+    // Update the game path and refresh the connection
+    public static void UpdateGamePath(string? newGamePath)
     {
-        Connection.Close();
+        if (string.IsNullOrEmpty(newGamePath))
+            throw new ArgumentNullException(nameof(newGamePath));
+
+        _databasePath = newGamePath + @"\panopticon.db";
+        RefreshConnection();
     }
 
+    // Ensure connection is valid and open
+    private static void EnsureConnection()
+    {
+        if (_connection == null || _connection.State == System.Data.ConnectionState.Closed || _connection.State == System.Data.ConnectionState.Broken)
+        {
+            RefreshConnection();
+        }
+        if (_connection?.State != System.Data.ConnectionState.Open)
+        {
+            _connection?.Open();
+        }
+    }
+
+    // Refresh the connection
+    private static void RefreshConnection()
+    {
+        if (_connection != null)
+        {
+            try
+            {
+                if (_connection.State != System.Data.ConnectionState.Closed)
+                {
+                    _connection.Close();
+                }
+                _connection.Dispose();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error disposing connection: {ex.Message}");
+            }
+        }
+
+        try
+        {
+            _connection = new SqliteConnection(_databaseSource);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error creating new connection: {ex.Message}");
+            throw;
+        }
+    }
+
+    // Clean up connection resources
+    public static void Cleanup()
+    {
+        if (_connection != null)
+        {
+            try
+            {
+                if (_connection.State != System.Data.ConnectionState.Closed)
+                {
+                    _connection.Close();
+                }
+                _connection.Dispose();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error during cleanup: {ex.Message}");
+            }
+            _connection = null;
+        }
+    }
+
+    // Create a parameterized query
     public static SqliteCommand Query(string text)
     {
+        EnsureConnection();
         var statement = Connection.CreateCommand();
         statement.CommandText = text;
         return statement;
     }
 
+    // Read data from a query
     public static void ReadData(SqliteCommand statement, Action<SqliteDataReader> reader)
     {
-        SqliteDataReader sdr = statement.ExecuteReader();
-        while (sdr.Read())
+        using (var sdr = statement.ExecuteReader())
         {
-            reader(sdr);
+            while (sdr.Read())
+            {
+                reader(sdr);
+            }
         }
     }
 
+    // Save all settings to the database
     public static void SaveAllSettings()
     {
-        Open();
-        SqliteCommand statement = Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn, @replay_mode) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn, replay_mode = @replay_mode");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
-        statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
-        statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
-        statement.Parameters.Add("@turn", SqliteType.Integer).Value = Game.Settings.Turn;
-        statement.Parameters.Add("@sq_turn", SqliteType.Text).Value = Game.Settings.SQ_Turn;
-        statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = Game.Settings.Compound_Turn;
-        statement.Parameters.Add("@replay_mode", SqliteType.Text).Value = Game.Settings.Replay_Mode;
+        using var statement = Query(
+            "INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode) " +
+            "VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn, @replay_mode) " +
+            "ON CONFLICT(game, branch) DO UPDATE SET " +
+            "auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, " +
+            "sq_turn = @sq_turn, compound_turn = @compound_turn, replay_mode = @replay_mode");
+        statement.Parameters.AddWithValue("@game", Game.Name);
+        statement.Parameters.AddWithValue("@branch", Git.CurrentBranch());
+        statement.Parameters.AddWithValue("@auto_commit", Game.Settings.Auto_commit);
+        statement.Parameters.AddWithValue("@prefix", Game.Settings.Prefix);
+        statement.Parameters.AddWithValue("@suffix", Game.Settings.Suffix);
+        statement.Parameters.AddWithValue("@turn", Game.Settings.Turn);
+        statement.Parameters.AddWithValue("@sq_turn", Game.Settings.SQ_Turn);
+        statement.Parameters.AddWithValue("@compound_turn", Game.Settings.Compound_Turn);
+        statement.Parameters.AddWithValue("@replay_mode", Game.Settings.Replay_Mode);
         statement.ExecuteNonQuery();
-        Close();
     }
 
+    // Load settings from the database
     public static void LoadSettingsData(SqliteDataReader settings)
     {
         Game.Settings.Auto_commit = Convert.ToBoolean(settings["auto_commit"]);
-        Game.Settings.Prefix = (string)settings["prefix"];
-        Game.Settings.Suffix = (string)settings["suffix"];
+        Game.Settings.Prefix = settings["prefix"].ToString();
+        Game.Settings.Suffix = settings["suffix"].ToString();
         Game.Settings.Turn = Convert.ToInt32(settings["turn"]);
-        Game.Settings.SQ_Turn = (double)settings["sq_turn"];
-        Game.Settings.Compound_Turn = (double)settings["compound_turn"];
+        Game.Settings.SQ_Turn = Convert.ToDouble(settings["sq_turn"]);
+        Game.Settings.Compound_Turn = Convert.ToDouble(settings["compound_turn"]);
         Game.Settings.Replay_Mode = Convert.ToBoolean(settings["replay_mode"]);
     }
 
+    // Save timeline data
     public static void SaveTimeline(string title)
     {
-        Open();
-        SqliteCommand statement = Query("INSERT INTO timeline (game, branch, node_name, node_seq, compound_turn, commit_hash) VALUES (@game, @branch, @node_name, @node_seq, @compound_turn, @commit_hash)");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@node_name", SqliteType.Text).Value = title;
-        statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = Git.CommitCount();
-        statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = Game.Settings.Compound_Turn;
-        statement.Parameters.Add("@commit_hash", SqliteType.Text).Value = Git.head_commit_hash;
+        using var statement = Query(
+            "INSERT INTO timeline (game, branch, node_name, node_seq, compound_turn, commit_hash) " +
+            "VALUES (@game, @branch, @node_name, @node_seq, @compound_turn, @commit_hash)");
+        statement.Parameters.AddWithValue("@game", Game.Name);
+        statement.Parameters.AddWithValue("@branch", Git.CurrentBranch());
+        statement.Parameters.AddWithValue("@node_name", title);
+        statement.Parameters.AddWithValue("@node_seq", Git.CommitCount());
+        statement.Parameters.AddWithValue("@compound_turn", Game.Settings.Compound_Turn);
+        statement.Parameters.AddWithValue("@commit_hash", Git.head_commit_hash);
         statement.ExecuteNonQuery();
-        Close();
     }
 
+    // Save timeline notes
     public static void SaveTimelineNotes(string notes, string? nodeName = null)
     {
-        Open();
-        SqliteCommand statement = Query("INSERT INTO notes (game, branch, node_name, notes) VALUES (@game, @branch, @node_name, @notes) ON CONFLICT(game, branch, node_name) DO UPDATE SET notes = @notes");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@node_name", SqliteType.Text).Value = nodeName ?? Game.UI.SelectedNode?.Name;
-        statement.Parameters.Add("@notes", SqliteType.Text).Value = notes;
+        using var statement = Query(
+            "INSERT INTO notes (game, branch, node_name, notes) " +
+            "VALUES (@game, @branch, @node_name, @notes) " +
+            "ON CONFLICT(game, branch, node_name) DO UPDATE SET notes = @notes");
+        statement.Parameters.AddWithValue("@game", Game.Name);
+        statement.Parameters.AddWithValue("@branch", Git.CurrentBranch());
+        statement.Parameters.AddWithValue("@node_name", nodeName ?? Game.UI.SelectedNode?.Name ?? throw new ArgumentNullException(nameof(nodeName)));
+        statement.Parameters.AddWithValue("@notes", notes);
         statement.ExecuteNonQuery();
-        Close();
     }
-
 }
 
 public static class Git

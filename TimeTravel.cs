@@ -7,40 +7,48 @@ public class TimeTravel
 {
     public static List<string> Undo(bool permanent = false)
     {
-        // Retrieve current selected node sequence
-        DB.Open();
-        SqliteCommand statement = DB.Query("SELECT node_seq FROM timeline WHERE game = @game AND branch = @branch AND node_name = @node_name");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
-        var data = statement.ExecuteScalar();
-        DB.Close();
+        int node_seq;
+        string commit_hash;
+        int max_node_seq;
+        double compoundTurnValue;
 
-        int node_seq = Convert.ToInt32(data);
+        // Retrieve current selected node sequence
+        using (var statement = DB.Query("SELECT node_seq FROM timeline WHERE game = @game AND branch = @branch AND node_name = @node_name"))
+        {
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+            statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name ?? throw new InvalidOperationException("Selected node is null");
+            var data = statement.ExecuteScalar() ?? throw new InvalidOperationException("No node sequence found");
+            node_seq = Convert.ToInt32(data);
+        }
+
+        //int node_seq = Convert.ToInt32(data);
 
         // Retrieve parent node sequence
         int parent_node_seq = node_seq - 1;
 
         // Retrieve the commit hash of the node that HEAD will point to.
-        DB.Open();
-        statement = DB.Query("SELECT commit_hash FROM timeline WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = parent_node_seq;
-        data = statement.ExecuteScalar();
-        DB.Close();
+        using (var statement = DB.Query("SELECT commit_hash FROM timeline WHERE game = @game AND branch = @branch AND node_seq = @node_seq"))
+        {
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+            statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = parent_node_seq;
+            var data = statement.ExecuteScalar();
+            commit_hash = data?.ToString() ?? throw new InvalidOperationException("No commit hash found");
+        }
 
-        string? commit_hash = data?.ToString();
+        //string? commit_hash = data?.ToString();
 
         // Retrieve max node_seq associated to this timeline & branch
-        DB.Open();
-        statement = DB.Query("SELECT MAX(node_seq) FROM timeline WHERE game = @game AND branch = @branch");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        data = statement.ExecuteScalar();
-        DB.Close();
+        using (var statement = DB.Query("SELECT MAX(node_seq) FROM timeline WHERE game = @game AND branch = @branch"))
+        {
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+            var data = statement.ExecuteScalar() ?? throw new InvalidOperationException("No max node sequence found");
+            max_node_seq = Convert.ToInt32(data);
+        }
 
-        int? max_node_seq = Convert.ToInt32(data);
+        //int? max_node_seq = Convert.ToInt32(data);
 
         // Calculate how many nodes will be deleted
         int? absolute_delta = max_node_seq - parent_node_seq;
@@ -66,19 +74,20 @@ public class TimeTravel
 
         // Retrieve node_name(s) associated with this commit_hash along with subsequent nodes
         List<string> timeline_nodes_name = new List<string>();
-        DB.Open();
-        statement = DB.Query("SELECT node_name FROM timeline WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end ORDER BY node_seq");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
-        statement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
-        SqliteDataReader timeline = statement.ExecuteReader();
-
-        while (timeline.Read())
+        using (var statement = DB.Query("SELECT node_name FROM timeline WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end ORDER BY node_seq"))
         {
-            timeline_nodes_name.Add((string)timeline["node_name"]);
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+            statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
+            statement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
+
+            SqliteDataReader timeline = statement.ExecuteReader();
+            while (timeline.Read())
+            {
+                timeline_nodes_name.Add((string)timeline["node_name"]);
+            }
+
         }
-        DB.Close();
 
         if (node_seq == 1)
         {
@@ -105,25 +114,26 @@ public class TimeTravel
                     }
                 });
 
-                DB.Open();
-                statement = DB.Query("DELETE FROM timeline WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end");
-                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-                statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
-                statement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
-                statement.ExecuteNonQuery();
-                DB.Close();
+                using (var statement = DB.Query("DELETE FROM timeline WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end"))
+                {
+                    statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                    statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                    statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
+                    statement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
+                    statement.ExecuteNonQuery();
+                }
 
                 // Retrieve the compound turn of the node that HEAD will point to.
-                DB.Open();
-                statement = DB.Query("SELECT compound_turn FROM timeline WHERE game = @game AND branch = @branch AND node_seq = @node_seq");
-                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-                statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = parent_node_seq;
-                data = statement.ExecuteScalar();
-                DB.Close();
+                using (var statement = DB.Query("SELECT compound_turn FROM timeline WHERE game = @game AND branch = @branch AND node_seq = @node_seq"))
+                {
+                    statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                    statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                    statement.Parameters.Add("@node_seq", SqliteType.Integer).Value = parent_node_seq;
+                    var data = statement.ExecuteScalar();
+                    compoundTurnValue = Convert.ToDouble(data ?? 0.00);
+                }
 
-                double compoundTurnValue = Convert.ToDouble(data ?? 0.00);
+                //TODO remove - double compoundTurnValue = Convert.ToDouble(data ?? 0.00);
                 string compoundTurnString = compoundTurnValue.ToString("0.00");
 
                 // Rewind the Turn(s) settings values
@@ -134,15 +144,15 @@ public class TimeTravel
                 double rewinded_sq_turn = double.Parse(match.Groups[2].Value) / 100.0;
                 double rewinded_compound_turn = rewinded_turn + rewinded_sq_turn;
 
-                DB.Open();
-                statement = DB.Query("UPDATE settings SET turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn WHERE game = @game AND branch = @branch");
-                statement.Parameters.Add("@turn", SqliteType.Integer).Value = rewinded_turn;
-                statement.Parameters.Add("@sq_turn", SqliteType.Integer).Value = rewinded_sq_turn;
-                statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = rewinded_compound_turn;
-                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-                statement.ExecuteNonQuery();
-                DB.Close();
+                using (var statement = DB.Query("UPDATE settings SET turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn WHERE game = @game AND branch = @branch"))
+                {
+                    statement.Parameters.Add("@turn", SqliteType.Integer).Value = rewinded_turn;
+                    statement.Parameters.Add("@sq_turn", SqliteType.Integer).Value = rewinded_sq_turn;
+                    statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = rewinded_compound_turn;
+                    statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                    statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                    statement.ExecuteNonQuery();
+                }
 
                 // Reload settings
                 Timeline.Retrieve_Settings();
@@ -157,26 +167,27 @@ public class TimeTravel
 
     public static void BranchOff(string branch_name)
     {
-        Console.WriteLine(branch_name);
-
-        // Retrieve information tied to this node
-        DB.Open();
-        SqliteCommand statement = DB.Query("SELECT node_seq, compound_turn, commit_hash FROM timeline WHERE game = @game AND branch = @branch AND node_name = @node_name");
-        statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-        statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-        statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
-        SqliteDataReader node_info = statement.ExecuteReader();
-
         int node_seq_end = 0;
         string commit_hash = "";
         double compoundTurnValue = 0.0;
-        while (node_info.Read())
+
+        Console.WriteLine(branch_name);
+
+        // Retrieve information tied to this node
+        using (var statement = DB.Query("SELECT node_seq, compound_turn, commit_hash FROM timeline WHERE game = @game AND branch = @branch AND node_name = @node_name"))
         {
-            node_seq_end = Convert.ToInt32(node_info["node_seq"]);
-            commit_hash = (string)node_info["commit_hash"];
-            compoundTurnValue = Convert.ToDouble(node_info["compound_turn"] ?? 0.00);
+            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+            statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name ?? throw new InvalidOperationException("Selected node is null");
+
+            using SqliteDataReader node_info = statement.ExecuteReader();
+            while (node_info.Read())
+            {
+                node_seq_end = Convert.ToInt32(node_info["node_seq"]);
+                commit_hash = node_info["commit_hash"]?.ToString() ?? "";
+                compoundTurnValue = Convert.ToDouble(node_info["compound_turn"] ?? 0.0);
+            }
         }
-        DB.Close();
 
         string compoundTurnString = compoundTurnValue.ToString("0.00");
         Console.WriteLine(node_seq_end);
@@ -214,19 +225,19 @@ public class TimeTravel
             double branch_compound_turn = branch_turn + branch_sq_turn;
 
             // Save newbranch settings
-            DB.Open();
-            statement = DB.Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn, @replay_mode) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn, replay_mode = @replay_mode");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-            statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
-            statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
-            statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
-            statement.Parameters.Add("@turn", SqliteType.Integer).Value = branch_turn;
-            statement.Parameters.Add("@sq_turn", SqliteType.Text).Value = branch_sq_turn;
-            statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = branch_compound_turn;
-            statement.Parameters.Add("@replay_mode", SqliteType.Text).Value = Game.Settings.Replay_Mode;
-            statement.ExecuteNonQuery();
-            DB.Close();
+            using (var statement = DB.Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn, @replay_mode) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn, replay_mode = @replay_mode"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
+                statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
+                statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
+                statement.Parameters.Add("@turn", SqliteType.Integer).Value = branch_turn;
+                statement.Parameters.Add("@sq_turn", SqliteType.Text).Value = branch_sq_turn;
+                statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = branch_compound_turn;
+                statement.Parameters.Add("@replay_mode", SqliteType.Text).Value = Game.Settings.Replay_Mode;
+                statement.ExecuteNonQuery();
+            }
 
             // Reload all settings from this current branch
             Timeline.Retrieve_Settings();
@@ -235,23 +246,22 @@ public class TimeTravel
             // This information has to come from branch_before_checkout since this is our reference branch
             // Persist them to timeline table under this new branch
             int node_seq_start = 1;
-            DB.Open();
-            SqliteCommand insertStatement = DB.Query(@"
+            using (var statement = DB.Query(@"
             INSERT INTO timeline (game, branch, node_name, node_seq, compound_turn, commit_hash)
             SELECT @game, @new_branch, node_name, node_seq, compound_turn, commit_hash
             FROM timeline 
             WHERE game = @game 
             AND branch = @old_branch 
             AND node_seq BETWEEN @node_seq_start AND @node_seq_end
-            ORDER BY node_seq");
-
-            insertStatement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            insertStatement.Parameters.Add("@new_branch", SqliteType.Text).Value = new_branch?.FriendlyName;
-            insertStatement.Parameters.Add("@old_branch", SqliteType.Text).Value = branch_before_checkout;
-            insertStatement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
-            insertStatement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
-            insertStatement.ExecuteNonQuery();
-            DB.Close();
+            ORDER BY node_seq"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@new_branch", SqliteType.Text).Value = new_branch?.FriendlyName;
+                statement.Parameters.Add("@old_branch", SqliteType.Text).Value = branch_before_checkout;
+                statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
+                statement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
+                statement.ExecuteNonQuery();
+            }
 
             // Refresh timeline UI
             Timeline.Refresh_Timeline_Nodes();
@@ -303,27 +313,27 @@ public class TimeTravel
         {
             // # Enable Replay mode (detached HEAD)
             // # git checkout <commit hash>
-
-            // Retrieve information tied to this node
-            DB.Open();
-            SqliteCommand statement = DB.Query("SELECT branch, node_seq, compound_turn, commit_hash FROM timeline WHERE game = @game AND branch = @branch AND node_name = @node_name");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-            statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
-            SqliteDataReader node_info = statement.ExecuteReader();
-
             string old_branch = "";
             int node_seq_end = 0;
             string commit_hash = "";
             double compoundTurnValue = 0.0;
-            while (node_info.Read())
+
+            // Retrieve information tied to this node
+            using (var statement = DB.Query("SELECT branch, node_seq, compound_turn, commit_hash FROM timeline WHERE game = @game AND branch = @branch AND node_name = @node_name"))
             {
-                old_branch = (string)node_info["branch"];
-                node_seq_end = Convert.ToInt32(node_info["node_seq"]);
-                commit_hash = (string)node_info["commit_hash"];
-                compoundTurnValue = Convert.ToDouble(node_info["compound_turn"] ?? 0.00);
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                statement.Parameters.Add("@node_name", SqliteType.Text).Value = Game.UI.SelectedNode?.Name;
+
+                using SqliteDataReader node_info = statement.ExecuteReader();
+                while (node_info.Read())
+                {
+                    old_branch = (string)node_info["branch"];
+                    node_seq_end = Convert.ToInt32(node_info["node_seq"]);
+                    commit_hash = (string)node_info["commit_hash"];
+                    compoundTurnValue = Convert.ToDouble(node_info["compound_turn"] ?? 0.00);
+                }
             }
-            DB.Close();
 
             string compoundTurnString = compoundTurnValue.ToString("0.00");
             Console.WriteLine(node_seq_end);
@@ -350,23 +360,23 @@ public class TimeTravel
                 // This information has to come from branch_before_checkout since this is our reference branch
                 // Persist them to timeline table under this new branch
                 int node_seq_start = 1;
-                DB.Open();
-                SqliteCommand insertStatement = DB.Query(@"
+
+                using (var statement = DB.Query(@"
                 INSERT INTO timeline (game, branch, node_name, node_seq, compound_turn, commit_hash)
                 SELECT @game, @new_branch, node_name, node_seq, compound_turn, commit_hash
                 FROM timeline
                 WHERE game = @game
                 AND branch = @old_branch
                 AND node_seq BETWEEN @node_seq_start AND @node_seq_end
-                ORDER BY node_seq");
-
-                insertStatement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-                insertStatement.Parameters.Add("@new_branch", SqliteType.Text).Value = Git.CurrentBranch();
-                insertStatement.Parameters.Add("@old_branch", SqliteType.Text).Value = old_branch;
-                insertStatement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
-                insertStatement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
-                insertStatement.ExecuteNonQuery();
-                DB.Close();
+                ORDER BY node_seq"))
+                {
+                    statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                    statement.Parameters.Add("@new_branch", SqliteType.Text).Value = Git.CurrentBranch();
+                    statement.Parameters.Add("@old_branch", SqliteType.Text).Value = old_branch;
+                    statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
+                    statement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
+                    statement.ExecuteNonQuery();
+                }
 
                 // Disable auto-commit, user may or not want to persist this replay session
                 // By forcing manual mode we are now allowing this choice.
@@ -420,20 +430,21 @@ public class TimeTravel
             Game.Settings.Replay_Mode = false;
 
             // Remove Replay Mode setting
-            DB.Open();
-            SqliteCommand statement = DB.Query("DELETE FROM settings WHERE game = @game AND branch = @branch");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.Parameters.Add("@branch", SqliteType.Text).Value = "(no branch)";
-            statement.ExecuteNonQuery();
-            DB.Close();
+            using (var statement = DB.Query("DELETE FROM settings WHERE game = @game AND branch = @branch"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@branch", SqliteType.Text).Value = "(no branch)";
+                statement.ExecuteNonQuery();
+            }
+
 
             // Remove temporary persisted (no branch) in timeline
-            DB.Open();
-            statement = DB.Query("DELETE FROM timeline WHERE game = @game AND branch = @branch");
-            statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-            statement.Parameters.Add("@branch", SqliteType.Text).Value = "(no branch)";
-            statement.ExecuteNonQuery();
-            DB.Close();
+            using (var statement = DB.Query("DELETE FROM timeline WHERE game = @game AND branch = @branch"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@branch", SqliteType.Text).Value = "(no branch)";
+                statement.ExecuteNonQuery();
+            }
 
             return true;
         }
@@ -487,27 +498,27 @@ public class TimeTravel
             {
 
                 // Persist new branch settings
-                DB.Open();
-                SqliteCommand statement = DB.Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn, @replay_mode) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn, replay_mode = @replay_mode");
-                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
-                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
-                statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
-                statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
-                statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
-                statement.Parameters.Add("@turn", SqliteType.Integer).Value = Game.Settings.Turn;
-                statement.Parameters.Add("@sq_turn", SqliteType.Text).Value = Game.Settings.SQ_Turn;
-                statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = Game.Settings.Compound_Turn;
-                statement.Parameters.Add("@replay_mode", SqliteType.Text).Value = false;
-                statement.ExecuteNonQuery();
-                DB.Close();
+                using (var statement = DB.Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn, @replay_mode) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn, replay_mode = @replay_mode"))
+                {
+                    statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                    statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                    statement.Parameters.Add("@auto_commit", SqliteType.Text).Value = Game.Settings.Auto_commit;
+                    statement.Parameters.Add("@prefix", SqliteType.Text).Value = Game.Settings.Prefix;
+                    statement.Parameters.Add("@suffix", SqliteType.Text).Value = Game.Settings.Suffix;
+                    statement.Parameters.Add("@turn", SqliteType.Integer).Value = Game.Settings.Turn;
+                    statement.Parameters.Add("@sq_turn", SqliteType.Text).Value = Game.Settings.SQ_Turn;
+                    statement.Parameters.Add("@compound_turn", SqliteType.Text).Value = Game.Settings.Compound_Turn;
+                    statement.Parameters.Add("@replay_mode", SqliteType.Text).Value = false;
+                    statement.ExecuteNonQuery();
+                }
 
                 // Rename all previously saved timeline nodes (via continue) to this new branch name
-                DB.Open();
-                statement = DB.Query("UPDATE timeline SET branch = @new_branch WHERE branch = @old_branch");
-                statement.Parameters.Add("@new_branch", SqliteType.Text).Value = Git.CurrentBranch();
-                statement.Parameters.Add("@old_branch", SqliteType.Text).Value = "(no branch)";
-                statement.ExecuteNonQuery();
-                DB.Close();
+                using (var statement = DB.Query("UPDATE timeline SET branch = @new_branch WHERE branch = @old_branch"))
+                {
+                    statement.Parameters.Add("@new_branch", SqliteType.Text).Value = Git.CurrentBranch();
+                    statement.Parameters.Add("@old_branch", SqliteType.Text).Value = "(no branch)";
+                    statement.ExecuteNonQuery();
+                }
 
                 // Persisting a replay will kick the user out of replay mode
                 ReplayMode.Disable();
