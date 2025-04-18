@@ -171,8 +171,8 @@
 - When persisting Replay, you do not need to exit Dominion (Remove messageBox)
 - Polish UI related to new branch name (add groupbox or label so that we can add "branch name:") - (Implemented 2025-04-13)
 - Rename timelines to timeline since we now have 1 db per game folder. (Implemented 2025-04-14)
-- Fix timeline_root (disable/enable) state while switching between replay_mode state (on/off) (Implemented 2025-04-14)
-- Need to display snapshot nodes differently while in replay mode, no time travel abilities!
+- Fix timeline_root (disable/enable) state while switching between replay_mode state (on/off) (Implemented 2025-04-17)
+- Need to display snapshot nodes differently while in replay mode, no time travel abilities! (Implemented 2025-04-17)
 
 BUG:
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, resulting in no new calculated turn. 

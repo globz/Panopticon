@@ -458,6 +458,18 @@ public partial class Timeline : Form
             Dock = DockStyle.Fill
         };
 
+        Label description_replay_mode = new()
+        {
+            Text = $"This node is part of your Timeline - {Game.Name}"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "You may do the following action:"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Add notes about this turn.",
+            Dock = DockStyle.Fill
+        };
+
         Button TimeTravelButton = new()
         {
             Location = new System.Drawing.Point(40, 20),
@@ -471,7 +483,7 @@ public partial class Timeline : Form
 
         Button SaveNotesButton = new()
         {
-            Location = new System.Drawing.Point(40, 53),
+            Location = (!Game.Settings.Replay_Mode) ? new System.Drawing.Point(40, 53) : new System.Drawing.Point(40, 20),
             Text = "Save Notes",
             BackColor = Color.LightSteelBlue,
             ForeColor = Game.UI.ForeColor,
@@ -481,7 +493,7 @@ public partial class Timeline : Form
             Name = "saveNotes"
         };
 
-        groupBox_timeline_node.Controls.Add(TimeTravelButton);
+        if (!Game.Settings.Replay_Mode) { groupBox_timeline_node.Controls.Add(TimeTravelButton); }
         groupBox_timeline_node.Controls.Add(SaveNotesButton);
         groupBox_timeline_node.Location = new System.Drawing.Point(10, 5);
         groupBox_timeline_node.Size = new System.Drawing.Size(220, 115);
@@ -506,9 +518,15 @@ public partial class Timeline : Form
 
         Game.UI.TopPanel?.Controls.Add(groupBox_timeline_node);
         Game.UI.BottomPanel?.Controls.Add(NotesBox);
-        Game.UI.BottomPanel?.Controls.Add(description);
-
-        TimeTravelButton.Click += new EventHandler(TimeTravelButton_Click);
+        if (!Game.Settings.Replay_Mode)
+        {
+            Game.UI.BottomPanel?.Controls.Add(description);
+        }
+        else
+        {
+            Game.UI.BottomPanel?.Controls.Add(description_replay_mode);
+        }
+        if (!Game.Settings.Replay_Mode) { TimeTravelButton.Click += new EventHandler(TimeTravelButton_Click); }
         SaveNotesButton.Click += (sender, e) => SaveNotesButton_Click(NotesBox);
         NotesBox.TextChanged += (sender, e) => Notes_TextChanged(NotesBox);
     }
