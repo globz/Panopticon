@@ -375,7 +375,20 @@ public class Snapshot
         Game.UI.TopPanel?.Controls.Add(groupBox_snapshot);
         Game.UI.BottomPanel?.Controls.Add(description);
 
-        ExitButton.Click += (sender, e) => { TimeTravel.ReplayMode.Exit(); };
+        ExitButton.Click += (sender, e) =>
+        {
+            var confirmPersistence = MessageBox.Show($"Please exit your Dominion game [{Game.Name}] before persisting your replay session.{System.Environment.NewLine + System.Environment.NewLine} Do you want to exit replay mode now?",
+            $"Exit confirmation", MessageBoxButtons.YesNo);
+            if (confirmPersistence == DialogResult.Yes)
+            {
+
+                TimeTravel.ReplayMode.Exit();
+            }
+            else if (confirmPersistence == DialogResult.No)
+            {
+                return;
+            }
+        };
 
     }
 
