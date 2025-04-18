@@ -1,16 +1,15 @@
 name: Publish Release
 on:
   push:
-    branches: [ "main" ]
     tags:
       - 'v*'
 jobs:
   build:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
     - name: Publish
@@ -18,8 +17,14 @@ jobs:
     - name: Zip Release
       run: Compress-Archive -Path ./publish/* -DestinationPath Panopticon-${{ github.ref_name }}-win-x64.zip
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: Panopticon-${{ github.ref_name }}-win-x64.zip
+        body: |
+          Panopticon ${{ github.ref_name }}
+          - Beta release.
+          - Self-contained Windows x64 executable.
+          - Features: Snapshot creation, Undo, Replay mode, Branch off, Switch branch, Save notes.
+          - Missing Features: Note templates, New game based on snapshot, keyboard shortcut and proper TAB cycling.
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
