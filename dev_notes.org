@@ -162,18 +162,19 @@
   when losing window focus it will reset to selecting the settings node. (Implemented 2025-04-10)
 - Highlight selected node in green in TreeviewLeft (Implemented 2025-04-08)
 - Isolate the @ Hack for force node selection (if we refactor this crap at least it will be all in the same function) - (Implemented 2025-04-12)
-- Fix Tab index on all forms
-- Revise and remove ALL TODO
-- Remove unnecessary Console call
-- Remove all unnecessary Console.WriteLine
-- Finish implementation details of Replay
-- Implement (New Game) mode
-- When persisting Replay, you do not need to exit Dominion (Remove messageBox)
 - Polish UI related to new branch name (add groupbox or label so that we can add "branch name:") - (Implemented 2025-04-13)
 - Rename timelines to timeline since we now have 1 db per game folder. (Implemented 2025-04-14)
 - Fix timeline_root (disable/enable) state while switching between replay_mode state (on/off) (Implemented 2025-04-17)
 - Need to display snapshot nodes differently while in replay mode, no time travel abilities! (Implemented 2025-04-17)
 - Exiting replay mode will now display a MessageBox to exit the current game & ask for user confirmation (Implemented 2025-04-17)
+- Improved branch name validation, you may now focus out of the input field while it is empty. (Implemented 2025-04-18)
+- When persisting Replay, you do not need to exit Dominion (Remove messageBox) - (Implemented 2025-04-18)
+- Revise and remove ALL TODO (Implemented 2025-04-18)
+- Fix Tab index on all forms
+- Remove unnecessary Console call
+- Remove all unnecessary Console.WriteLine
+- Finish implementation details of Replay
+- Implement (New Game) mode
 
 BUG:
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, resulting in no new calculated turn. 
@@ -196,7 +197,7 @@ BUG:
   this causes your whole timeline to be deleted from panopticon.db (Implemented 2025-04-12)
 - Switching game without closing the game seems to not reset the DB.DatabasePath so all the writes and read goes to the wrong database. (Implemented 2025-04-14)
 - Exception thrown: 'System.InvalidOperationException' in Microsoft.Data.Sqlite.dll: 'Invalid attempt to call Read when reader is closed.' - (Implemented 2025-04-15)
-- Improved branch name validation, you may now focus out of the input field while it is empty. (Implemented 2025-04-18)
+- Existing notes should carry over when branching off (just like replay mode)
 
 
 
