@@ -380,14 +380,28 @@ public static class DB
 
 }
 
-# Release build
+# Release procedure
+Update version(s) in Panopticon.csproj
 dotnet publish Panopticon.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+Test release locally
+Note SHA256 from certutil -hashfile publish/Panopticon.exe SHA256
+Update Update release.yml body release description & add updated SHA256
+Commit & push latest Panopticon.csprof & release.yml
+Trigger workflow:
+git tag -a v1.0.0-xxx -m "Panopticon v1.0.0: XXX Windows x64 release"
+git push origin v1.0.0-xxx
+
+# Release build
 git tag -a v1.0.0-beta -m "Panopticon v1.0.0: Beta Windows x64 release"
 git push origin v1.0.0-beta
 
 # Delete tag
 git push --delete origin tagname
 git tag --delete tagname
+
+# Force update on existing tab
+git tag -f v1.0.0-beta
+git push origin v1.0.0-beta --force
 
 # Create new Guid
 powershell [guid]::NewGuid()
