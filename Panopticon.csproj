@@ -17,6 +17,14 @@
     <SelfContained Condition="'$(Configuration)'=='Release'">true</SelfContained>
     <RuntimeIdentifier Condition="'$(Configuration)'=='Release'">win-x64</RuntimeIdentifier>
     <DebugType>embedded</DebugType>
+
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+    <InformationalVersion>1.0.0-beta</InformationalVersion>
+    <Company>kittybomber</Company>
+    <Product>Panopticon</Product>
+    <Title>Panopticon</Title>
   </PropertyGroup>
 
   <ItemGroup>

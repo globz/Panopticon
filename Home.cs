@@ -86,12 +86,18 @@ public partial class Home : Form
 
     private void InitializeAboutSection()
     {
-        var appVersion = Assembly.GetExecutingAssembly().GetName().Version;
+        //var appVersion = Assembly.GetExecutingAssembly().GetName().Version;
+        var informationalVersion = Assembly.GetExecutingAssembly()
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+        ?? "Unknown";
+
+        // Strip git commit (e.g., +b5fa5fe4...)
+        informationalVersion = informationalVersion.Split('+')[0];
 
         Label About = new()
         {
             Dock = DockStyle.Bottom,
-            Text = "Coded by globz - https://github.com/globz - v" + appVersion,
+            Text = $"Coded by globz - https://github.com/globz - v{informationalVersion}",
             TextAlign = ContentAlignment.MiddleCenter,
             ForeColor = Game.UI.ForeColor,
             Height = 50
