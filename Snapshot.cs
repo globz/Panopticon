@@ -394,21 +394,13 @@ public class Snapshot
 
     private static void PersistButon_Click(string? branch_name)
     {
-        var confirmPersistence = MessageBox.Show($"Please exit your Dominion game [{Game.Name}] before persisting your replay session.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and persist your replay session?",
-        $"Confirm replay session persistence",
-        MessageBoxButtons.YesNo);
-        if (confirmPersistence == DialogResult.Yes && !string.IsNullOrWhiteSpace(branch_name))
+        if (!string.IsNullOrWhiteSpace(branch_name))
         {
-
             TimeTravel.ReplayMode.Persist(branch_name);
         }
-        else if (confirmPersistence == DialogResult.Yes && string.IsNullOrWhiteSpace(branch_name))
+        else if (string.IsNullOrWhiteSpace(branch_name))
         {
             MessageBox.Show("A branch name is required.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-        }
-        else if (confirmPersistence == DialogResult.No)
-        {
-            return;
         }
     }
 

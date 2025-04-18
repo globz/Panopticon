@@ -151,7 +151,7 @@ public static class Game
 
         public static void TextBox_branch_name_Validating(object? sender, System.ComponentModel.CancelEventArgs e, TextBox t)
         {
-            if (!Git.IsValidGitBranchName(t.Text))
+            if (!Git.IsValidGitBranchName(t.Text) && !string.IsNullOrWhiteSpace(t.Text))
             {
                 e.Cancel = true; // Prevent focus change
                                  // ErrorProvider already set by TextChanged, so no need to set again

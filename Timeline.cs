@@ -1060,7 +1060,7 @@ public partial class Timeline : Form
             var confirmBranchCreation = MessageBox.Show($"Please exit your Dominion game [{Game.Name}] before branching this turn.{System.Environment.NewLine + System.Environment.NewLine} Do you want to proceed and create a new branch?",
             $"Confirm branch creation",
             MessageBoxButtons.YesNo);
-            if (confirmBranchCreation == DialogResult.Yes)
+            if (confirmBranchCreation == DialogResult.Yes && !string.IsNullOrWhiteSpace(textBox_branch_name.Text.Trim()))
             {
 
                 TimeTravel.BranchOff(textBox_branch_name.Text.Trim());
@@ -1068,6 +1068,10 @@ public partial class Timeline : Form
             else if (confirmBranchCreation == DialogResult.No)
             {
                 return;
+            }
+            else if (string.IsNullOrWhiteSpace(textBox_branch_name.Text.Trim()))
+            {
+                MessageBox.Show("A branch name is required.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         };
 
