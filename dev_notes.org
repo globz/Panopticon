@@ -382,6 +382,8 @@ public static class DB
 
 # Release build
 dotnet publish Panopticon.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./publish
+git tag -a v1.0.0 -m "Panopticon v1.0.0: Beta Windows x64 release"
+git push origin v1.0.0
 
 # Delete tag
 git push --delete origin tagname
