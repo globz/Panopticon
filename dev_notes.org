@@ -170,6 +170,7 @@
 - Improved branch name validation, you may now focus out of the input field while it is empty. (Implemented 2025-04-18)
 - When persisting Replay, you do not need to exit Dominion (Remove messageBox) - (Implemented 2025-04-18)
 - Revise and remove ALL TODO (Implemented 2025-04-18)
+- Create an app.ico (Implemented 2025-04-18)
 - Fix Tab index on all forms
 - Remove unnecessary Console call
 - Remove all unnecessary Console.WriteLine

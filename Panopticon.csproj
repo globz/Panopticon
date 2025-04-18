@@ -22,11 +22,12 @@
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
-    <InformationalVersion>1.0.0-beta</InformationalVersion>
+    <InformationalVersion>1.0.1-beta</InformationalVersion>
     <Company>kittybomber</Company>
     <Product>Panopticon</Product>
     <Title>Panopticon</Title>
     <Guid>371e5a8d-62fe-4b5e-8cbc-2e999dc4e7f0</Guid>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,7 +35,10 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="8.0.8" />
     <None Update="Assets\background.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>    
+    </None>
+    <None Update="Assets\app.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
