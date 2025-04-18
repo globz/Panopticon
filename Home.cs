@@ -100,13 +100,47 @@ public partial class Home : Form
         Controls.Add(About);
     }
 
+    private Image? LoadBackgroundImage()
+    {
+        try
+        {
+            // Use the executable's directory as the base path
+            string basePath = AppDomain.CurrentDomain.BaseDirectory;
+            string imagePath = Path.Combine(basePath, "Assets", "background.png");
+
+            // Log the path for debugging
+            File.AppendAllText("startup.log", $"Attempting to load image: {imagePath}\n");
+
+            // Check if the file exists
+            if (!File.Exists(imagePath))
+            {
+                File.AppendAllText("startup.log", $"Image not found: {imagePath}\n");
+                MessageBox.Show($"Image not found: {imagePath}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return null;
+            }
+
+            // Load the image
+            return Image.FromFile(imagePath);
+        }
+        catch (Exception ex)
+        {
+            File.AppendAllText("startup.log", $"Error loading image: {ex.Message}\n{ex.StackTrace}\n");
+            MessageBox.Show($"Failed to load image: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return null;
+        }
+    }
+
     private void InitializeBackground()
     {
-        Image bg_source = Image.FromFile(AppDomain.CurrentDomain.BaseDirectory + @"..\..\..\Assets\background.png");
+        Image? bg_source = LoadBackgroundImage();
+        //Image.FromFile(AppDomain.CurrentDomain.BaseDirectory + @"..\..\..\Assets\background.png");
         BackColor = Game.UI.Theme;
-        Image bg = RoundCorners(bg_source, 250, Game.UI.Theme);
-        BackgroundImage = bg;
-        BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+        if (bg_source != null)
+        {
+            Image bg = RoundCorners(bg_source, 250, Game.UI.Theme);
+            BackgroundImage = bg;
+            BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+        }
     }
 
     private static Bitmap RoundCorners(Image StartImage, int CornerRadius, Color BackgroundColor)
