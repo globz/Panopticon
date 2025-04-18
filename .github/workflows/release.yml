@@ -20,11 +20,15 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: Panopticon-${{ github.ref_name }}-win-x64.zip
+        overwrite: true
         body: |
           Panopticon ${{ github.ref_name }}
           - Beta release.
           - Self-contained Windows x64 executable.
           - Features: Snapshot creation, Undo, Replay mode, Branch off, Switch branch, Save notes.
           - Missing Features: Note templates, New game based on snapshot, keyboard shortcut and proper TAB cycling.
+          - SHA256 hash of Panopticon.exe:
+            7b04b7cced49d2c811a4edcedba8c9c7504c7181042dceb3e5b264e546c4be54
+            CertUtil: -hashfile command completed successfully.
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

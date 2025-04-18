@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
@@ -25,6 +26,7 @@
     <Company>kittybomber</Company>
     <Product>Panopticon</Product>
     <Title>Panopticon</Title>
+    <Guid>371e5a8d-62fe-4b5e-8cbc-2e999dc4e7f0</Guid>
   </PropertyGroup>
 
   <ItemGroup>
