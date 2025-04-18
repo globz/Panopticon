@@ -1149,19 +1149,19 @@ public partial class Timeline : Form
     }
 
     private static void Initialize_Settings_DB()
-    {        
+    {
         using var statement = DB.Query("CREATE TABLE IF NOT EXISTS settings (game VARCHAR(23), branch VARCHAR(100), auto_commit BOOLEAN, prefix VARCHAR(10), suffix VARCHAR(10), turn INT, sq_turn DOUBLE, compound_turn DOUBLE, replay_mode BOOLEAN, PRIMARY KEY (game, branch))");
         statement.ExecuteNonQuery();
     }
 
     public static void Retrieve_Settings()
     {
-        
+
         using var statement = DB.Query("SELECT auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode FROM settings WHERE game = @game AND branch = @branch");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
         DB.ReadData(statement, DB.LoadSettingsData);
-        
+
     }
 
     private static void Initialize_Timelines_DB()
@@ -1219,7 +1219,7 @@ public partial class Timeline : Form
 
     private static string? Retrieve_Timeline_Notes()
     {
-     
+
         using var statement = DB.Query("SELECT notes FROM notes WHERE game = @game AND branch = @branch AND node_name = @node_name");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
@@ -1257,10 +1257,14 @@ public partial class Timeline : Form
         {
             TreeNode replayNode = new("Replay Mode");
             replayNode.Name = "replay_mode";
-            TreeNode? node_to_delete = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "timeline_root");
-            if (node_to_delete != null)
+            TreeNode? timeline_root = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "timeline_root");
+            if (timeline_root != null)
             {
-                Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
+                // Disable selection of timeline_root (user is unable to interact with the timeline_root node)
+                Game.UI.Timeline_history.Text = "Timeline - Replay Mode";
+                Game.UI.Timeline_history.ForeColor = SystemColors.GrayText;
+                Game.UI.beforeSelectHandler = (s, e) => { if (e.Node?.Name == "timeline_root") e.Cancel = true; };
+                Game.UI.TreeViewLeft.BeforeSelect += Game.UI.beforeSelectHandler;
             }
             Game.UI.TreeViewLeft.Nodes.Add(replayNode);
 
@@ -1273,10 +1277,12 @@ public partial class Timeline : Form
             if (node_to_delete != null)
             {
                 Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
-                // Rebuild timeline history
-                Game.UI.TreeViewLeft.Nodes.Add(Game.UI.Timeline_history);
                 Game.UI.TreeViewLeft.ExpandAll();
                 Game.UI.TreeViewLeft.PerformLayout();
+
+                // Re-enable selection of timeline_root (user is now able to interact with timeline_root node)
+                Game.UI.Timeline_history.Text = "Timeline - " + Game.Name;
+                Game.UI.TreeViewLeft.BeforeSelect -= Game.UI.beforeSelectHandler;
 
                 // @ HACK to force selection of timeline_root
                 Game.UI.ForceNodeSelection(Game.UI.TreeViewLeft.Nodes["timeline_root"]);

@@ -63,12 +63,18 @@ public partial class TurnTracker
                 // Call Snapshot.InitializeComponent() to refresh the UI
                 if (Game.Settings.Replay_Mode)
                 {
+                    // @ HACK to force selection of replay_mode
+                    TreeNode? replay_mode = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "replay_mode");
+                    Game.UI.ForceNodeSelection(replay_mode);
+
                     Snapshot.InitializeReplayComponent();
                 }
                 else
                 {
+                    // @ HACK to force selection of new_snapshot
                     TreeNode? new_snapshot = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, "new_snapshot");
                     Game.UI.ForceNodeSelection(new_snapshot);
+
                     Snapshot.InitializeDefaultComponent();
                 }
 

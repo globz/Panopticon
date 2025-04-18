@@ -55,6 +55,7 @@ public static class Game
         public static Color Theme { get; set; }
         public static Color ForeColor { get; set; }
         public static TreeNode? SelectedNode { get; set; }
+        public static TreeViewCancelEventHandler? beforeSelectHandler { get; set;}
         public static TreeNode? FindNodeByName(TreeNodeCollection nodes, string searchName)
         {
             foreach (TreeNode node in nodes)
