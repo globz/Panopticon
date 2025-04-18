@@ -10,6 +10,11 @@ public partial class Home : Form
     {
         this.ClientSize = new System.Drawing.Size(800, 800);
         this.Text = "Dominion: Panopticon";
+        
+        // Load App icon
+        string basePath = AppDomain.CurrentDomain.BaseDirectory;
+        string icon_path = Path.Combine(basePath, "Assets", "app.ico");
+        Icon = new Icon(icon_path);
 
         InitializeFeatures();
         InitializeAboutSection();
@@ -134,7 +139,6 @@ public partial class Home : Form
     private void InitializeBackground()
     {
         Image? bg_source = LoadBackgroundImage();
-        //Image.FromFile(AppDomain.CurrentDomain.BaseDirectory + @"..\..\..\Assets\background.png");
         BackColor = Game.UI.Theme;
         if (bg_source != null)
         {

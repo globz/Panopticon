@@ -16,6 +16,11 @@ public partial class Timeline : Form
 
     public Timeline()
     {
+        // Load App icon
+        string basePath = AppDomain.CurrentDomain.BaseDirectory;
+        string icon_path = Path.Combine(basePath, "Assets", "app.ico");
+        Icon = new Icon(icon_path);
+
         InitializeComponent();
 
         // Add .gitignore to Game.Path (ignoring panopticon.db)
