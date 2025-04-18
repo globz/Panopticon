@@ -127,7 +127,6 @@ public class TimeTravel
                     compoundTurnValue = Convert.ToDouble(data ?? 0.00);
                 }
 
-                //TODO remove - double compoundTurnValue = Convert.ToDouble(data ?? 0.00);
                 string compoundTurnString = compoundTurnValue.ToString("0.00");
 
                 // Rewind the Turn(s) settings values
@@ -499,8 +498,6 @@ public class TimeTravel
             // Refresh Replay component
             Snapshot.InitializeReplayComponent();
 
-            // TODO remove 1 turn from settings (turn, sq_turn?? & compound_turn)
-            // TODO test for dicarding an sq_turn scenario
             Game.Settings.Turn--;
             Game.Settings.Compound_Turn--;
 
