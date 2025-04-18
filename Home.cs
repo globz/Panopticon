@@ -108,13 +108,9 @@ public partial class Home : Form
             string basePath = AppDomain.CurrentDomain.BaseDirectory;
             string imagePath = Path.Combine(basePath, "Assets", "background.png");
 
-            // Log the path for debugging
-            File.AppendAllText("startup.log", $"Attempting to load image: {imagePath}\n");
-
             // Check if the file exists
             if (!File.Exists(imagePath))
             {
-                File.AppendAllText("startup.log", $"Image not found: {imagePath}\n");
                 MessageBox.Show($"Image not found: {imagePath}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return null;
             }
@@ -124,7 +120,6 @@ public partial class Home : Form
         }
         catch (Exception ex)
         {
-            File.AppendAllText("startup.log", $"Error loading image: {ex.Message}\n{ex.StackTrace}\n");
             MessageBox.Show($"Failed to load image: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return null;
         }
