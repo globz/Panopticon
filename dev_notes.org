@@ -258,7 +258,8 @@ When ReplayMode is Enabled the following should happen:
 + [BUG] When enabling a replay session, settings.turn will be +1 instead of of what has been selected, example of the problem: (replay turn 4 -> settings.turn = 5) (Implemented 2025-02-17)
 + [BUG] When persisting to a new branch, if there is a pending commit it will not carry over (Implemented 2025-02-25)
 + Maybe Persist Git.previous_branch (new column) unto the game + (no branch) setting - ~Not need, too much hassle for little gains~
-+ When branching off or persisting a DETACHED HEAD, it should also carry all the notes associated with each nodes
++ When branching off or persisting a DETACHED HEAD, it should also carry all the notes associated with existing nodes (previous_nodes) - (Implemented 2025-04-17)
++ When branching off or persisting a DETACHED HEAD, it should also carry all the notes associated with each new nodes - (Implemented 2025-04-17)
 
 + Snapshot UI & logic must be adapted to work in ReplayMode or dispatch to a new handler via TurnTracker.Refresh_UI: 
  - Ask if user wish to [Persist], [Discard], [Continue] or [Exit] (Implemented 2025-02-06)
