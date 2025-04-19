@@ -20,7 +20,6 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: Panopticon-${{ github.ref_name }}-win-x64.zip
-        overwrite: true
         body: |
           Panopticon ${{ github.ref_name }}
           - Beta release.
