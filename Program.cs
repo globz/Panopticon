@@ -626,11 +626,10 @@ public static class Git
         // Check if file does not already exist.
         if (!File.Exists(gitignore_path))
         {
-            // Create the file, or overwrite if the file exists.
+            // Create the file
             using (FileStream fs = File.Create(gitignore_path, 1024))
             {
                 byte[] info = new System.Text.UTF8Encoding(true).GetBytes("panopticon.db\n.gitignore");
-                // Add some information to the file.
                 fs.Write(info, 0, info.Length);
             }
         }
