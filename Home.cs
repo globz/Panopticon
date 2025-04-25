@@ -91,13 +91,11 @@ public partial class Home : Form
 
     private void InitializeAboutSection()
     {
-        //var appVersion = Assembly.GetExecutingAssembly().GetName().Version;
+        // Get informationalVersion from the current build
+        // Strip git commit (e.g., +b5fa5fe4...) via Split
         var informationalVersion = Assembly.GetExecutingAssembly()
-        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]
         ?? "Unknown";
-
-        // Strip git commit (e.g., +b5fa5fe4...)
-        informationalVersion = informationalVersion.Split('+')[0];
 
         Label About = new()
         {

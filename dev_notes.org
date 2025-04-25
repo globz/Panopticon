@@ -174,8 +174,10 @@
 - Fix Tab index on all forms
 - Remove unnecessary Console call
 - Remove all unnecessary Console.WriteLine
-- Finish implementation details of Replay
+- Finish implementation details of Replay (Implemented 2025-04-18)
 - Implement (New Game) mode
+- Delete .gitignore when deleting timeline? improve logic and perhaps read its content if already exist
+- Implement migration feature to facilitate futures upgrades to the database or local architecture. (Implemented 2025-04-24)
 
 BUG:
 - Sometimes 2h files writes do not trigger TurnTrackerWorker event, resulting in no new calculated turn. 
@@ -270,6 +272,14 @@ When ReplayMode is Enabled the following should happen:
  - Selecting [Discard], will discard the outcome of your replay session. (Implemented 2025-02-06)
  - Selecting [Continue], will protect your latest turn from being removed when using [Discard] (Implemented 2025-02-25)
  - Selecting [Exit] will discarding ALL CHANGES made during replay session and return to previous branch (Implemented 2025-02-06)
+
+# Investigate the possibility to support COE5
+ + --autosave launch option should be off when using Panopticon (Create player warning).
+ + Since all the games are in the same folder (C:\Users\$USER\AppData\Roaming\coe5\saves) - we should isolate panopticon.db into a subfolder (C:\Users\$USER\AppData\Roaming\coe5\saves\my_game)
+ + .gitignore should be rewritten each time we switch game file, to ignore all the rest? need to test this out.
+ + Save file in the saves folder = Game.Name - (No longer the folder)
+ + Rename SUFFIX to _SAVE_
+ + Do not track turn instead we track manual saves from player
  
 # Release procedure
 Update version(s) in Panopticon.csproj

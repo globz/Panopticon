@@ -26,8 +26,11 @@ public partial class Timeline : Form
         // Add .gitignore to Game.Path (ignoring panopticon.db)
         Git.CreateGitIgnore(Game.Path);
 
+        // Apply migrations if needed
+        Migration.Process();
+
         // Initialize the settings database
-        Initialize_Settings_DB();
+        Initialize_Settings_Table();
 
         // Retrieve saved settings
         Retrieve_Settings();
@@ -1175,7 +1178,7 @@ public partial class Timeline : Form
         }
     }
 
-    private static void Initialize_Settings_DB()
+    private static void Initialize_Settings_Table()
     {
         using var statement = DB.Query("CREATE TABLE IF NOT EXISTS settings (game VARCHAR(23), branch VARCHAR(100), auto_commit BOOLEAN, prefix VARCHAR(10), suffix VARCHAR(10), turn INT, sq_turn DOUBLE, compound_turn DOUBLE, replay_mode BOOLEAN, PRIMARY KEY (game, branch))");
         statement.ExecuteNonQuery();
@@ -1183,7 +1186,6 @@ public partial class Timeline : Form
 
     public static void Retrieve_Settings()
     {
-
         using var statement = DB.Query("SELECT auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode FROM settings WHERE game = @game AND branch = @branch");
         statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
         statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();

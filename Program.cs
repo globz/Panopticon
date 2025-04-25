@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using LibGit2Sharp;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace Panopticon;
 
@@ -28,6 +29,13 @@ static class Program
         Game.Settings.Suffix = "_TURN_";
         Game.Settings.Auto_commit = true;
         Game.Settings.Replay_Mode = false;
+
+        // This value always reference the current app_version - This is NOT the same as Game.Migration.App_version which may lag behind
+        Game.Settings.App_version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0];
+
+        // Default Migration values
+        Game.Migration.App_version = "1.0.2-beta";
+        Game.Migration.Upgrade_count = 0;
 
         // Default Git setting
         Git.userName = Environment.GetEnvironmentVariable("GIT_USER_NAME") ?? "Panopticon";
@@ -168,7 +176,14 @@ public static class Game
         public static double SQ_Turn { get; set; }
         public static double Compound_Turn { get; set; }
         public static bool Replay_Mode { get; set; }
+        public static string? App_version { get; set; }
     }
+
+    public static class Migration
+    {
+        public static int Upgrade_count { get; set; }
+        public static string? App_version { get; set; }
+    }    
 
 }
 
@@ -282,6 +297,13 @@ public static class DB
             }
         }
     }
+
+    // Load migration value from the database
+    public static void LoadMigrationData(SqliteDataReader migration)
+    {
+        Game.Migration.App_version = migration["app_version"].ToString();
+        Game.Migration.Upgrade_count = Convert.ToInt32(migration["upgrade_count"]);
+    }    
 
     // Save all settings to the database
     public static void SaveAllSettings()
