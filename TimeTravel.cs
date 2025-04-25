@@ -225,6 +225,7 @@ public class TimeTravel
             int branch_turn = int.Parse(match.Groups[1].Value);
             double branch_sq_turn = double.Parse(match.Groups[2].Value) / 100.0;
             double branch_compound_turn = branch_turn + branch_sq_turn;
+            List<string> node_names = new List<string>();
 
             // Save newbranch settings
             using (var statement = DB.Query("INSERT INTO settings (game, branch, auto_commit, prefix, suffix, turn, sq_turn, compound_turn, replay_mode) VALUES (@game, @branch, @auto_commit, @prefix, @suffix, @turn, @sq_turn, @compound_turn, @replay_mode) ON CONFLICT(game, branch) DO UPDATE SET auto_commit = @auto_commit, prefix = @prefix, suffix = @suffix, turn = @turn, sq_turn = @sq_turn, compound_turn = @compound_turn, replay_mode = @replay_mode"))
@@ -263,6 +264,40 @@ public class TimeTravel
                 statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
                 statement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
                 statement.ExecuteNonQuery();
+            }
+
+            // Find all previous node(s) name tied to node_seq_start and node_seq_end
+            using (var statement = DB.Query("SELECT node_name FROM timeline WHERE game = @game AND branch = @old_branch AND node_seq BETWEEN @node_seq_start AND @node_seq_end ORDER BY node_seq"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@old_branch", SqliteType.Text).Value = branch_before_checkout;
+                statement.Parameters.Add("@node_seq_start", SqliteType.Integer).Value = node_seq_start;
+                statement.Parameters.Add("@node_seq_end", SqliteType.Integer).Value = node_seq_end;
+                SqliteDataReader _node_names = statement.ExecuteReader();
+                while (_node_names.Read())
+                {
+                    node_names.Add((string)_node_names["node_name"]);
+                }
+            }
+
+            // Retrieve and store all notes for each node(s) name
+            foreach (string node_name in node_names)
+            {
+                using (var statement = DB.Query(@"
+                    INSERT INTO notes (game, branch, node_name, notes)
+                    SELECT @game, @new_branch, @node_name, notes
+                    FROM notes
+                    WHERE game = @game
+                    AND branch = @old_branch
+                    AND node_name = @node_name
+                    ORDER BY game"))
+                {
+                    statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                    statement.Parameters.Add("@new_branch", SqliteType.Text).Value = Git.CurrentBranch();
+                    statement.Parameters.Add("@old_branch", SqliteType.Text).Value = branch_before_checkout;
+                    statement.Parameters.Add("@node_name", SqliteType.Text).Value = node_name;
+                    statement.ExecuteNonQuery();
+                }
             }
 
             // Refresh timeline UI
