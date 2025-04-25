@@ -21,7 +21,8 @@ public class Migration
         // 4. if (Game.Migration.App_version != Game.Settings.App_version && Game.Migration.Upgrade_count == 0) { }
 
         // Migration procedures may be added below this line:
-        Maybe_apply(0, My_migration_procedure);
+        // TODO change -1 to procedure_position 0 when a real procedure is ready to be applied
+        Maybe_apply(-1, My_migration_procedure);
 
         // Workflow:
         // First make sure you did bump the version of <InformationalVersion> else you will never trigger a new procedure!
@@ -107,9 +108,11 @@ public class Migration
     {
         Console.WriteLine("Template migration procedure - #0");
 
+        // TODO add extra validation if needed
+
         // TODO add procedure
 
-        // Increate upgrade_count
+        // Increase upgrade_count
         Increase_Upgrade_Count();
     }
 }
