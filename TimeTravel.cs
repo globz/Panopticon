@@ -99,13 +99,22 @@ public class TimeTravel
 
                 // Delete timeline node(s) associated with this commit_hash along with subsequent nodes (UI + DB)
                 TreeNode? node_to_delete = new TreeNode();
-                timeline_nodes_name.ForEach(i =>
+                timeline_nodes_name.ForEach(node_name =>
                 {
-                    node_to_delete = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, i);
+                    node_to_delete = Game.UI.FindNodeByName(Game.UI.TreeViewLeft.Nodes, node_name);
                     if (node_to_delete != null)
                     {
                         Game.UI.TreeViewLeft.Nodes.Remove(node_to_delete);
                     }
+                });
+
+                timeline_nodes_name.ForEach(node_name =>
+                {
+                    using var statement = DB.Query("DELETE FROM notes WHERE game = @game AND branch = @branch AND node_name = @node_name");
+                    statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                    statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                    statement.Parameters.Add("@node_name", SqliteType.Text).Value = node_name;
+                    statement.ExecuteNonQuery();
                 });
 
                 using (var statement = DB.Query("DELETE FROM timeline WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end"))
@@ -480,7 +489,7 @@ public class TimeTravel
                 statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
                 statement.Parameters.Add("@branch", SqliteType.Text).Value = "(no branch)";
                 statement.ExecuteNonQuery();
-            }            
+            }
 
             return true;
         }
@@ -560,7 +569,7 @@ public class TimeTravel
                     statement.Parameters.Add("@new_branch", SqliteType.Text).Value = Git.CurrentBranch();
                     statement.Parameters.Add("@old_branch", SqliteType.Text).Value = "(no branch)";
                     statement.ExecuteNonQuery();
-                }                
+                }
 
                 // Persisting a replay will kick the user out of replay mode
                 ReplayMode.Disable();
