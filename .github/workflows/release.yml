@@ -25,11 +25,12 @@ jobs:
           - Beta release.
           - Self-contained Windows x64 executable.
           - Changelog: 
-            + Added app icon
-            + Improved new branch name validation
-            + Removed exit game confirmation prompt when persisting replay
+            + Added migration procedure logic.
+            + Undoing a node will now delete its associated note.
+            + Existing notes are now carrying over when braching off.
+            + Added new TimeTravel option: New Game
           - Features: Snapshot creation, Undo, Replay mode, Branch off, Switch branch, Save notes.
-          - Missing Features: Note templates, New game based on snapshot, keyboard shortcut and proper TAB cycling.
+          - Missing Features: Note templates, keyboard shortcut and proper TAB cycling.
           - SHA256 hash of Panopticon.exe:
             f270ed17a47b57deda3905438b238c7a3c5bd2ac2dd0d3a005a05aee104d23d3
             CertUtil: -hashfile command completed successfully.
