@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.RegularExpressions;
 using LibGit2Sharp;
 using Microsoft.Data.Sqlite;
@@ -642,4 +643,60 @@ public class TimeTravel
         }
 
     }
+
+    public static void NewGame(string new_game_name)
+    {
+        // Retrieve <savedgames> from Game.Path
+        string parent_directory = IO.GetParentDirectory(Game.Path);
+        Console.WriteLine(parent_directory);
+
+        // Create new directory <new_game_name> in parent_directory
+        string new_game_path = @$"{parent_directory}\{new_game_name}";
+        bool isDirectoryCreated = IO.CreateDirectoryIfNotExists(new_game_path);
+
+        if (isDirectoryCreated)
+        {
+            try
+            {
+                // Copy all content of Game.Path into new_game_path
+                IO.CopyDirectoryWithRobocopy(Game.Path, new_game_path);
+                Console.WriteLine("Directory copied successfully!");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred: {ex.Message}");
+            }
+
+            string commit_hash;
+
+            // Retrieve the commit hash of the node that HEAD will point to.
+            using (var statement = DB.Query("SELECT commit_hash FROM timeline WHERE game = @game AND branch = @branch AND node_name = @node_name"))
+            {
+                statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
+                statement.Parameters.Add("@branch", SqliteType.Text).Value = Git.CurrentBranch();
+                statement.Parameters.Add("@node_name", SqliteType.Integer).Value = Game.UI.SelectedNode?.Name ?? throw new InvalidOperationException("Selected node is null");
+                var data = statement.ExecuteScalar();
+                commit_hash = data?.ToString() ?? throw new InvalidOperationException("No commit hash found");
+            }
+
+            Console.WriteLine("Commit HEAD: " + commit_hash);
+
+            // git reset --hard using the commit_hash
+            // Note that we specified new_game_path, else it would default to Game.Path (uh! uh!)
+            Git.ResetHard(commit_hash, new_game_path);
+
+            // Delete files: panopticon.db & .gitignore
+            Git.Delete_Repo(new_game_path);            
+
+            // Delete files: panopticon.db & .gitignore
+            List<string> filesToDelete = new List<string>
+            {
+                @$"{new_game_path}\panopticon.db",
+                @$"{new_game_path}\.gitignore"
+            }; IO.DeleteFiles(filesToDelete);
+        }
+
+    }
+
+
 }

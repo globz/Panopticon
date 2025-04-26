@@ -606,6 +606,13 @@ public partial class Timeline : Form
             // Delete git repo
             Git.Delete_Repo(Game.Path);
 
+            // Delete files: panopticon.db & .gitignore
+            List<string> filesToDelete = new List<string>
+            {
+                @$"{Game.Path}\panopticon.db",
+/*                 @$"{Game.Path}\.gitignore" */
+            }; IO.DeleteFiles(filesToDelete);
+
             // Delete child nodes from Timeline history
             Game.UI.Timeline_history?.Nodes.Clear();
 
@@ -873,6 +880,7 @@ public partial class Timeline : Form
         UndoButton.Click += new EventHandler(UndoButton_Click);
         BranchOffButton.Click += new EventHandler(BranchOffButton_Click);
         ReplayButton.Click += new EventHandler(ReplayButton_Click);
+        NewGameButton.Click += new EventHandler(NewGameButton_Click);
     }
 
     static void UndoButton_Click(object? send, EventArgs e)
@@ -1166,6 +1174,105 @@ public partial class Timeline : Form
                 return;
             }
 
+        };
+
+    }
+
+    static void NewGameButton_Click(object? send, EventArgs e)
+    {
+        // Display UI and confirm user action
+        Game.UI.BottomPanel?.Controls.Clear();
+
+        Label description = new()
+        {
+            Text = $"You are about to create a new game based on the following snapshot:"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + $"Turn: {Game.UI.SelectedNode?.Name} & branch: [{Git.CurrentBranch()}]"
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "Fill in the name of your new game and proceed with the creation.",
+            Dock = DockStyle.Fill
+        };
+
+        Label new_game_description = new()
+        {
+            Text = "This will create a new game within your Dominion <savedgames> folder."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "The game files will reflect the state of the selected node along with all previous turn(s) up to this point in time."
+            + System.Environment.NewLine
+            + System.Environment.NewLine
+            + "You may then load this new game via Dominion under <Continue Old Game>",
+            Dock = DockStyle.Fill
+        };
+
+        var groupBox_new_game_description = new System.Windows.Forms.GroupBox();
+        groupBox_new_game_description.Location = new System.Drawing.Point(5, 200);
+        groupBox_new_game_description.Size = new System.Drawing.Size(250, 125);
+        groupBox_new_game_description.Text = "New game?";
+        groupBox_new_game_description.ForeColor = Color.Orange;
+        groupBox_new_game_description.Controls.Add(new_game_description);
+        groupBox_new_game_description.Dock = DockStyle.Bottom;
+
+        Button CreateGameButton = new()
+        {
+            Location = new System.Drawing.Point(5, 150),
+            Size = new System.Drawing.Size(100, 25),
+            Text = "Create game",
+            BackColor = Color.Purple,
+            ForeColor = Game.UI.ForeColor,
+            Padding = new(2),
+            TabIndex = 2
+        };
+
+        var textBox_game_name = new TextBox
+        {
+            TabIndex = 1,
+            ForeColor = Game.UI.ForeColor,
+            MaxLength = 50,
+            Dock = DockStyle.Left
+        };
+
+        ErrorProvider gameName_errorProvider = new ErrorProvider
+        {
+            BlinkStyle = ErrorBlinkStyle.BlinkIfDifferentError // Optional: Blink when error changes
+        };
+
+        var groupBox_game_name_textbox = new System.Windows.Forms.GroupBox();
+        groupBox_game_name_textbox.Location = new System.Drawing.Point(5, 100);
+        groupBox_game_name_textbox.Size = new System.Drawing.Size(130, 50);
+        groupBox_game_name_textbox.Text = "game name";
+        groupBox_game_name_textbox.ForeColor = Color.Orange;
+        groupBox_game_name_textbox.Controls.Add(textBox_game_name);
+
+        Game.UI.BottomPanel?.Controls.Add(CreateGameButton);
+        Game.UI.BottomPanel?.Controls.Add(groupBox_game_name_textbox);
+        Game.UI.BottomPanel?.Controls.Add(groupBox_new_game_description);
+        Game.UI.BottomPanel?.Controls.Add(description);
+
+        textBox_game_name.TextChanged += (sender, e) => Game.UI.TextBox_new_game_name_TextChanged(textBox_game_name, gameName_errorProvider);
+        textBox_game_name.Validating += (sender, e) => Game.UI.TextBox_new_game_name_Validating(sender, e, textBox_game_name);
+
+        CreateGameButton.Click += (sender, e) =>
+        {
+            if (string.IsNullOrWhiteSpace(textBox_game_name.Text.Trim()))
+            {
+                MessageBox.Show("A game name is required.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var confirmNewGameCreation = MessageBox.Show($"Do you want to proceed and create a new game?",
+            $"Confirm new game creation",
+            MessageBoxButtons.YesNo);
+            if (confirmNewGameCreation == DialogResult.Yes && !string.IsNullOrWhiteSpace(textBox_game_name.Text.Trim()))
+            {
+                TimeTravel.NewGame(textBox_game_name.Text.Trim());
+            }
+            else if (confirmNewGameCreation == DialogResult.No)
+            {
+                return;
+            }
         };
 
     }

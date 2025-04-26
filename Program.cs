@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using LibGit2Sharp;
 using System.Diagnostics;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Panopticon;
 
@@ -47,6 +48,202 @@ static class Program
 
 }
 
+public static class IO
+{
+    public static string GetParentDirectory(string? path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            return ""; // Or throw an exception, depending on your needs
+        }
+
+        try
+        {
+            string? result = Path.GetDirectoryName(path);
+            return result ?? ""; // Return empty string if result is null (e.g., no parent directory)
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error processing path: {ex.Message}");
+            return "";
+        }
+    }
+
+    public static bool CreateDirectoryIfNotExists(string path)
+    {
+        try
+        {
+            // Check if the directory exists
+            if (Directory.Exists(path))
+            {
+                Console.WriteLine($"Directory '{path}' already exists.");
+                MessageBox.Show($"Directory '{path}' already exists.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false; // Directory was not created (already exists)
+            }
+
+            // Create the directory (and any parent directories if needed)
+            Directory.CreateDirectory(path);
+            Console.WriteLine($"Directory '{path}' created successfully.");
+            MessageBox.Show($"Directory '{path}' created successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return true; // Directory was created
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Console.WriteLine($"Permission denied to create directory '{path}': {ex.Message}");
+            MessageBox.Show($"Permission denied: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+        }
+        catch (PathTooLongException ex)
+        {
+            Console.WriteLine($"Path '{path}' is too long: {ex.Message}");
+            MessageBox.Show($"Path too long: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+        }
+        catch (IOException ex)
+        {
+            Console.WriteLine($"IO error creating directory '{path}': {ex.Message}");
+            MessageBox.Show($"IO error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error creating directory '{path}': {ex.Message}");
+            MessageBox.Show($"Error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return false;
+        }
+    }
+
+    public static void CopyDirectoryWithRobocopy(string? sourceDir, string destDir)
+    {
+        try
+        {
+            ProcessStartInfo processInfo = new ProcessStartInfo
+            {
+                FileName = "robocopy",
+                Arguments = $"\"{sourceDir}\" \"{destDir}\" /MIR /R:3 /W:5 /COPY:DATSO /NP /LOG+:robocopy_log.txt",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (Process? process = Process.Start(processInfo))
+            {
+                if (process == null) { return; }
+
+                string output = process.StandardOutput.ReadToEnd();
+                string errors = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+
+                Console.WriteLine("Robocopy Output:");
+                Console.WriteLine(output);
+                if (!string.IsNullOrEmpty(errors))
+                {
+                    Console.WriteLine("Robocopy Errors:");
+                    Console.WriteLine(errors);
+                }
+
+                // Robocopy exit codes: 0-7 indicate success or minor issues, >=8 indicate failure
+                if (process.ExitCode >= 8)
+                {
+                    throw new Exception($"Robocopy failed with exit code {process.ExitCode}. Check robocopy_log.txt for details.");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Robocopy error: {ex.Message}");
+            throw;
+        }
+    }
+
+
+    public static bool DeleteFiles(List<string> filePaths)
+    {
+        bool allSucceeded = true;
+
+        foreach (string filePath in filePaths)
+        {
+            try
+            {
+                if (!File.Exists(filePath))
+                {
+                    Console.WriteLine($"File does not exist: {filePath}");
+                    allSucceeded = false;
+                    continue;
+                }
+
+                File.SetAttributes(filePath, FileAttributes.Normal);
+                File.Delete(filePath);
+                Console.WriteLine($"Deleted file: {filePath}");
+            }
+            catch (IOException ex)
+            {
+                // TODO add messageBox
+                Console.WriteLine($"Failed to delete file {filePath}: {ex.Message}");
+                allSucceeded = false;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                // TODO add messageBox                
+                Console.WriteLine($"Access denied for file {filePath}: {ex.Message}");
+                allSucceeded = false;
+            }
+            catch (Exception ex)
+            {
+                // TODO add messageBox                
+                Console.WriteLine($"Unexpected error deleting file {filePath}: {ex.Message}");
+                allSucceeded = false;
+            }
+        }
+
+        return allSucceeded;
+    }
+
+    public static bool DeleteDirectories(List<string> directoryPaths, bool recursive = true)
+    {
+        bool allSucceeded = true;
+
+        foreach (string dirPath in directoryPaths)
+        {
+            try
+            {
+                if (!Directory.Exists(dirPath))
+                {
+                    Console.WriteLine($"Directory does not exist: {dirPath}");
+                    allSucceeded = false;
+                    continue;
+                }
+
+                DirectoryInfo dirInfo = new DirectoryInfo(dirPath);
+                dirInfo.Attributes = FileAttributes.Normal;
+                Directory.Delete(dirPath, recursive);
+                Console.WriteLine($"Deleted directory: {dirPath}");
+            }
+            catch (IOException ex)
+            {
+                // TODO add messageBox                
+                Console.WriteLine($"Failed to delete directory {dirPath}: {ex.Message}");
+                allSucceeded = false;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                // TODO add messageBox                
+                Console.WriteLine($"Access denied for directory {dirPath}: {ex.Message}");
+                allSucceeded = false;
+            }
+            catch (Exception ex)
+            {
+                // TODO add messageBox                
+                Console.WriteLine($"Unexpected error deleting directory {dirPath}: {ex.Message}");
+                allSucceeded = false;
+            }
+        }
+
+        return allSucceeded;
+    }
+}
+
 public static class Game
 {
     public static string? Path { get; set; }
@@ -63,7 +260,7 @@ public static class Game
         public static Color Theme { get; set; }
         public static Color ForeColor { get; set; }
         public static TreeNode? SelectedNode { get; set; }
-        public static TreeViewCancelEventHandler? beforeSelectHandler { get; set;}
+        public static TreeViewCancelEventHandler? beforeSelectHandler { get; set; }
         public static TreeNode? FindNodeByName(TreeNodeCollection nodes, string searchName)
         {
             foreach (TreeNode node in nodes)
@@ -165,6 +362,41 @@ public static class Game
                                  // ErrorProvider already set by TextChanged, so no need to set again
             }
         }
+
+        public static void TextBox_new_game_name_TextChanged(TextBox t, ErrorProvider _errorProvider)
+        {
+            string invalidPattern = @"^\.|[\s.[\]{}?*~^:]|(/)$|[\x00-\x1F]|^$";
+            Regex regex = new Regex(invalidPattern, RegexOptions.Compiled);
+
+            if (regex.IsMatch(t.Text))
+            {
+                t.ForeColor = Color.MediumVioletRed;
+                _errorProvider.SetError(t,
+                    "Invalid game name. Game names cannot:\n" +
+                    "- Start with a dot\n" +
+                    "- Contain dots, spaces, or ~^:?*[]{}\n" +
+                    "- End with /\n" +
+                    "- Contain control characters or be empty");
+            }
+            else
+            {
+                t.ForeColor = Color.Black;
+                t.BackColor = Color.GhostWhite;
+                _errorProvider.SetError(t, string.Empty);
+            }
+        }
+
+        public static void TextBox_new_game_name_Validating(object? sender, System.ComponentModel.CancelEventArgs e, TextBox t)
+        {
+            string invalidPattern = @"^\.|[\s.[\]{}?*~^:]|(/)$|[\x00-\x1F]|^$";
+            Regex regex = new Regex(invalidPattern, RegexOptions.Compiled);
+
+            if (regex.IsMatch(t.Text) && !string.IsNullOrWhiteSpace(t.Text))
+            {
+                e.Cancel = true; // Prevent focus change
+                                 // ErrorProvider already set by TextChanged, so no need to set again
+            }
+        }
     }
 
     public static class Settings
@@ -183,7 +415,7 @@ public static class Game
     {
         public static int Upgrade_count { get; set; }
         public static string? App_version { get; set; }
-    }    
+    }
 
 }
 
@@ -303,7 +535,7 @@ public static class DB
     {
         Game.Migration.App_version = migration["app_version"].ToString();
         Game.Migration.Upgrade_count = Convert.ToInt32(migration["upgrade_count"]);
-    }    
+    }
 
     // Save all settings to the database
     public static void SaveAllSettings()
@@ -521,9 +753,13 @@ public static class Git
         return hasMatchingEntry;
     }
 
-    public static void ResetHard(string? commit_hash = null)
+    public static void ResetHard(string? commit_hash = null, string? game_path = null)
     {
-        using var repo = new Repository(Game.Path);
+        string? _game_path_;
+
+        if (game_path != null) { _game_path_ = @$"{game_path}"; } else { _game_path_ = Game.Path; }
+
+        using var repo = new Repository(_game_path_);
         if (commit_hash != null)
         {
             repo.Reset(ResetMode.Hard, commit_hash);
