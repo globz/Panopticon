@@ -75,6 +75,9 @@ public partial class NewTimeline : Form
         // Update the game path and refresh the connection
         DB.UpdateGamePath(Game.Path);
 
+        // Reset game settings to default values
+        Game.Settings.ApplyDefaults();
+
         var TimeLine = new Timeline
         {
             Location = this.Location,
