@@ -23,13 +23,14 @@ static class Program
         Game.UI.ForeColor = Color.GhostWhite;
 
         // Set default Settings values
-        Game.Settings.Turn = 1;
+        Game.Settings.ApplyDefaults();
+/*         Game.Settings.Turn = 1;
         Game.Settings.SQ_Turn = 0.00;
         Game.Settings.Compound_Turn = 1.00;
         Game.Settings.Prefix = "";
         Game.Settings.Suffix = "_TURN_";
         Game.Settings.Auto_commit = true;
-        Game.Settings.Replay_Mode = false;
+        Game.Settings.Replay_Mode = false; */
 
         // This value always reference the current app_version - This is NOT the same as Game.Migration.App_version which may lag behind
         Game.Settings.App_version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0];
@@ -84,7 +85,6 @@ public static class IO
             // Create the directory (and any parent directories if needed)
             Directory.CreateDirectory(path);
             Console.WriteLine($"Directory '{path}' created successfully.");
-            MessageBox.Show($"Directory '{path}' created successfully!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             return true; // Directory was created
         }
         catch (UnauthorizedAccessException ex)
@@ -409,6 +409,17 @@ public static class Game
         public static double Compound_Turn { get; set; }
         public static bool Replay_Mode { get; set; }
         public static string? App_version { get; set; }
+
+        public static void ApplyDefaults()
+        {
+            Turn = 1;
+            SQ_Turn = 0.00;
+            Compound_Turn = 1.00;
+            Prefix = "";
+            Suffix = "_TURN_";
+            Auto_commit = true;
+            Replay_Mode = false;
+        }
     }
 
     public static class Migration
