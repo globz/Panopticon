@@ -694,6 +694,8 @@ public class TimeTravel
                 @$"{new_game_path}\panopticon.db",
                 @$"{new_game_path}\.gitignore"
             }; IO.DeleteFiles(filesToDelete);
+
+            MessageBox.Show($"New game created successfully @ '{new_game_path}'", "Success!", MessageBoxButtons.OK, MessageBoxIcon.Information);            
         }
 
     }

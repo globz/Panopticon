@@ -1200,16 +1200,19 @@ public partial class Timeline : Form
             Text = "This will create a new game within your Dominion <savedgames> folder."
             + System.Environment.NewLine
             + System.Environment.NewLine
-            + "The game files will reflect the state of the selected node along with all previous turn(s) up to this point in time."
+            + "The game files will reflect the state of the selected node."
             + System.Environment.NewLine
             + System.Environment.NewLine
+            + "This new game will not carry any Timeline history or notes."
+            + System.Environment.NewLine
+            + System.Environment.NewLine            
             + "You may then load this new game via Dominion under <Continue Old Game>",
             Dock = DockStyle.Fill
         };
 
         var groupBox_new_game_description = new System.Windows.Forms.GroupBox();
         groupBox_new_game_description.Location = new System.Drawing.Point(5, 200);
-        groupBox_new_game_description.Size = new System.Drawing.Size(250, 125);
+        groupBox_new_game_description.Size = new System.Drawing.Size(250, 135);
         groupBox_new_game_description.Text = "New game?";
         groupBox_new_game_description.ForeColor = Color.Orange;
         groupBox_new_game_description.Controls.Add(new_game_description);
