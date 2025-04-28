@@ -179,20 +179,20 @@ public static class IO
             }
             catch (IOException ex)
             {
-                // TODO add messageBox
                 Console.WriteLine($"Failed to delete file {filePath}: {ex.Message}");
+                MessageBox.Show($"Failed to delete file {filePath}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 allSucceeded = false;
             }
             catch (UnauthorizedAccessException ex)
             {
-                // TODO add messageBox                
                 Console.WriteLine($"Access denied for file {filePath}: {ex.Message}");
+                MessageBox.Show($"Access denied for file {filePath}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 allSucceeded = false;
             }
             catch (Exception ex)
             {
-                // TODO add messageBox                
                 Console.WriteLine($"Unexpected error deleting file {filePath}: {ex.Message}");
+                MessageBox.Show($"Unexpected error deleting file {filePath}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 allSucceeded = false;
             }
         }
@@ -222,20 +222,20 @@ public static class IO
             }
             catch (IOException ex)
             {
-                // TODO add messageBox                
                 Console.WriteLine($"Failed to delete directory {dirPath}: {ex.Message}");
+                MessageBox.Show($"Failed to delete directory {dirPath}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 allSucceeded = false;
             }
             catch (UnauthorizedAccessException ex)
             {
-                // TODO add messageBox                
                 Console.WriteLine($"Access denied for directory {dirPath}: {ex.Message}");
+                MessageBox.Show($"Access denied for directory {dirPath}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 allSucceeded = false;
             }
             catch (Exception ex)
             {
-                // TODO add messageBox                
                 Console.WriteLine($"Unexpected error deleting directory {dirPath}: {ex.Message}");
+                MessageBox.Show($"Unexpected error deleting directory {dirPath}: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 allSucceeded = false;
             }
         }
