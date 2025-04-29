@@ -11,7 +11,7 @@ public class Settings
         {
             Location = new System.Drawing.Point(20, 20),
             Text = "Creation mode",
-            BackColor = Color.LightSteelBlue,
+            BackColor = Color.Black,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
             AutoSize = true,
@@ -22,7 +22,7 @@ public class Settings
         {
             Location = new System.Drawing.Point(20, 53),
             Text = "Naming convention",
-            BackColor = Color.LightSteelBlue,
+            BackColor = Color.Black,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
             AutoSize = true,

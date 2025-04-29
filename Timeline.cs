@@ -322,7 +322,7 @@ public partial class Timeline : Form
                 {
                     Location = new System.Drawing.Point(40, 20),
                     Text = "Delete Timeline",
-                    BackColor = Color.LightSteelBlue,
+                    BackColor = Color.Black,
                     ForeColor = Game.UI.ForeColor,
                     Padding = new(2),
                     AutoSize = true,
@@ -338,7 +338,7 @@ public partial class Timeline : Form
                 {
                     Location = new System.Drawing.Point(40, 20),
                     Text = "Delete Branch",
-                    BackColor = Color.LightSteelBlue,
+                    BackColor = Color.Black,
                     ForeColor = Game.UI.ForeColor,
                     Padding = new(2),
                     AutoSize = true,
@@ -353,7 +353,7 @@ public partial class Timeline : Form
             {
                 Location = new System.Drawing.Point(40, 53),
                 Text = "Switch Branch",
-                BackColor = Color.LightSteelBlue,
+                BackColor = Color.Black,
                 ForeColor = Game.UI.ForeColor,
                 Padding = new(2),
                 AutoSize = true,
@@ -364,7 +364,7 @@ public partial class Timeline : Form
             {
                 Location = new System.Drawing.Point(40, 86),
                 Text = "Save Description",
-                BackColor = Color.LightSteelBlue,
+                BackColor = Color.Black,
                 ForeColor = Game.UI.ForeColor,
                 Padding = new(2),
                 AutoSize = true,
@@ -419,7 +419,7 @@ public partial class Timeline : Form
             {
                 Location = new System.Drawing.Point(40, 40),
                 Text = "Create Timeline",
-                BackColor = Color.LightSteelBlue,
+                BackColor = Color.Green,
                 ForeColor = Game.UI.ForeColor,
                 Padding = new(2),
                 AutoSize = true,
@@ -483,7 +483,7 @@ public partial class Timeline : Form
         {
             Location = new System.Drawing.Point(40, 20),
             Text = "Time Travel",
-            BackColor = Color.LightSteelBlue,
+            BackColor = Color.Black,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
             AutoSize = true,
@@ -494,7 +494,7 @@ public partial class Timeline : Form
         {
             Location = (!Game.Settings.Replay_Mode) ? new System.Drawing.Point(40, 53) : new System.Drawing.Point(40, 20),
             Text = "Save Notes",
-            BackColor = Color.LightSteelBlue,
+            BackColor = Color.Black,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
             AutoSize = true,
@@ -837,7 +837,7 @@ public partial class Timeline : Form
         {
             Location = new System.Drawing.Point(10, 20),
             Text = "Undo",
-            BackColor = Color.LightSteelBlue,
+            BackColor = Color.Black,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
             AutoSize = true,
@@ -848,7 +848,7 @@ public partial class Timeline : Form
         {
             Location = new System.Drawing.Point(100, 20),
             Text = "Replay",
-            BackColor = Color.LightSteelBlue,
+            BackColor = Color.Black,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
             AutoSize = true,
@@ -859,7 +859,7 @@ public partial class Timeline : Form
         {
             Location = new System.Drawing.Point(10, 50),
             Text = "Branch off",
-            BackColor = Color.LightSteelBlue,
+            BackColor = Color.Black,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
             AutoSize = true,
@@ -870,7 +870,7 @@ public partial class Timeline : Form
         {
             Location = new System.Drawing.Point(100, 50),
             Text = "New game",
-            BackColor = Color.LightSteelBlue,
+            BackColor = Color.Black,
             ForeColor = Game.UI.ForeColor,
             Padding = new(2),
             AutoSize = true,

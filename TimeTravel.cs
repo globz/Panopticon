@@ -12,6 +12,7 @@ public class TimeTravel
         string commit_hash;
         int max_node_seq;
         double compoundTurnValue;
+        List<string> timeline_nodes_name = new List<string>();
 
         // Retrieve current selected node sequence
         using (var statement = DB.Query("SELECT node_seq FROM timeline WHERE game = @game AND branch = @branch AND node_name = @node_name"))
@@ -22,6 +23,8 @@ public class TimeTravel
             var data = statement.ExecuteScalar() ?? throw new InvalidOperationException("No node sequence found");
             node_seq = Convert.ToInt32(data);
         }
+        
+        if (node_seq == 1) { return timeline_nodes_name; };
 
         // Retrieve parent node sequence
         int parent_node_seq = node_seq - 1;
@@ -68,7 +71,6 @@ public class TimeTravel
         }
 
         // Retrieve node_name(s) associated with this commit_hash along with subsequent nodes
-        List<string> timeline_nodes_name = new List<string>();
         using (var statement = DB.Query("SELECT node_name FROM timeline WHERE game = @game AND branch = @branch AND node_seq between @node_seq_start AND @node_seq_end ORDER BY node_seq"))
         {
             statement.Parameters.Add("@game", SqliteType.Text).Value = Game.Name;
