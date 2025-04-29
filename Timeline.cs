@@ -23,20 +23,21 @@ public partial class Timeline : Form
 
         InitializeComponent();
 
-        // Add .gitignore to Game.Path (ignoring panopticon.db)
-        Git.CreateGitIgnore(Game.Path);
+        if (Git.Exist(Game.Path))
+        {
 
-        // Apply migrations if needed
-        Migration.Process();
+            // Apply migrations if needed
+            Migration.Process();
 
-        // Initialize the settings database
-        Initialize_Settings_Table();
+            // Initialize the settings database
+            Initialize_Settings_Table();
 
-        // Retrieve saved settings
-        Retrieve_Settings();
+            // Retrieve saved settings
+            Retrieve_Settings();
 
-        // Refresh Timeline nodes
-        Refresh_Timeline_Nodes();
+            // Refresh Timeline nodes
+            Refresh_Timeline_Nodes();
+        }
 
         // Initialize FileWatcherManager
         this.Load += (s, e) =>
@@ -542,6 +543,15 @@ public partial class Timeline : Form
     static void CreateTimelineButton_Click(object? sender, EventArgs e)
     {
 
+        // Add .gitignore to Game.Path (ignoring panopticon.db)
+        Git.CreateGitIgnore(Game.Path);
+
+        // Initialize the settings database
+        Initialize_Settings_Table();
+
+        // Retrieve saved settings
+        Retrieve_Settings();
+
         // Initialize the timeline database
         Initialize_Timelines_DB();
 
@@ -563,6 +573,9 @@ public partial class Timeline : Form
 
         // Save current commit information to timeline DB
         DB.SaveTimeline(Git.Commit_title(true));
+
+        // Apply migrations if needed
+        Migration.Process();        
 
         // Refresh Timeline nodes
         Refresh_Timeline_Nodes();
@@ -1205,7 +1218,7 @@ public partial class Timeline : Form
             + System.Environment.NewLine
             + "This new game will not carry any Timeline history or notes."
             + System.Environment.NewLine
-            + System.Environment.NewLine            
+            + System.Environment.NewLine
             + "You may then load this new game via Dominion under <Continue Old Game>",
             Dock = DockStyle.Fill
         };

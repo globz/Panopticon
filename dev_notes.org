@@ -205,7 +205,7 @@ BUG:
 - Undoing nodes does not remove their associated notes. (Implemented 2025-04-25)
 - Existing notes should carry over when branching off (just like replay mode) (Implemented 2025-04-25)
 - Creating a new Timeline without exiting Panopticon and previously had a loaded game will carry all settings from the previous game. (Implemented 2025-04-27)
-- panopticon.db & .gitignore should be created ONLY if a timeline has been created!
+- panopticon.db & .gitignore should be created ONLY if a timeline has been created! (Implemented 2025-04-28)
 
 
 
