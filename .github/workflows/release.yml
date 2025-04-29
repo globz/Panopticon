@@ -25,14 +25,16 @@ jobs:
           - Beta release.
           - Self-contained Windows x64 executable.
           - Changelog: 
+            + Added new TimeTravel option: New Game            
             + Added migration procedure logic.
             + Undoing a node will now delete its associated note.
             + Existing notes are now carrying over when braching off.
-            + Added new TimeTravel option: New Game
-          - Features: Snapshot creation, Undo, Replay mode, Branch off, Switch branch, Save notes.
+            + panopticon.db & .gitignore are now only created when a Timeline is created by the user.
+            + Most buttons "BackColor" are now black.
+          - Features: Snapshot creation, Undo, Replay mode, Branch off, New Game, Switch branch, Save notes.
           - Missing Features: Note templates, keyboard shortcut and proper TAB cycling.
           - SHA256 hash of Panopticon.exe:
-            f270ed17a47b57deda3905438b238c7a3c5bd2ac2dd0d3a005a05aee104d23d3
+            4c0fa782f921a95114f120bc1012485190c028646cdb286a05a5d1d67ba90bff
             CertUtil: -hashfile command completed successfully.
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
